@@ -33,6 +33,7 @@ if not os.path.exists(TENSORBOARD_LOG_DIR):
 # dataset repositories
 DATA_DIR_MNIST = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-mnist')
 DATA_DIR_KO_WIKIPEDIA_ORG = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-ko.wikipedia.org')
+SENTENCES_FILE_KO_WIKIPEDIA_ORG = os.path.join(DATA_DIR_KO_WIKIPEDIA_ORG, 'ko.wikipedia.org.sentences.gz')
 
 if __name__ == '__main__':
     print('DATA_DIR:', DATA_DIR)

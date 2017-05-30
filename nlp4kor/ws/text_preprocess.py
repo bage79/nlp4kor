@@ -1,16 +1,11 @@
 import gzip
 import os
-import pickle
 
-from bage_utils.base_util import is_my_pc
-from bage_utils.datafile_util import DataFileUtil
-from bage_utils.dataset import DataSet
 from bage_utils.file_util import FileUtil
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import OneHotVector
-from nlp4kor.config import log, DATA_DIR_KO_WIKIPEDIA_ORG, MONGO_URL
+from nlp4kor.config import log, DATA_DIR_KO_WIKIPEDIA_ORG, MONGO_URL, SENTENCES_FILE_KO_WIKIPEDIA_ORG
 
 
 class TextPreprocess(object):
@@ -82,7 +77,7 @@ class TextPreprocess(object):
 
 
 if __name__ == '__main__':
-    sentences_file = os.path.join(DATA_DIR_KO_WIKIPEDIA_ORG, 'ko.wikipedia.org.sentences.gz')
+    sentences_file = SENTENCES_FILE_KO_WIKIPEDIA_ORG
     log.info('sentences_file: %s' % sentences_file)
     if not os.path.exists(sentences_file):
         TextPreprocess.dump_corpus(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', sentences_file=sentences_file,

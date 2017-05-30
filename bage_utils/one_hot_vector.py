@@ -30,6 +30,8 @@ class OneHotVector(object):
         :param chars: list of characters. len(chars)>0 
         :return: 
         """
+        if type(chars) is str or np.str_:
+            chars = [c for c in chars]
         return self.encoder.transform(chars)
 
     def to_value(self, v: np.ndarray) -> np.ndarray:

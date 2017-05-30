@@ -41,9 +41,9 @@ class DataSets(object):
             valid_features, valid_labels = d.features[n_test:n_test + n_valid, ], d.labels[n_test:n_test + n_valid, ]
             train_features, train_labels = d.features[n_test + n_valid:, ], d.labels[n_test + n_valid:, ]
 
-        test = DataSet(test_features, test_labels, d.features_vector, d.labels_vector)
-        train = DataSet(train_features, train_labels, d.features_vector, d.labels_vector)
-        valid = DataSet(valid_features, valid_labels, d.features_vector, d.labels_vector)
+        test = DataSet(test_features, test_labels, d.features_vector, d.labels_vector, name='test')
+        train = DataSet(train_features, train_labels, d.features_vector, d.labels_vector, name='train')
+        valid = DataSet(valid_features, valid_labels, d.features_vector, d.labels_vector, name='validation')
         return DataSets(train=train, test=test, validation=valid)
 
 
