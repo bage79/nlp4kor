@@ -40,7 +40,6 @@ class OneHotVector(object):
         :param v: one hot vector 
         :return: 
         """
-        # print('v:', type(v), v, len(v))
         return self.encoder.inverse_transform(np.array([v]))[0]
 
     def to_values(self, vectors: list) -> np.ndarray:
@@ -56,18 +55,22 @@ class OneHotVector(object):
 
 
 if __name__ == '__main__':
-    # chars = ['0', '1', '2']
-    chars = [2, 1, 0]
-    chars = ['ㅎ', 'ㄱ', 'a', 'b']
-    ohv = OneHotVector(chars)
-    for c in chars:
-        v = ohv.to_vector(c)
-        print(c, type(v), v, ohv.to_value(v))
+    labels_vector = OneHotVector([0, 1])
+    print(labels_vector.to_vector([0]))
+    print(labels_vector.to_vector(0))
 
-    vectors = ohv.to_vectors(chars)
-    print(type(vectors), vectors)
-    values = ohv.to_values(vectors)
-    print(type(values), values)
+    # chars = ['0', '1', '2']
+    # chars = [1, 0]
+    # chars = ['ㅎ', 'ㄱ', 'a', 'b']
+    # ohv = OneHotVector(chars)
+    # for c in chars:
+    #     v = ohv.to_vector(c)
+    #     print(c, type(v), v, ohv.to_value(v))
+    #
+    # vectors = ohv.to_vectors(chars)
+    # print(type(vectors), vectors)
+    # values = ohv.to_values(vectors)
+    # print(type(values), values)
 
     # X = ['ㄱ', 'a', 'b']
     # # x = [ord(c) for c in X]
