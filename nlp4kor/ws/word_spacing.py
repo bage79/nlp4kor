@@ -1,9 +1,9 @@
 import gzip
+import math
 import os
 
 import numpy as np
 import tensorflow as tf
-import math
 
 from bage_utils.base_util import is_my_pc
 from bage_utils.datafile_util import DataFileUtil
@@ -16,29 +16,6 @@ from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, KO_WIKIPEDIA_ORG_SENT
 
 
 class WordSpacing(object):
-    @classmethod
-    def create_dataset(cls, sentences_file: str, features_vector: OneHotVector, labels_vector: OneHotVector, max_len: int = 0) -> DataSet:
-        features, labels = [], []
-
-        total = FileUtil.count_lines(sentences_file, gzip_format=True if sentences_file.endswith('.gz') else False)
-        check_interval = 10000 if not is_my_pc() else 1
-        log.info('total: %s' % NumUtil.comma_str(total))
-
-        with gzip.open(sentences_file, 'rt') as f:
-            for i, line in enumerate(f, 1):
-                if max_len and 0 < max_len < i:  # test_mode
-                    break
-
-                if i % check_interval == 0:
-                    log.info('%.1f%% readed. dataset len: %s' % (i / total * 100, NumUtil.comma_str(len(features))))
-
-                _features, _labels = cls.sentence2features_labels(line.strip())
-                features.extend(_features)
-                labels.extend(_labels)
-
-        d = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
-        return d
-
     @classmethod
     def sentence2features_labels(cls, sentence, left_gram=2, right_gram=2) -> (list, list):
         if left_gram < 1 or right_gram < 1:
@@ -103,16 +80,17 @@ def learning(sentences_file, batch_size, left_gram, right_gram, model_file, n_hi
     # dataset_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.dataset.%d.left=%d.right=%d.gz' % (max_sentences, left_gram, right_gram))
     # log.info('dataset_file: %s' % dataset_file)
 
+    if max_sentences == 0:
+        max_sentences = FileUtil.count_lines(sentences_file, gzip_format=True)
+
     train_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.dataset.%d.train.left=%d.right=%d.gz' % (max_sentences, left_gram, right_gram))
-    validation_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR,
-                                   'ko.wikipedia.org.dataset.%d.validation.left=%d.right=%d.gz' % (max_sentences, left_gram, right_gram))
-    test_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.dataset.%d.test.left=%d.right=%d.gz' % (max_sentences, left_gram, right_gram))
+    validation_file = train_file.replace('.train.', '.validation.')
+    test_file = train_file.replace('.train.', '.test.')
     if not os.path.exists(train_file) or not os.path.exists(validation_file) or not os.path.exists(test_file):
         log.info('create dataset...')
         features, labels = [], []
-        total = FileUtil.count_lines(sentences_file, gzip_format=True)
-        check_interval = min(10000, math.ceil(total))
-        log.info('total: %s' % NumUtil.comma_str(total))
+        check_interval = min(10000, math.ceil(max_sentences))
+        log.info('total: %s' % NumUtil.comma_str(max_sentences))
 
         with gzip.open(sentences_file, 'rt') as f:
             for i, line in enumerate(f, 1):
@@ -120,7 +98,7 @@ def learning(sentences_file, batch_size, left_gram, right_gram, model_file, n_hi
                     break
 
                 if i % check_interval == 0:
-                    log.info('%.1f%% readed. data len: %s' % (i / total * 100, NumUtil.comma_str(len(features))))
+                    log.info('create dataset... %.1f%% readed. data len: %s' % (i / max_sentences * 100, NumUtil.comma_str(len(features))))
 
                 _f, _l = WordSpacing.sentence2features_labels(line.strip(), left_gram=left_gram, right_gram=right_gram)
                 features.extend(_f)
@@ -130,7 +108,7 @@ def learning(sentences_file, batch_size, left_gram, right_gram, model_file, n_hi
         log.info('dataset: %s' % dataset)
 
         log.info('split to train, test, validation...')
-        datasets = DataSets.to_datasets(dataset, test_rate=0.1, valid_rate=0.1, shuffle=True)
+        datasets = DataSets.to_datasets(dataset, test_rate=0.1, valid_rate=0.1, test_max=10000, valid_max=1000, shuffle=True)
         train, test, validation = datasets.train, datasets.test, datasets.validation
         log.info(train)
         log.info(test)
@@ -139,28 +117,28 @@ def learning(sentences_file, batch_size, left_gram, right_gram, model_file, n_hi
         log.info('split to train, test, validation OK.\n')
 
         log.info('dataset save...%s' % train_file)
-        train.save(train_file, verbose=True)  # counter 형식으로 저장할 까?
+        train.save(train_file, verbose=True)  # save as text # TODO: counter 형식으로 압축해서 저장할까?
         log.info('dataset save OK.\n')
         log.info('create dataset OK.\n')
 
         log.info('dataset save...%s' % validation_file)
-        validation = validation.convert_to_one_hot_vector(verbose=True)
+        validation = validation.convert_to_one_hot_vector(verbose=True)  # save as vector
         validation.save(validation_file, verbose=True)
         log.info('dataset save OK.\n')
 
         log.info('dataset save...%s' % test_file)
         test = test.convert_to_one_hot_vector(verbose=True)
-        test.save(test_file, verbose=True)
+        test.save(test_file, verbose=True)  # save as vector
         log.info('dataset save OK.\n')
-
-    log.info('dataset load...')
-    train = DataSet.load(train_file, verbose=True)
-    validation = DataSet.load(validation_file, verbose=True)
-    test = DataSet.load(test_file, verbose=True)
-    log.info(train)
-    log.info(validation)
-    log.info(test)
-    log.info('dataset load OK.\n')
+    else:
+        log.info('dataset load...')
+        train = DataSet.load(train_file, verbose=True)
+        validation = DataSet.load(validation_file, verbose=True)
+        test = DataSet.load(test_file, verbose=True)
+        log.info(train)
+        log.info(validation)
+        log.info(test)
+        log.info('dataset load OK.\n')
 
     log.info('check samples...')
     for i, (features_batch, labels_batch) in enumerate(train.next_batch(batch_size=5, to_one_hot_vector=True), 1):
@@ -239,8 +217,8 @@ if __name__ == '__main__':
     batch_size = 1000  # mini batch size
     left_gram, right_gram = 2, 2
     n_hidden1 = 100
-    max_sentences = 100 if is_my_pc() else 10000
-    # max_sentences = 100 if is_my_pc() else 0  # FIXME: TEST
+    # max_sentences = 100 if is_my_pc() else 10000 # FIXME: TEST
+    max_sentences = 100 if is_my_pc() else 0
 
     log.info('learning...')
     train_set = ['예쁜 운동화']
@@ -253,8 +231,8 @@ if __name__ == '__main__':
     log.info('testing...')
     test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
     for s in test_set:
-        # features, labels = WordSpacing.to_features_labels(s, left_gram=left_gram, right_gram=right_gram)
-        # print(features, labels)
+        # features, labels = WordSpacing.to_features_labels(s, left_gram=left_gram, right_gram=right_gram) # high accuracy # do not use
+        # log.info(features, labels)
         log.info('"%s"' % s)
         log.info('"%s"' % WordSpacing.spacing(s.replace(' ', ''), features, labels, left_gram=left_gram, right_gram=right_gram))
     log.info('testing OK.\n')

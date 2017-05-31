@@ -1,7 +1,8 @@
 import gzip
+import math
+import os
 import pickle
 
-import math
 import numpy as np
 
 from bage_utils.one_hot_vector import OneHotVector
@@ -67,6 +68,7 @@ class DataSet(object):
 
     @classmethod
     def load(cls, filepath: str, gzip_format=False, verbose=False):
+        filename = os.path.basename(filepath)
         if gzip_format:
             f = gzip.open(filepath, 'rb')
         else:
@@ -77,18 +79,18 @@ class DataSet(object):
             d.name, d.size, d.features_vector, d.labels_vector, d.labels = \
                 pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f)
 
-            check_interval = 1000  # min(1000, math.ceil(d.size / 100))
-
+            check_interval = min(10000, math.ceil(d.size))
             li = []
             for i in range(d.size):
                 li.append(pickle.load(f))
                 if verbose and i % check_interval == 0:
-                    log.info('%.1f%% loaded.' % (i / d.size * 100))
-            log.info('100% loaded.')
+                    log.info('%s %.1f%% loaded.' % (filename, i / d.size * 100))
+            log.info('%s 100% loaded.' % filename)
             d.features = np.asarray(li)
         return d
 
     def save(self, filepath: str, gzip_format=False, verbose=False):
+        filename = os.path.basename(filepath)
         if gzip_format:
             f = gzip.open(filepath, 'wb')
         else:
@@ -102,8 +104,8 @@ class DataSet(object):
             for i, o in enumerate(self.features):
                 pickle.dump(o, f)
                 if verbose and i % check_interval == 0:
-                    log.info('%.1f%% saved.' % (i / self.size * 100))
-            log.info('100% saved.')
+                    log.info('%s %.1f%% saved.' % (filename, i / self.size * 100))
+            log.info('%s 100% saved.' % filename)
 
 
 if __name__ == '__main__':
