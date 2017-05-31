@@ -7,9 +7,10 @@ class OneHotVector(object):
         if not chars or type(chars) is not list or len(chars) == 0:
             raise Exception('values must be list and len(values)>0 %s' % chars)
 
-        self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)
+        self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)  # TODO: performance test
         self.encoder.fit(chars)
 
+    @property
     def classes(self):
         return self.encoder.classes_
 
@@ -20,15 +21,17 @@ class OneHotVector(object):
         """
         
         :param c: character. len(c)==1
-        :return: 
+        :param dtype:
+        :return:
         """
         return self.encoder.transform([c])[0]
 
     def to_vectors(self, chars: list) -> np.ndarray:
         """
         
-        :param chars: list of characters. len(chars)>0 
-        :return: 
+        :param chars: list of characters. len(chars)>0
+        :param dtype:
+        :return:
         """
         if type(chars) is str or np.str_:
             chars = [c for c in chars]
@@ -55,10 +58,14 @@ class OneHotVector(object):
 
 
 if __name__ == '__main__':
-    labels_vector = OneHotVector([0, 1])
-    print(labels_vector.to_vector([0]))
-    print(labels_vector.to_vector(0))
+    unary_vector = OneHotVector([0])
+    binary_vector = OneHotVector([0, 1])
+    ternary_vector = OneHotVector([0, 1, 2])
+    print('%6s\t%6s\t%6s\t%6s' % ('', 'unary', 'binary', 'ternary'))
+    for i in [0, 1, 2]:
+        print('%6s\t%6s\t%6s\t%6s' % (i, unary_vector.to_vector(i), binary_vector.to_vector(i), ternary_vector.to_vector(i)))
 
+        # @formatter:off
     # chars = ['0', '1', '2']
     # chars = [1, 0]
     # chars = ['ㅎ', 'ㄱ', 'a', 'b']

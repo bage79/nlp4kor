@@ -5,7 +5,7 @@ from bage_utils.file_util import FileUtil
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
-from nlp4kor.config import log, DATA_DIR_KO_WIKIPEDIA_ORG, MONGO_URL, SENTENCES_FILE_KO_WIKIPEDIA_ORG
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE
 
 
 class TextPreprocess(object):
@@ -77,13 +77,13 @@ class TextPreprocess(object):
 
 
 if __name__ == '__main__':
-    sentences_file = SENTENCES_FILE_KO_WIKIPEDIA_ORG
+    sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
     log.info('sentences_file: %s' % sentences_file)
     if not os.path.exists(sentences_file):
         TextPreprocess.dump_corpus(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', sentences_file=sentences_file,
                                    mongo_query={})  # mongodb -> text file(corpus)
 
-    characters_file = os.path.join(DATA_DIR_KO_WIKIPEDIA_ORG, 'ko.wikipedia.org.characters')
+    characters_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.characters')
     log.info('characters_file: %s' % characters_file)
     if not os.path.exists(characters_file):
         log.info('collect characters...')
