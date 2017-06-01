@@ -94,8 +94,8 @@ ENV/
 .ropeproject
 
 **/logs/
-**/_nlp4kor/
 **/_*/
+**/datasets/
 
 .idea/workspace.xml
 .idea/tasks.xml
