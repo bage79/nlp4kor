@@ -62,7 +62,9 @@ class DataSet(object):
             label = self.labels_vector.to_vector(has_space)
             _features.append(feature)
             _labels.append(label)
-            if verbose and i % 1000 == 0:
+
+            check_interval = min(1000, math.ceil(features_batch.shape[0]))
+            if verbose and i % check_interval == 0:
                 log.info('[%s] to_one_hot_vector %s -> %s, %s (len=%s) %s (len=%s)' % (i, chars, label, feature, len(feature), label, len(label)))
         return np.asarray(_features, dtype=np.int32), np.asarray(_labels, dtype=np.int32)
 
@@ -79,13 +81,13 @@ class DataSet(object):
             d.name, d.size, d.features_vector, d.labels_vector, d.labels = \
                 pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f)
 
-            check_interval = min(10000, math.ceil(d.size))
+            check_interval = min(100000, math.ceil(d.size))
             li = []
             for i in range(d.size):
                 li.append(pickle.load(f))
                 if verbose and i % check_interval == 0:
                     log.info('%s %.1f%% loaded.' % (filename, i / d.size * 100))
-            log.info('%s 100% loaded.' % filename)
+            log.info('%s 100%% loaded.' % filename)
             d.features = np.asarray(li)
         return d
 
@@ -100,12 +102,12 @@ class DataSet(object):
             for o in [self.name, self.size, self.features_vector, self.labels_vector, self.labels]:
                 pickle.dump(o, f)
 
-            check_interval = min(10000, math.ceil(self.size))
+            check_interval = min(100000, math.ceil(self.size))
             for i, o in enumerate(self.features):
                 pickle.dump(o, f)
                 if verbose and i % check_interval == 0:
                     log.info('%s %.1f%% saved.' % (filename, i / self.size * 100))
-            log.info('%s 100% saved.' % filename)
+            log.info('%s 100%% saved.' % filename)
 
 
 if __name__ == '__main__':

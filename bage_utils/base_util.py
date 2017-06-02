@@ -46,12 +46,12 @@ def is_windows_os():
 
 
 def is_my_pc():
-    """ 맥이면 내 PC로 판단함."""
-    return is_osx_os()
+    """ 맥 또는 GPU용 머신이면 내 PC로 판단함."""
+    return is_osx_os() or hostname() == 'office'
 
 
 def is_server():
-    """ ubuntu or windows는 서버로 판단함."""
+    """ full batch 용 서버 """
     return not is_my_pc()
 
 
@@ -65,7 +65,7 @@ def api_server_hostname():
     if is_my_pc():
         return 'localhost'  # test server
     else:
-        return 'api-local'
+        return 'api-local'  # real server
 
 
 def db_hostname():
@@ -73,19 +73,19 @@ def db_hostname():
     if is_my_pc():
         return 'localhost'  # test server
     else:
-        return 'db-local'
+        return 'db-local'  # real server
 
 
 def elasticsearch_hostname():
-    return 'db-local'
+    return 'db-local'  # real server
 
 
 def neo4j_hostname():
-    return 'db-local'
+    return 'db-local'  # real server
 
 
 def redis_hostname():
-    return 'db-local'
+    return 'db-local'  # real server
 
 
 def hts_server_hostname():

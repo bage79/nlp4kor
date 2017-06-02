@@ -15,13 +15,12 @@ class OneHotVector(object):
         return self.encoder.classes_
 
     def __len__(self):
-        return len(self.encoder.classes_)
+        return self.encoder.classes_.shape[0]
 
     def to_vector(self, c: str) -> np.ndarray:
         """
         
         :param c: character. len(c)==1
-        :param dtype:
         :return:
         """
         return self.encoder.transform([c])[0]
@@ -30,7 +29,6 @@ class OneHotVector(object):
         """
         
         :param chars: list of characters. len(chars)>0
-        :param dtype:
         :return:
         """
         if type(chars) is str or np.str_:

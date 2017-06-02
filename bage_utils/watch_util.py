@@ -14,7 +14,7 @@ class WatchUtil(object):
 
     def __init__(self, auto_stop=True):
         """
-        :param auto_stop: elapsed() 또는 elapsed_string() 호출시, 자동으로 stop() 호출됨.
+        :param auto_stop: auto_stop=True이면, elapsed() 또는 elapsed_string() 호출시 자동으로 stop() 호출됨.
         """
         self.__watches = {}
         self.__cnt = {}
@@ -52,7 +52,7 @@ class WatchUtil(object):
     def elapsed_string(self, name=DEFAULT_WATCH_NAME) -> str:
         return DateUtil.secs_to_string(self.elapsed(name))
 
-    def summary(self, prefix=''):
+    def summary(self, prefix='') -> str:
         import operator
         li = [(name, self.__watches[name].elapsed()) for name in self.__watches]
         li = sorted(li, key=operator.itemgetter(1), reverse=True)
