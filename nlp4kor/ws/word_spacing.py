@@ -1,6 +1,7 @@
 import gzip
 import math
 import os
+import sys
 
 import editdistance
 import numpy as np
@@ -10,7 +11,6 @@ from bage_utils.base_util import is_my_pc
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.datasets import DataSets
-from bage_utils.file_util import FileUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.one_hot_vector import OneHotVector
 from bage_utils.watch_util import WatchUtil
@@ -59,9 +59,9 @@ class WordSpacing(object):
         return ''.join(left)
 
     @classmethod
-    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=1):
+    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=4):
         log.info('\nbuild_FFNN(layers=%s)' % layers)
-        if layers == 1:
+        if layers == 2:
             return cls.__build_FFNN_layers2(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
         else:
             return cls.__build_FFNN_layers4(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
@@ -136,7 +136,8 @@ class WordSpacing(object):
             cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
 
             # train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)  # Too bad. sentences=10000 + layer=2, 20분, Accuracy: 0.689373, cost: 0.8719
-            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)  # Very good!! sentences=10000 + layer=2, 10분, accuracy 0.9194, cost: 0.2139
+            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
+                cost)  # Very good!! sentences=10000 + layer=2, 10분, accuracy 0.9194, cost: 0.2139
 
             predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
             accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
@@ -275,11 +276,25 @@ class WordSpacing(object):
 
     @classmethod
     def sim_two_sentence(cls, original, generated):
-        total = len(original.replace(' ', '')) - 1
-        return 1 - editdistance.eval(original, generated) / total
+        total = original.count(' ')
+        correct = total - math.ceil(editdistance.eval(original, generated) / 2)  # +-1 오류 있음 ^^
+        sim = correct / total
+        return sim, correct, total
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        max_sentences = int(sys.argv[1])
+    else:
+        max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
+    # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data (학습시간: 5일 소요)
+    layers = 4
+    model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
+                              'word_spacing_model.sentences=%s.layers=%s/model' % (max_sentences, layers))  # .%s' % max_sentences
+    log.info('max_sentences: %s' % max_sentences)
+    log.info('layers: %s' % layers)
+    log.info('model_file: %s' % model_file)
+
     sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
     log.info('sentences_file: %s' % sentences_file)
 
@@ -302,45 +317,26 @@ if __name__ == '__main__':
     log.info('n_features: %s' % n_features)
     log.info('n_classes: %s' % n_classes)
 
-    layers = 4
     n_hidden1 = 100
     learning_rate = 0.01  # 0.1 ~ 0.001
-    # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data
-    max_sentences = 10000 if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data
-    model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
-                              'word_spacing_model.sentences=%s.layers=%s/' % (max_sentences, layers))  # .%s' % max_sentences
-    # model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models', 'word_spacing_model/')  # .%s' % max_sentences
-    log.info('layers: %s' % layers)
     log.info('n_hidden1: %s' % n_hidden1)
     log.info('learning_rate: %s' % learning_rate)
-    log.info('max_sentences: %s' % max_sentences)
-    log.info('model_file: %s' % model_file)
-
-    log.info('sample learning...')
-    train_set = ['예쁜 운동화']
-    features, labels = [], []
-    for s in train_set:
-        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-        log.info('%s %s' % (features, labels))
-    log.info('sample learning OK.\n')
 
     log.info('sample testing...')
     test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
     for s in test_set:
-        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)  # high accuracy # do not use
-        log.info('')
+        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
         log.info('%s -> %s' % (features, labels))
         log.info('in : "%s"' % s)
-        log.info('out: "%s"' % WordSpacing.spacing(s, labels))
+        log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
     log.info('sample testing OK.\n')
 
-    if not os.path.exists(model_file):
+    if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
         WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
                              max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
 
     log.info('chek result...')
-    # sentences = ['아버지가 방에 들어 가신다.']
-    sentences = []
+    sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
     max_test_sentences = 10
     with gzip.open(sentences_file, 'rt') as f:
         for i, line in enumerate(f):
@@ -361,11 +357,11 @@ if __name__ == '__main__':
                 dataset.convert_to_one_hot_vector()
                 _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
                 generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                distance = WordSpacing.sim_two_sentence(s, generated_sentence)
-                log.info('')
+                sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence)
                 log.info('in : "%s"' % s)
-                log.info(
-                    'out: "%s" (accuracy: %s%%, distance: %s%%)' % (generated_sentence, NumUtil.comma_str(_accuracy * 100), NumUtil.comma_str(distance * 100)))
+                log.info('out: "%s" (accuracy: %s%%, sim: %s%%=%s/%s)' % (
+                    generated_sentence, NumUtil.comma_str(_accuracy * 100), NumUtil.comma_str(sim * 100), correct, total))
+                log.info('')
         except:
             log.error('restore failed. model_file: %s' % model_file)
 
