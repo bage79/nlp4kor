@@ -17,6 +17,8 @@ from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, KO_WIKIPEDIA_ORG_SENT
 
 
 class WordSpacing(object):
+    graph_nodes = {}
+
     @classmethod
     def sentence2features_labels(cls, sentence, left_gram=2, right_gram=2) -> (list, list):
         if left_gram < 1 or right_gram < 1:
@@ -57,86 +59,90 @@ class WordSpacing(object):
 
     @classmethod
     def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=1):
-        log.info('build_FFNN(layers=%s)' % layers)
+        log.info('\nbuild_FFNN(layers=%s)' % layers)
         if layers == 1:
-            return cls.build_FFNN_layers1(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
+            return cls.__build_FFNN_layers1(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
         else:
-            return cls.build_FFNN_layers4(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
+            return cls.__build_FFNN_layers4(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
 
     @classmethod
-    def build_FFNN_layers1(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
-        log.info('create tensorflow graph...')
-        watch.start('create tensorflow graph')
-        log.info('n_features: %s' % n_features)
-        log.info('n_classes: %s' % n_classes)
-        log.info('n_hidden1: %s' % n_hidden1)
+    def __build_FFNN_layers4(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
+        if len(cls.graph_nodes) == 0:
+            n_hidden3 = n_hidden2 = n_hidden1
+            log.info('create tensorflow graph...')
+            watch.start('create tensorflow graph')
+            log.info('n_features: %s' % n_features)
+            log.info('n_classes: %s' % n_classes)
+            log.info('n_hidden1: %s' % n_hidden1)
+            log.info('n_hidden2: %s' % n_hidden2)
+            log.info('n_hidden3: %s' % n_hidden3)
 
-        tf.set_random_seed(777)  # for reproducibility
+            tf.set_random_seed(777)  # for reproducibility
 
-        X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
-        Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
+            X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
+            Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
 
-        W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
-        b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
-        layer1 = tf.sigmoid(tf.matmul(X, W1) + b1, name='layer1')
+            W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
+            b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
+            layer1 = tf.sigmoid(tf.matmul(X, W1) + b1, name='layer1')
 
-        W2 = tf.Variable(tf.random_normal([n_hidden1, n_classes]), name='W2')
-        b2 = tf.Variable(tf.random_normal([n_classes]), name='b2')
-        hypothesis = tf.sigmoid(tf.matmul(layer1, W2) + b2, name='hypothesis')
+            W2 = tf.Variable(tf.random_normal([n_hidden1, n_hidden2]), name='W2')
+            b2 = tf.Variable(tf.random_normal([n_hidden2]), name='b2')
+            layer2 = tf.sigmoid(tf.matmul(layer1, W2) + b2, name='layer2')
 
-        cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
+            W3 = tf.Variable(tf.random_normal([n_hidden2, n_hidden3]), name='W3')
+            b3 = tf.Variable(tf.random_normal([n_hidden3]), name='b3')
+            layer3 = tf.sigmoid(tf.matmul(layer2, W3) + b3, name='layer3')
 
-        # train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)  # Too bad. sentences=10000 + layer=2, 20분, Accuracy: 0.689373, cost: 0.8719
-        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-            cost)  # Very good!! sentences=10000 + layer=2, 10분, accuracy 0.9194, cost: 0.2139
+            W4 = tf.Variable(tf.random_normal([n_hidden3, n_classes]), name='W4')
+            b4 = tf.Variable(tf.random_normal([n_classes]), name='b4')
+            hypothesis = tf.sigmoid(tf.matmul(layer3, W4) + b4, name='hypothesis')
 
-        predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
-        accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
-        watch.stop('create tensorflow graph')
-        log.info('create tensorflow graph OK.\n')
-        return {'hypothesis': hypothesis, 'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
+            cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
+
+            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
+                cost)  # Very Very good!! sentences=10000 + layer=4, 10분, accuracy 0.9294, cost: 0.1839
+
+            predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
+            accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
+            watch.stop('create tensorflow graph')
+            log.info('create tensorflow graph OK.\n')
+            cls.graph_nodes = {'hypothesis': hypothesis, 'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
+        return cls.graph_nodes
 
     @classmethod
-    def build_FFNN_layers4(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
-        n_hidden3 = n_hidden2 = n_hidden1
-        log.info('create tensorflow graph...')
-        watch.start('create tensorflow graph')
-        log.info('n_features: %s' % n_features)
-        log.info('n_classes: %s' % n_classes)
-        log.info('n_hidden1: %s' % n_hidden1)
-        log.info('n_hidden2: %s' % n_hidden2)
-        log.info('n_hidden3: %s' % n_hidden3)
+    def __build_FFNN_layers1(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
+        if len(cls.graph_nodes) == 0:
+            log.info('create tensorflow graph...')
+            watch.start('create tensorflow graph')
+            log.info('n_features: %s' % n_features)
+            log.info('n_classes: %s' % n_classes)
+            log.info('n_hidden1: %s' % n_hidden1)
 
-        tf.set_random_seed(777)  # for reproducibility
+            tf.set_random_seed(777)  # for reproducibility
 
-        X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
-        Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
+            X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
+            Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
 
-        W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
-        b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
-        layer1 = tf.sigmoid(tf.matmul(X, W1) + b1, name='layer1')
+            W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
+            b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
+            layer1 = tf.sigmoid(tf.matmul(X, W1) + b1, name='layer1')
 
-        W2 = tf.Variable(tf.random_normal([n_hidden1, n_hidden2]), name='W2')
-        b2 = tf.Variable(tf.random_normal([n_hidden2]), name='b2')
-        layer2 = tf.sigmoid(tf.matmul(layer1, W2) + b2, name='layer2')
+            W2 = tf.Variable(tf.random_normal([n_hidden1, n_classes]), name='W2')
+            b2 = tf.Variable(tf.random_normal([n_classes]), name='b2')
+            hypothesis = tf.sigmoid(tf.matmul(layer1, W2) + b2, name='hypothesis')
 
-        W3 = tf.Variable(tf.random_normal([n_hidden2, n_hidden3]), name='W3')
-        b3 = tf.Variable(tf.random_normal([n_hidden3]), name='b3')
-        layer3 = tf.sigmoid(tf.matmul(layer2, W3) + b3, name='layer3')
+            cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
 
-        W4 = tf.Variable(tf.random_normal([n_hidden3, n_classes]), name='W4')
-        b4 = tf.Variable(tf.random_normal([n_classes]), name='b4')
-        hypothesis = tf.sigmoid(tf.matmul(layer3, W4) + b4, name='hypothesis')
+            # train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)  # Too bad. sentences=10000 + layer=2, 20분, Accuracy: 0.689373, cost: 0.8719
+            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)  # Very good!! sentences=10000 + layer=2, 10분, accuracy 0.9194, cost: 0.2139
 
-        cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
-
-        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)  # Very Very good!! sentences=10000 + layer=4, 10분, accuracy 0.9294, cost: 0.1839
-
-        predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
-        accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
-        watch.stop('create tensorflow graph')
-        log.info('create tensorflow graph OK.\n')
-        return {'hypothesis': hypothesis, 'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
+            predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
+            accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
+            watch.stop('create tensorflow graph')
+            log.info('create tensorflow graph OK.\n')
+            cls.graph_nodes = {'hypothesis': hypothesis, 'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
+        return cls.graph_nodes
 
     @classmethod
     def learning(cls, sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=100, max_sentences=0,
@@ -296,57 +302,52 @@ if __name__ == '__main__':
     n_hidden1 = 100
     learning_rate = 0.01  # 0.1 ~ 0.001
     # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data
-    max_sentences = 100 if is_my_pc() else int('1,000,000'.replace(',',''))  # run 100 or 1M data
-    # model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models', 'word_spacing_model.sentences=%s.layers=%s/' % (max_sentences, layers))  # .%s' % max_sentences
-    model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models', 'word_spacing_model/')  # .%s' % max_sentences
+    max_sentences = 100 if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data
+    model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models', 'word_spacing_model.sentences=%s.layers=%s/' % (max_sentences, layers))  # .%s' % max_sentences
+    # model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models', 'word_spacing_model/')  # .%s' % max_sentences
     log.info('layers: %s' % layers)
     log.info('n_hidden1: %s' % n_hidden1)
     log.info('learning_rate: %s' % learning_rate)
     log.info('max_sentences: %s' % max_sentences)
     log.info('model_file: %s' % model_file)
 
-    # log.info('sample learning...')
-    # train_set = ['예쁜 운동화']
-    # features, labels = [], []
-    # for s in train_set:
-    #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-    #     log.info('%s %s' % (features, labels))
-    # log.info('sample learning OK.\n')
-    #
-    # log.info('sample testing...')
-    # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-    # for s in test_set:
-    #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)  # high accuracy # do not use
-    #     log.info('%s -> %s' % (features, labels))
-    #     log.info('"%s"' % s)
-    #     log.info('"%s"' % WordSpacing.spacing(s, labels))
-    # log.info('sample testing OK.\n')
+    log.info('sample learning...')
+    train_set = ['예쁜 운동화']
+    features, labels = [], []
+    for s in train_set:
+        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+        log.info('%s %s' % (features, labels))
+    log.info('sample learning OK.\n')
 
-    if not os.path.exists(model_file):  # FIXME: TEST
+    log.info('sample testing...')
+    test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+    for s in test_set:
+        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)  # high accuracy # do not use
+        log.info('%s -> %s' % (features, labels))
+        log.info('"%s"' % s)
+        log.info('"%s"' % WordSpacing.spacing(s, labels))
+    log.info('sample testing OK.\n')
+
+    if not os.path.exists(model_file):
         WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
                              max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
 
     log.info('chek result...')
     sentences = []
-    max_test_sentences = 100
+    max_test_sentences = 10
     with gzip.open(sentences_file, 'rt') as f:
         for i, line in enumerate(f):
             if i + 1 > max_test_sentences:
                 break
             sentences.append(line.strip())
 
-
     with tf.Session() as sess:
         graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
         X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
 
-        sess.run(tf.global_variables_initializer())  # FIXME: Saver.restore() not found ERROR.
         saver = tf.train.Saver()
-        checkpoint = tf.train.get_checkpoint_state(model_file)
-        print(checkpoint)
-        if checkpoint and checkpoint.model_checkpoint_path:
-            saver.restore(sess, checkpoint.model_checkpoint_path)
-
+        try:
+            restored = saver.restore(sess, model_file)
             sentences2word_spacing = []
             for s in sentences:
                 features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
@@ -357,6 +358,7 @@ if __name__ == '__main__':
                 log.info('')
                 log.info('in : "%s"' % s)
                 log.info('out: "%s" (accuracy: %s%%)' % (WordSpacing.spacing(s.replace(' ', ''), _predicted), NumUtil.comma_str(_accuracy * 100)))
-        else:
-            log.error('restore failed')
+        except:
+            log.error('restore failed. model_file: %s' % model_file)
+
     log.info('chek result OK.')
