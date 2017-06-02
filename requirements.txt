@@ -1,3 +1,4 @@
+editdistance
 beautifulsoup4==4.5.1
 bokeh==0.12.2
 chardet==2.3.0

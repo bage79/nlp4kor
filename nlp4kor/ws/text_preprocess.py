@@ -10,15 +10,16 @@ from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, MONGO_URL, KO_WIKIPED
 
 class TextPreprocess(object):
     @staticmethod
-    def dump_corpus(mongo_url, db_name, collection_name, sentences_file, mongo_query=None):
+    def dump_corpus(mongo_url, db_name, collection_name, sentences_file, mongo_query=None, limit=None):
         """
         Mongodb에서 문서를 읽어서, 문장 단위로 저장한다. (단 문장안의 단어가 1개 이거나, 한글이 전혀 없는 문장은 추출하지 않는다.)
-        :param mongo_url: mongodb://~~~ 
+        :param mongo_url: mongodb://~~~
         :param db_name: database name of mongodb
         :param collection_name: collection name of mongodb
         :param sentences_file: *.sentence file
         :param mongo_query: default={}
-        :return: 
+        :param limit:
+        :return:
         """
         if mongo_query is None:
             mongo_query = {}
@@ -32,7 +33,7 @@ class TextPreprocess(object):
             os.makedirs(output_dir)
 
         with gzip.open(sentences_file, 'wt') as out_f:
-            for i, row in enumerate(corpus_mongo.find(mongo_query)):
+            for i, row in enumerate(corpus_mongo.find(mongo_query, limit=limit)):
                 # print('url:', row['url'])
                 for c in row['content']:
                     if i % 1000 == 0:
