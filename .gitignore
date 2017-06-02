@@ -94,11 +94,13 @@ ENV/
 .ropeproject
 
 **/logs/
+
 **/_*/
 **/datasets/
 
+.idea/*.iml
+.idea/misc.xml
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/deployment.xml
 .idea/webServers.xml
-
