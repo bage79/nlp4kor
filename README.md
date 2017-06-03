@@ -15,5 +15,5 @@
 - https://youtu.be/0UkAV3DnpPk?list=PLE_yleP-KQefhFSNh16hJKnq6stIG05fu
 
 ### 2. FFNN for 한글 띄어쓰기 - 박혜웅, 2017.06.03
-- 
+- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word-spaceing.ipynb
 - 
