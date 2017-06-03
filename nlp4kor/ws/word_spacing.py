@@ -2,8 +2,8 @@ import gzip
 import math
 import os
 import sys
+import traceback
 
-import editdistance
 import numpy as np
 import tensorflow as tf
 
@@ -275,11 +275,38 @@ class WordSpacing(object):
         log.info('\n')
 
     @classmethod
-    def sim_two_sentence(cls, original, generated):
-        total = original.count(' ')
-        correct = total - math.ceil(editdistance.eval(original, generated) / 2)  # +-1 오류 있음 ^^
-        sim = correct / total
-        return sim, correct, total
+    def levenshteinDistance(cls, s1, s2):
+        if len(s1) > len(s2):
+            s1, s2 = s2, s1
+
+        distances = range(len(s1) + 1)
+        for i2, c2 in enumerate(s2):
+            distances_ = [i2 + 1]
+            for i1, c1 in enumerate(s1):
+                if c1 == c2:
+                    distances_.append(distances[i1])
+                else:
+                    distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+            distances = distances_
+        return distances[-1]
+
+    @classmethod
+    def sim_two_sentence(cls, original, generated, left_gram=2, right_gram=2):
+        _, labels1 = WordSpacing.sentence2features_labels(original, left_gram=left_gram, right_gram=right_gram)
+        _, labels2 = WordSpacing.sentence2features_labels(generated, left_gram=left_gram, right_gram=right_gram)
+        incorrect = 0
+        for idx, l in enumerate(labels1):
+            if l == 1 and labels2[idx] != 1:
+                incorrect += 1
+
+        total_spaces = labels1.count(1)  # 정답에 있는 공백 개수
+        correct = total_spaces - incorrect  # 정답에 있는 공백과 같은 곳에 공백이 있는지
+
+        if total_spaces == 0:
+            sim = 1
+        else:
+            sim = correct / total_spaces
+        return sim, correct, total_spaces
 
 
 if __name__ == '__main__':
@@ -335,15 +362,19 @@ if __name__ == '__main__':
         WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
                              max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
 
+    watch = WatchUtil()
+    watch.start('check')
     log.info('chek result...')
     sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
-    max_test_sentences = 10
+    max_test_sentences = 100
     with gzip.open(sentences_file, 'rt') as f:
-        for i, line in enumerate(f):
-            if i + 1 > max_test_sentences:
+        for line in f:
+            if len(sentences) >= max_test_sentences:
                 break
             sentences.append(line.strip())
+    log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
 
+    accuracies, sims = [], []
     with tf.Session() as sess:
         graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
         X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
@@ -351,18 +382,30 @@ if __name__ == '__main__':
         saver = tf.train.Saver()
         try:
             restored = saver.restore(sess, model_file)
-            for s in sentences:
+        except:
+            log.error('restore failed. model_file: %s' % model_file)
+        try:
+            for i, s in enumerate(sentences):
+                log.info('')
+                log.info('[%s] in : "%s"' % (i, s))
                 features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
                 dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
                 dataset.convert_to_one_hot_vector()
-                _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
-                generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence)
-                log.info('in : "%s"' % s)
-                log.info('out: "%s" (accuracy: %s%%, sim: %s%%=%s/%s)' % (
-                    generated_sentence, NumUtil.comma_str(_accuracy * 100), NumUtil.comma_str(sim * 100), correct, total))
-                log.info('')
+                if len(dataset) > 0:
+                    _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
+
+                    generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
+                    sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence, left_gram=left_gram, right_gram=right_gram)
+
+                    accuracies.append(_accuracy)
+                    sims.append(sim)
+
+                    log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, generated_sentence, _accuracy * 100, sim * 100, correct, total))
         except:
-            log.error('restore failed. model_file: %s' % model_file)
+            log.error(traceback.format_exc())
 
     log.info('chek result OK.')
+    # noinspection PyStringFormat
+    log.info('mean(accuracy): %.2f%%, mean(sim): %.2f%%' % (np.mean(accuracies) * 100, np.mean(sims) * 100))
+    log.info('secs/sentence: %.4f' % (watch.elapsed('check') / len(sentences)))
+    log.info(watch.summary())
