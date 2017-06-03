@@ -11,9 +11,9 @@
 ## Season #1 2017.05 ~ 2017.08 (FFNN, CNN, word2vec)
 
 ### 1. CNN for MNIST - 박혜웅, 2017.05.20
-- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/CNN_for_MNIST.ipynb
+- https://github.com/bage79/nlp4kor/blob/master/ipynb/CNN_for_MNIST.ipynb
 - https://youtu.be/0UkAV3DnpPk?list=PLE_yleP-KQefhFSNh16hJKnq6stIG05fu
 
 ### 2. FFNN for 한글 띄어쓰기 - 박혜웅, 2017.06.03
-- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word-spaceing.ipynb
+- https://github.com/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word-spaceing.ipynb
 - 
