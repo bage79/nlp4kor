@@ -349,31 +349,42 @@ if __name__ == '__main__':
     log.info('n_hidden1: %s' % n_hidden1)
     log.info('learning_rate: %s' % learning_rate)
 
-    log.info('sample testing...')
-    test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-    for s in test_set:
-        features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-        log.info('%s -> %s' % (features, labels))
-        log.info('in : "%s"' % s)
-        log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
-    log.info('sample testing OK.\n')
+    # log.info('sample testing...')
+    # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+    # for s in test_set:
+    #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+    #     log.info('%s -> %s' % (features, labels))
+    #     log.info('in : "%s"' % s)
+    #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
+    # log.info('sample testing OK.\n')
 
     if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
         WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
                              max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
 
-    watch = WatchUtil()
-    watch.start('check')
     log.info('chek result...')
+    watch = WatchUtil()
+    watch.start('read sentences')
+
     sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
     max_test_sentences = 100
     with gzip.open(sentences_file, 'rt') as f:
-        for line in f:
-            if len(sentences) >= max_test_sentences:
-                break
-            sentences.append(line.strip())
-    log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
+        if max_test_sentences < max_sentences:  # leared sentences is smaller than full sentences
+            for i, line in enumerate(f, 1):
+                if i <= max_sentences:  # skip learned sentences
+                    if i % 100000 == 0:
+                        log.info('skip %d th learned sentence.' % i)
+                    continue
+                if len(sentences) >= max_test_sentences:  # read new sentences
+                    break
 
+                s = line.strip()
+                if s.count(' ') > 0:  # sentence must have one or more space.
+                    sentences.append(s)
+    log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
+    watch.stop('read sentences')
+
+    watch.start('run tensorflow')
     accuracies, sims = [], []
     with tf.Session() as sess:
         graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
@@ -407,5 +418,5 @@ if __name__ == '__main__':
     log.info('chek result OK.')
     # noinspection PyStringFormat
     log.info('mean(accuracy): %.2f%%, mean(sim): %.2f%%' % (np.mean(accuracies) * 100, np.mean(sims) * 100))
-    log.info('secs/sentence: %.4f' % (watch.elapsed('check') / len(sentences)))
+    log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
     log.info(watch.summary())
