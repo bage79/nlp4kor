@@ -7,7 +7,9 @@
 brew install git git-lfs
 git lfs install
 ```
-- 모든 명령은 Ubuntu를 기준으로 합니다. (대부분 OSX 호환)
+- 개발 환경
+    - 서버: Ubuntu 16.04 + Anaconda3 4.3 + Python 3.5 + Tensorflow-GPU 1.1
+    - 로컬: OSX 10.12 + Anaconda3 4.3 + Python 3.5 + Tensorflow-CPU 1.1
 
 ### install source codes
 - anaconda3 설치 https://www.continuum.io/downloads
