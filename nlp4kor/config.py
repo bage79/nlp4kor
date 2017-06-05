@@ -14,8 +14,8 @@ if log is None:
     else:
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log # console_mode=True for jupyter notebook
 
-
-MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % ('root', os.getenv('MONGODB_PASSWD') or 'gPdnd', 'db-local', '27017', 'admin') # FIXME: os.getenv()
+MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
+    'root', os.getenv('MONGODB_PASSWD'), 'db-local', '27017', 'admin')
 MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_PASSWD'), 'db': 'kr_nlp'}
 
 PROJECT_DIR = os.path.join(os.getenv("HOME"), 'workspace/nlp4kor')
@@ -36,6 +36,7 @@ MNIST_DATA_DIR = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-mnist')
 KO_WIKIPEDIA_ORG_DATA_DIR = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-ko.wikipedia.org')
 KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'corpus/ko.wikipedia.org.sentences.gz')
 KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'corpus/ko.wikipedia.org.urls.txt')
+KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'dic/ko.wikipedia.org.characters')
 
 if __name__ == '__main__':
     print('DATA_DIR:', MNIST_DATA_DIR)

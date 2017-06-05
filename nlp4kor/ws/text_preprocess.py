@@ -6,7 +6,8 @@ from bage_utils.file_util import FileUtil
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_URLS_FILE
+from nlp4kor.config import log, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_URLS_FILE, \
+    KO_WIKIPEDIA_ORG_CHARACTERS_FILE
 
 
 class TextPreprocess(object):
@@ -101,7 +102,7 @@ class TextPreprocess(object):
 if __name__ == '__main__':
     urls_file = KO_WIKIPEDIA_ORG_URLS_FILE
     sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
-    characters_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.characters')
+    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
     log.info('urls_file: %s' % urls_file)
     log.info('sentences_file: %s' % sentences_file)
     log.info('characters_file: %s' % characters_file)

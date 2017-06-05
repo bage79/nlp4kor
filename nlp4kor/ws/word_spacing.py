@@ -14,7 +14,7 @@ from bage_utils.datasets import DataSets
 from bage_utils.num_util import NumUtil
 from bage_utils.one_hot_vector import OneHotVector
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE
 
 
 class WordSpacing(object):
@@ -158,7 +158,7 @@ class WordSpacing(object):
         watch = WatchUtil()
 
         train_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'datasets',
-                                  'ko.wikipedia.org.dataset.%d.left=%d.right=%d.train.gz' % (max_sentences, left_gram, right_gram))
+                                  'ko.wikipedia.org.dataset.sentences=%d.left=%d.right=%d.train.gz' % (max_sentences, left_gram, right_gram))
         validation_file = train_file.replace('.train.', '.validation.')
         test_file = train_file.replace('.train.', '.test.')
         if not os.path.exists(train_file) or not os.path.exists(validation_file) or not os.path.exists(test_file):
@@ -180,7 +180,7 @@ class WordSpacing(object):
                     features.extend(_f)
                     labels.extend(_l)
 
-            dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
+            dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector, name='all')
             log.info('dataset: %s' % dataset)
 
             log.info('split to train, test, validation...')
@@ -275,22 +275,6 @@ class WordSpacing(object):
         log.info('\n')
 
     @classmethod
-    def levenshteinDistance(cls, s1, s2):
-        if len(s1) > len(s2):
-            s1, s2 = s2, s1
-
-        distances = range(len(s1) + 1)
-        for i2, c2 in enumerate(s2):
-            distances_ = [i2 + 1]
-            for i1, c1 in enumerate(s1):
-                if c1 == c2:
-                    distances_.append(distances[i1])
-                else:
-                    distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
-            distances = distances_
-        return distances[-1]
-
-    @classmethod
     def sim_two_sentence(cls, original, generated, left_gram=2, right_gram=2):
         _, labels1 = WordSpacing.sentence2features_labels(original, left_gram=left_gram, right_gram=right_gram)
         _, labels2 = WordSpacing.sentence2features_labels(generated, left_gram=left_gram, right_gram=right_gram)
@@ -310,113 +294,125 @@ class WordSpacing(object):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        max_sentences = int(sys.argv[1])
-    else:
-        max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
-    # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data (학습시간: 5일 소요)
-    layers = 4
-    model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
-                              'word_spacing_model.sentences=%s.layers=%s/model' % (max_sentences, layers))  # .%s' % max_sentences
-    log.info('max_sentences: %s' % max_sentences)
-    log.info('layers: %s' % layers)
-    log.info('model_file: %s' % model_file)
+    try:
+        if len(sys.argv) == 4:
+            max_sentences = int(sys.argv[1])
+            left_gram = int(sys.argv[2])
+            right_gram = int(sys.argv[3])
+        else:
+            max_sentences, left_gram, right_gram = None, None, None
 
-    sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
-    log.info('sentences_file: %s' % sentences_file)
+        if max_sentences is None:
+            max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
+            # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data (학습시간: 5일 소요)
+        if left_gram is None:
+            left_gram = 4
+        if right_gram is None:
+            right_gram = 4
 
-    characters_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.characters')
-    log.info('characters_file: %s' % characters_file)
+        layers = 4
+        model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
+                                  'word_spacing_model.sentences=%s.layers=%s.left_gram=%s.right_gram=%s/model' % (max_sentences, layers, left_gram, right_gram))  # .%s' % max_sentences
+        log.info('max_sentences: %s' % max_sentences)
+        log.info('layers: %s' % layers)
+        log.info('model_file: %s' % model_file)
 
-    batch_size = 1000  # mini batch size
-    left_gram, right_gram = 2, 2
-    ngram = left_gram + right_gram
-    log.info('batch_size: %s' % batch_size)
-    log.info('left_gram: %s, right_gram: %s' % (left_gram, right_gram))
-    log.info('ngram: %s' % ngram)
+        sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
+        log.info('sentences_file: %s' % sentences_file)
 
-    features_vector = OneHotVector(DataFileUtil.read_list(characters_file))
-    labels_vector = OneHotVector([0, 1])  # 붙여쓰기=0, 띄어쓰기=1
-    n_features = len(features_vector) * ngram  # number of features = 17,380 * 4
-    n_classes = len(labels_vector) if len(labels_vector) >= 3 else 1  # number of classes = 2 but len=1
-    log.info('features_vector: %s' % features_vector)
-    log.info('labels_vector: %s' % labels_vector)
-    log.info('n_features: %s' % n_features)
-    log.info('n_classes: %s' % n_classes)
+        characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+        log.info('characters_file: %s' % characters_file)
 
-    n_hidden1 = 100
-    learning_rate = 0.01  # 0.1 ~ 0.001
-    log.info('n_hidden1: %s' % n_hidden1)
-    log.info('learning_rate: %s' % learning_rate)
+        batch_size = 1000  # mini batch size
+        ngram = left_gram + right_gram
+        log.info('batch_size: %s' % batch_size)
+        log.info('left_gram: %s, right_gram: %s' % (left_gram, right_gram))
+        log.info('ngram: %s' % ngram)
 
-    # log.info('sample testing...')
-    # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-    # for s in test_set:
-    #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-    #     log.info('%s -> %s' % (features, labels))
-    #     log.info('in : "%s"' % s)
-    #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
-    # log.info('sample testing OK.\n')
+        features_vector = OneHotVector(DataFileUtil.read_list(characters_file))
+        labels_vector = OneHotVector([0, 1])  # 붙여쓰기=0, 띄어쓰기=1
+        n_features = len(features_vector) * ngram  # number of features = 17,380 * 4
+        n_classes = len(labels_vector) if len(labels_vector) >= 3 else 1  # number of classes = 2 but len=1
+        log.info('features_vector: %s' % features_vector)
+        log.info('labels_vector: %s' % labels_vector)
+        log.info('n_features: %s' % n_features)
+        log.info('n_classes: %s' % n_classes)
 
-    if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
-        WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
-                             max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
+        n_hidden1 = 100
+        learning_rate = 0.01  # 0.1 ~ 0.001
+        log.info('n_hidden1: %s' % n_hidden1)
+        log.info('learning_rate: %s' % learning_rate)
 
-    log.info('chek result...')
-    watch = WatchUtil()
-    watch.start('read sentences')
+        # log.info('sample testing...')
+        # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+        # for s in test_set:
+        #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+        #     log.info('%s -> %s' % (features, labels))
+        #     log.info('in : "%s"' % s)
+        #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
+        # log.info('sample testing OK.\n')
 
-    sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
-    max_test_sentences = 100
-    with gzip.open(sentences_file, 'rt') as f:
-        if max_test_sentences < max_sentences:  # leared sentences is smaller than full sentences
-            for i, line in enumerate(f, 1):
-                if i <= max_sentences:  # skip learned sentences
-                    if i % 100000 == 0:
-                        log.info('skip %d th learned sentence.' % i)
-                    continue
-                if len(sentences) >= max_test_sentences:  # read new sentences
-                    break
+        if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
+            WordSpacing.learning(sentences_file, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
+                                 max_sentences=max_sentences, learning_rate=learning_rate, layers=layers)
 
-                s = line.strip()
-                if s.count(' ') > 0:  # sentence must have one or more space.
-                    sentences.append(s)
-    log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
-    watch.stop('read sentences')
+        log.info('chek result...')
+        watch = WatchUtil()
+        watch.start('read sentences')
 
-    watch.start('run tensorflow')
-    accuracies, sims = [], []
-    with tf.Session() as sess:
-        graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
-        X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
+        sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
+        max_test_sentences = 100
+        with gzip.open(sentences_file, 'rt') as f:
+            if max_test_sentences < max_sentences:  # leared sentences is smaller than full sentences
+                for i, line in enumerate(f, 1):
+                    if i <= max_sentences:  # skip learned sentences
+                        if i % 100000 == 0:
+                            log.info('skip %d th learned sentence.' % i)
+                        continue
+                    if len(sentences) >= max_test_sentences:  # read new sentences
+                        break
 
-        saver = tf.train.Saver()
-        try:
-            restored = saver.restore(sess, model_file)
-        except:
-            log.error('restore failed. model_file: %s' % model_file)
-        try:
-            for i, s in enumerate(sentences):
-                log.info('')
-                log.info('[%s] in : "%s"' % (i, s))
-                features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
-                dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
-                dataset.convert_to_one_hot_vector()
-                if len(dataset) > 0:
-                    _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
+                    s = line.strip()
+                    if s.count(' ') > 0 and len(s.replace(' ', '')) > ngram:  # sentence must have one or more space.
+                        sentences.append(s)
+        log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
+        watch.stop('read sentences')
 
-                    generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                    sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence, left_gram=left_gram, right_gram=right_gram)
+        watch.start('run tensorflow')
+        accuracies, sims = [], []
+        with tf.Session() as sess:
+            graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
+            X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
 
-                    accuracies.append(_accuracy)
-                    sims.append(sim)
+            saver = tf.train.Saver()
+            try:
+                restored = saver.restore(sess, model_file)
+            except:
+                log.error('restore failed. model_file: %s' % model_file)
+            try:
+                for i, s in enumerate(sentences):
+                    log.info('')
+                    log.info('[%s] in : "%s"' % (i, s))
+                    features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
+                    dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
+                    dataset.convert_to_one_hot_vector()
+                    if len(dataset) > 0:
+                        _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
 
-                    log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, generated_sentence, _accuracy * 100, sim * 100, correct, total))
-        except:
-            log.error(traceback.format_exc())
+                        generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
+                        sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence, left_gram=left_gram, right_gram=right_gram)
 
-    log.info('chek result OK.')
-    # noinspection PyStringFormat
-    log.info('mean(accuracy): %.2f%%, mean(sim): %.2f%%' % (np.mean(accuracies) * 100, np.mean(sims) * 100))
-    log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
-    log.info(watch.summary())
+                        accuracies.append(_accuracy)
+                        sims.append(sim)
+
+                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, generated_sentence, _accuracy * 100, sim * 100, correct, total))
+            except:
+                log.error(traceback.format_exc())
+
+        log.info('chek result OK.')
+        # noinspection PyStringFormat
+        log.info('mean(accuracy): %.2f%%, mean(sim): %.2f%%' % (np.mean(accuracies) * 100, np.mean(sims) * 100))
+        log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
+        log.info(watch.summary())
+    except:
+        log.error(traceback.format_exc())

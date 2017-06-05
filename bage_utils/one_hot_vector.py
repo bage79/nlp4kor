@@ -76,26 +76,3 @@ if __name__ == '__main__':
     # print(type(vectors), vectors)
     # values = ohv.to_values(vectors)
     # print(type(values), values)
-
-    # X = ['ㄱ', 'a', 'b']
-    # # x = [ord(c) for c in X]
-    # from sklearn.preprocessing import LabelBinarizer
-    # lb = LabelBinarizer()
-    # lb.fit(X)
-    # print(lb.classes_)
-    # print(len(lb.classes_))
-    # v = lb.transform(['ㄱ'])
-    # print(v, lb.inverse_transform(v))
-
-    # characters_file = os.path.join(DATA_DIR_KO_WIKIPEDIA_ORG, 'ko.wikipedia.org.characters')
-    # print('characters_file:', characters_file)
-    # li = DataFileUtil.read_list(characters_file, gzip_format=False)
-    # print(li[:3])
-    # chars_ohv = OneHotVector(li)
-    # print(len(chars_ohv))
-    # print(chars_ohv.classes())
-    # for ch in ['ㄱ', 'ㄲ']:
-    #     v = chars_ohv.to_vector(ch)
-    #     print(ch, v)
-    #     c = chars_ohv.to_value(v)
-    #     print(c, OneHotVector.to_index(v), v)

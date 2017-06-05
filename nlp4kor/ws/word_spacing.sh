@@ -10,5 +10,5 @@ pkill -f ${PROGRAM}
 echo "rm -f logs/${PROGRAM}.*"
 rm -f logs/${PROGRAM}.*
 
-echo "python3 ./${PROGRAM} $1 >/dev/null 2>&1 &"
-nohup python3 ./${PROGRAM} $1 >/dev/null 2>&1 &
+echo "python3 ./${PROGRAM} $1 $2 $3 >/dev/null 2>&1 &"
+nohup python3 ./${PROGRAM} $1 $2 $3 >/dev/null 2>&1 &
