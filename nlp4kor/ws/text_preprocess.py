@@ -1,14 +1,35 @@
 import gzip
 import os
+import traceback
 
 from bage_utils.file_util import FileUtil
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_URLS_FILE
 
 
 class TextPreprocess(object):
+    @staticmethod
+    def dump_urls(mongo_url, db_name, collection_name, urls_file, mongo_query=None, limit=0):
+        if mongo_query is None:
+            mongo_query = {}
+
+        corpus_mongo = MongodbUtil(mongo_url, db_name=db_name, collection_name=collection_name)
+        total = corpus_mongo.count()
+        log.info('%s total: %s' % (corpus_mongo, NumUtil.comma_str(total)))
+
+        output_dir = os.path.basename(urls_file)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        with open(urls_file, 'wt') as out_f:
+            for i, row in enumerate(corpus_mongo.find(mongo_query, limit=limit)):
+                if i % 1000 == 0:
+                    log.info('%s %.1f%% writed.' % (os.path.basename(urls_file), i / total * 100))
+                    out_f.write(row['url'])
+                    out_f.write('\n')
+
     @staticmethod
     def dump_corpus(mongo_url, db_name, collection_name, sentences_file, mongo_query=None, limit=None):
         """
@@ -37,31 +58,31 @@ class TextPreprocess(object):
                 # print('url:', row['url'])
                 for c in row['content']:
                     if i % 1000 == 0:
-                        print('%.1f%% writed.' % (i / total * 100))
+                        log.info('%s %.1f%% writed.' % (os.path.basename(sentences_file), i / total * 100))
                     for s in HangulUtil.text2sentences(c['sentences']):
                         if HangulUtil.has_hangul(s):
                             out_f.write(s)
                             out_f.write('\n')
 
     @staticmethod
-    def collect_characters(input_sentences_file: str, output_chars_file: str, max_test: int = 0):
+    def collect_characters(sentences_file: str, characters_file: str, max_test: int = 0):
         """
         문장 파일을 읽어서, 유니크한 문자(음절)들을 추출 한다.
         추후 corpus기반으로 one hot vector 생성시 사용한다.
-        :param input_sentences_file: *.sentences file path 
-        :param output_chars_file: *.characters file path
+        :param sentences_file: *.sentences file path 
+        :param characters_file: *.characters file path
         :param max_test: 0=run all 
         :return: 
         """
-        total = FileUtil.count_lines(input_sentences_file, gzip_format=True)
+        total = FileUtil.count_lines(sentences_file, gzip_format=True)
         log.info('total: %s' % NumUtil.comma_str(total))
 
         char_set = set()
-        with gzip.open(input_sentences_file, 'rt') as f:
+        with gzip.open(sentences_file, 'rt') as f:
             for i, sentence in enumerate(f):
                 i += 1
                 if i % 10000 == 0:
-                    log.info('%.1f%% readed.' % (i / total * 100))
+                    log.info('%s %.1f%% writed.' % (os.path.basename(characters_file), i / total * 100))
                 _char_set = set([c for c in sentence])
                 char_set.update(_char_set)
                 if 0 < max_test <= i:
@@ -70,23 +91,49 @@ class TextPreprocess(object):
         char_list = list(char_set)
         char_list.sort()
         if max_test == 0:  # 0=full
-            with open(output_chars_file, 'w') as f:
+            with open(characters_file, 'w') as f:
                 for c in char_list:
                     f.write(c)
                     f.write('\n')
-                log.info('writed to %s OK.' % output_chars_file)
+                log.info('writed to %s OK.' % characters_file)
 
 
 if __name__ == '__main__':
+    urls_file = KO_WIKIPEDIA_ORG_URLS_FILE
     sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
-    log.info('sentences_file: %s' % sentences_file)
-    if not os.path.exists(sentences_file):
-        TextPreprocess.dump_corpus(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', sentences_file=sentences_file,
-                                   mongo_query={})  # mongodb -> text file(corpus)
-
     characters_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.characters')
+    log.info('urls_file: %s' % urls_file)
+    log.info('sentences_file: %s' % sentences_file)
     log.info('characters_file: %s' % characters_file)
+
+    if not os.path.exists(urls_file):
+        try:
+            log.info('create urls file...')
+            TextPreprocess.dump_urls(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', urls_file=urls_file,
+                                     mongo_query={})  # mongodb -> text file(url)
+            log.info('create urls file OK')
+        except:
+            log.error(traceback.format_exc())
+            if os.path.exists(urls_file):
+                os.remove(urls_file)
+
+    if not os.path.exists(sentences_file):
+        try:
+            log.info('create senences file...')
+            TextPreprocess.dump_corpus(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', sentences_file=sentences_file,
+                                       mongo_query={})  # mongodb -> text file(corpus)
+            log.info('create senences file OK')
+        except:
+            log.error(traceback.format_exc())
+            if os.path.exists(sentences_file):
+                os.remove(sentences_file)
+
     if not os.path.exists(characters_file):
-        log.info('collect characters...')
-        TextPreprocess.collect_characters(sentences_file, characters_file)  # text file -> characters(unique features)
-        log.info('collect characters OK.')
+        try:
+            log.info('create characters file...')
+            TextPreprocess.collect_characters(sentences_file, characters_file)  # text file -> characters(unique features)
+            log.info('create characters file OK.')
+        except:
+            log.error(traceback.format_exc())
+            if os.path.exists(characters_file):
+                os.remove(characters_file)
