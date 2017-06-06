@@ -182,7 +182,10 @@ class WordSpacing(object):
 
             dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector, name='all')
             log.info('dataset: %s' % dataset)
+            log.info('create dataset OK.\n')
+            watch.stop('create dataset')
 
+            watch.start('dataset save')
             log.info('split to train, test, validation...')
             datasets = DataSets.to_datasets(dataset, test_rate=0.1, valid_rate=0.1, test_max=10000, valid_max=1000, shuffle=True)
             train, test, validation = datasets.train, datasets.test, datasets.validation
@@ -193,9 +196,8 @@ class WordSpacing(object):
             log.info('split to train, test, validation OK.\n')
 
             log.info('dataset save... %s' % train_file)
-            train.save(train_file, verbose=True)  # save as text # TODO: counter 형식으로 압축해서 저장할까?
+            train.save(train_file, verbose=True)  # save as text
             log.info('dataset save OK.\n')
-            log.info('create dataset OK.\n')
 
             log.info('dataset save... %s' % validation_file)
             validation = validation.convert_to_one_hot_vector(verbose=True)  # save as vector
@@ -206,7 +208,7 @@ class WordSpacing(object):
             test = test.convert_to_one_hot_vector(verbose=True)
             test.save(test_file, verbose=True)  # save as vector
             log.info('dataset save OK.\n')
-            watch.stop('create dataset')
+            watch.stop('dataset save')
         else:
             watch.start('dataset load')
             log.info('dataset load...')
@@ -312,7 +314,8 @@ if __name__ == '__main__':
 
         layers = 4
         model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
-                                  'word_spacing_model.sentences=%s.layers=%s.left_gram=%s.right_gram=%s/model' % (max_sentences, layers, left_gram, right_gram))  # .%s' % max_sentences
+                                  'word_spacing_model.sentences=%s.layers=%s.left_gram=%s.right_gram=%s/model' % (
+                                  max_sentences, layers, left_gram, right_gram))  # .%s' % max_sentences
         log.info('max_sentences: %s' % max_sentences)
         log.info('layers: %s' % layers)
         log.info('model_file: %s' % model_file)
