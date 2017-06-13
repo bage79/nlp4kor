@@ -15,7 +15,7 @@ from bage_utils.file_util import FileUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.one_hot_vector import OneHotVector
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DATA_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE
 
 
 class WordSpacing(object):
@@ -158,7 +158,7 @@ class WordSpacing(object):
         log.info('load characters list OK. len: %s\n' % NumUtil.comma_str(len(features_vector)))
         watch = WatchUtil()
 
-        train_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'datasets',
+        train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets',
                                   'ko.wikipedia.org.dataset.sentences=%d.left=%d.right=%d.train.gz' % (max_sentences, left_gram, right_gram))
         validation_file = train_file.replace('.train.', '.validation.')
         test_file = train_file.replace('.train.', '.test.')
@@ -311,16 +311,15 @@ if __name__ == '__main__':
             max_sentences, left_gram, right_gram = None, None, None
 
         if max_sentences is None:
-            max_sentences = int('1,000,000'.replace(',', ''))
-            # max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
-            # max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True)  # run 100 or full data (학습시간: 5일 소요)
+            max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
+            # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data (학습시간: 5일 소요)
         if left_gram is None:
             left_gram = 2
         if right_gram is None:
             right_gram = 2
 
         layers = 4
-        model_file = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'models',
+        model_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models',
                                   'word_spacing_model.sentences=%s.layers=%s.left_gram=%s.right_gram=%s/model' % (
                                       max_sentences, layers, left_gram, right_gram))  # .%s' % max_sentences
         log.info('max_sentences: %s' % max_sentences)

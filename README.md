@@ -8,6 +8,7 @@
 - 문의: nlp4kor@gmail.com 또는 https://fb.com/nlp4kor 의 `메시지` 메뉴 
 - 설치: [INSTALL.md](https://github.com/bage79/nlp4kor/blob/master/INSTALL.md)
 - 라이센스: [LICENSE.md](https://github.com/bage79/nlp4kor/blob/master/LICENSE.md)
+- 소스구조 [PACKAGES.md](https://github.com/bage79/nlp4kor/blob/master/PACKAGES.md)
 
 ## Season #1 2017.05 ~ 2017.08 (FFNN, CNN, word2vec)
 
@@ -19,4 +20,3 @@
 
 ### 2. FFNN for 한글 띄어쓰기 - 박혜웅, 2017.06.03
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word-spaceing.ipynb
-- 

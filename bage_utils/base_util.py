@@ -46,8 +46,13 @@ def is_windows_os():
 
 
 def is_my_pc():
-    """ 맥 또는 GPU용 머신이면 내 PC로 판단함."""
-    return is_osx_os() or hostname() == 'office'
+    """ 맥 또는 내 PC로 판단함."""
+    return is_osx_os() or is_windows_os()
+
+
+def is_my_gpu_pc():
+    """ GPU 장착된 원격 PC (pycahrm remote, jupyter notebook) """
+    return hostname() == 'db-local'
 
 
 def is_server():

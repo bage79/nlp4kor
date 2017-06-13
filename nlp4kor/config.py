@@ -2,16 +2,16 @@ import logging
 import os
 import sys
 
-from bage_utils.base_util import is_my_pc, db_hostname
+from bage_utils.base_util import db_hostname, is_osx_os, is_windows_os
 from bage_utils.log_util import LogUtil
 
 # warnings.simplefilter(action='ignore', category=FutureWarning)
 
 log = None
 if log is None:
-    if is_my_pc():
+    if is_osx_os() or is_windows_os():  # my pc
         log = LogUtil.get_logger(None, level=logging.DEBUG, console_mode=True)  # global log
-    else:
+    else:  # remote server
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log # console_mode=True for jupyter notebook
 
 MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
@@ -32,12 +32,17 @@ if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
 
 # dataset repositories
-MNIST_DATA_DIR = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-mnist')
-KO_WIKIPEDIA_ORG_DATA_DIR = os.path.join(os.getenv('HOME'), 'workspace/nlp4kor-ko.wikipedia.org')
-KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'corpus/ko.wikipedia.org.sentences.gz')
-KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'corpus/ko.wikipedia.org.urls.txt')
-KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'dic/ko.wikipedia.org.characters')
+MNIST_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-mnist')
+MNIST_DATA_DIR = os.path.join(MNIST_DIR, 'data')
+MNIST_CNN_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'cnn')
+MNIST_DAE_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'dae')
+
+KO_WIKIPEDIA_ORG_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
+KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.sentences.gz')
+KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.urls.txt')
+KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'dic', 'ko.wikipedia.org.characters')
+KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
 
 if __name__ == '__main__':
-    print('DATA_DIR:', MNIST_DATA_DIR)
+    print('DATA_DIR:', MNIST_DIR)
     print('MONGODB_PASSWD', os.getenv('MONGODB_PASSWD'), os.environ.get('MONGODB_PASSWD'))

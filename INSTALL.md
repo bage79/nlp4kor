@@ -18,7 +18,7 @@ git lfs install
 - git clone 되는 상위 디렉토리는 `~/workspace` 입니다.
 - 원할한 소스 실행을 위해서는 환경변수 PYTHONPATH 에 `~/workspace/nlp4kor` 를 추가하셔야 합니다.
     - `export PYTHONPATH=~/workspace/nlp4kor:$PYTHONPATH`
-    - ~/.bash_profile 또는 ~/.bashrc에 한 줄을 추가해 주세요.
+    - ~/.bash_profile 또는 ~/.profile 에 한 줄을 추가해 주세요.
 ```shell
 mkdir ~/workspae
 cd ~/workspace
