@@ -5,6 +5,5 @@
     - `word_spacing.py`: FFNN for 띄어쓰기
 
 - `sec/`: spelling error correction (철자 오류 교정)
-    - `spelling_error_correction.py`: Denosing Auto-Encoder for 철자 오류 교정
-    
-    
+    - `spelling_error_correction.py`: ??? for 철자 오류 교정
+        
