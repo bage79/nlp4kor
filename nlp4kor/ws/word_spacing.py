@@ -11,11 +11,10 @@ from bage_utils.base_util import is_my_pc
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.datasets import DataSets
-from bage_utils.file_util import FileUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.one_hot_vector import OneHotVector
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DIR, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE, KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR
 
 
 class WordSpacing(object):
@@ -319,7 +318,7 @@ if __name__ == '__main__':
             right_gram = 2
 
         layers = 4
-        model_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models',
+        model_file = os.path.join(KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR,
                                   'word_spacing_model.sentences=%s.layers=%s.left_gram=%s.right_gram=%s/model' % (
                                       max_sentences, layers, left_gram, right_gram))  # .%s' % max_sentences
         log.info('max_sentences: %s' % max_sentences)
