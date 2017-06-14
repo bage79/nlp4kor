@@ -1,5 +1,5 @@
 # nlp4kor 
-### https://github.com/bage79/nlp4kor/
+### [nlp4kor/](https://github.com/bage79/nlp4kor/tree/master/nlp4kor)
 - `ws/`: word spacing (띄어쓰기)
     - `text_processing.py`: 전처리
     - `word_spacing.py`: FFNN for 띄어쓰기
