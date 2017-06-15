@@ -17,6 +17,9 @@ class OneHotVector(object):
     def __len__(self):
         return self.encoder.classes_.shape[0]
 
+    def __repr__(self):
+        return '%s(len:%s)' % (self.__class__.__name__, self.__len__())
+
     def to_vector(self, c: str) -> np.ndarray:
         """
         
@@ -59,6 +62,7 @@ if __name__ == '__main__':
     unary_vector = OneHotVector([0])
     binary_vector = OneHotVector([0, 1])
     ternary_vector = OneHotVector([0, 1, 2])
+    print(unary_vector, binary_vector, ternary_vector)
     print('%6s\t%6s\t%6s\t%6s' % ('', 'unary', 'binary', 'ternary'))
     for i in [0, 1, 2]:
         print('%6s\t%6s\t%6s\t%6s' % (i, unary_vector.to_vector(i), binary_vector.to_vector(i), ternary_vector.to_vector(i)))
