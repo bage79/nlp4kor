@@ -7,7 +7,6 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
-from bage_utils.base_util import is_my_pc
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.datasets import DataSets
@@ -310,8 +309,7 @@ if __name__ == '__main__':
             max_sentences, left_gram, right_gram = None, None, None
 
         if max_sentences is None:
-            max_sentences = int('1,000,000'.replace(',', '')) if is_my_pc() else int('1,000,000'.replace(',', ''))  # run 100 or 1M data (학습: 17시간 소요)
-            # max_sentences = 100 if is_my_pc() else FileUtil.count_lines(sentences_file, gzip_format=True) # run 100 or full data (학습시간: 5일 소요)
+            max_sentences = int('1,000,000'.replace(',', ''))  # 1M data (학습: 17시간 소요)
         if left_gram is None:
             left_gram = 2
         if right_gram is None:
