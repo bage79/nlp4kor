@@ -39,12 +39,12 @@ class DataSet(object):
             splits += 1
         for features_batch, labels_batch in zip(np.array_split(self.features, splits), np.array_split(self.labels, splits)):
             if to_one_hot_vector:
-                features_batch, labels_batch = self.to_one_hot_vector(features_batch, labels_batch, verbose=verbose)
+                features_batch, labels_batch = self.__to_one_hot_vector(features_batch, labels_batch, max_len=0, verbose=verbose)
 
             yield features_batch, labels_batch
 
-    def convert_to_one_hot_vector(self, verbose=False):
-        self.features, self.labels = self.to_one_hot_vector(self.features, self.labels, verbose=verbose)
+    def convert_to_one_hot_vector(self, max_len=0, verbose=False):
+        self.features, self.labels = self.__to_one_hot_vector(self.features, self.labels, max_len=max_len, verbose=verbose)
         return self
 
     def __repr__(self):
@@ -53,9 +53,14 @@ class DataSet(object):
     def __len__(self):
         return self.size
 
-    def to_one_hot_vector(self, features_batch: np.ndarray, labels_batch: np.ndarray, verbose=False):
+    def __to_one_hot_vector(self, features_batch: np.ndarray, labels_batch: np.ndarray, max_len=0, verbose=False):
         _features, _labels = [], []
+        check_interval = min(1000, math.ceil(features_batch.shape[0]))
+
         for i, (chars, has_space) in enumerate(zip(features_batch, labels_batch)):
+            if 0 < max_len < i:
+                break
+
             chars_v = self.features_vector.to_vectors(chars)
             feature = np.concatenate(chars_v)  # concated feature
 
@@ -63,7 +68,6 @@ class DataSet(object):
             _features.append(feature)
             _labels.append(label)
 
-            check_interval = min(1000, math.ceil(features_batch.shape[0]))
             if verbose and i % check_interval == 0:
                 log.info('[%s] to_one_hot_vector %s -> %s, %s (len=%s) %s (len=%s)' % (i, chars, label, feature, len(feature), label, len(label)))
         return np.asarray(_features, dtype=np.int32), np.asarray(_labels, dtype=np.int32)

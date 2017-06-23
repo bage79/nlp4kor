@@ -159,7 +159,7 @@ class WordSpacing(object):
         watch = WatchUtil()
 
         train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'word_spacing',
-                                                                    'ko.wikipedia.org.dataset.left=%d.right=%d.train.gz' % (left_gram, right_gram))
+                                  'ko.wikipedia.org.dataset.left=%d.right=%d.train.gz' % (left_gram, right_gram))
         valid_file = train_file.replace('.train.', '.valid.')
         test_file = train_file.replace('.train.', '.test.')
         if True:  # not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
@@ -170,9 +170,8 @@ class WordSpacing(object):
             watch.start('create dataset')
             log.info('create dataset...')
 
-
-            for name, data_file, dataset_file, to_one_hot_vector in (('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, valid_file, True),
-                                                                     ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, test_file, True),
+            for name, data_file, dataset_file, to_one_hot_vector in (('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, valid_file, False),
+                                                                     ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, test_file, False),
                                                                      ('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, train_file, False),
                                                                      ):
                 max_train_sentences = FileUtil.count_lines(data_file, gzip_format=True)
@@ -186,18 +185,15 @@ class WordSpacing(object):
                         #     break
 
                         if i % check_interval == 0:
-                            time.sleep(0.1) # prevent cpu overload
+                            time.sleep(0.1)  # prevent cpu overload
                             log.info('create dataset... %.1f%% readed. data len: %s' % (i / max_train_sentences * 100, NumUtil.comma_str(len(features))))
 
                         _f, _l = WordSpacing.sentence2features_labels(line.strip(), left_gram=left_gram, right_gram=right_gram)
                         features.extend(_f)
                         labels.extend(_l)
 
-
                     dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector, name=name)
                     log.info('dataset save... %s' % dataset_file)
-                    if to_one_hot_vector:
-                        dataset = dataset.convert_to_one_hot_vector(verbose=True)
                     dataset.save(dataset_file, gzip_format=True, verbose=True)
                     log.info('dataset save OK. %s' % dataset_file)
                     log.info('dataset: %s' % dataset)
@@ -208,8 +204,17 @@ class WordSpacing(object):
         watch.start('dataset load')
         log.info('dataset load...')
         train = DataSet.load(train_file, gzip_format=True, verbose=True)
+
         valid = DataSet.load(valid_file, gzip_format=True, verbose=True)
+        log.info('valid.convert_to_one_hot_vector()...')
+        valid = valid.convert_to_one_hot_vector(max_len=1000, verbose=True)
+        log.info('valid.convert_to_one_hot_vector() OK.')
+
         test = DataSet.load(test_file, gzip_format=True, verbose=True)
+        log.info('test.convert_to_one_hot_vector()...')
+        test = test.convert_to_one_hot_vector(max_len=100, verbose=True)
+        log.info('test.convert_to_one_hot_vector() OK.')
+
         log.info(train)
         log.info(valid)
         log.info(test)
@@ -389,7 +394,7 @@ if __name__ == '__main__':
                 for i, s in enumerate(sentences):
                     log.info('')
                     log.info('[%s] in : "%s"' % (i, s))
-                    features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
+                    features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)  # TODO: with test set
                     dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
                     dataset.convert_to_one_hot_vector()
                     if len(dataset) > 0:
