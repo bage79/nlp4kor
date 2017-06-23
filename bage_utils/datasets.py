@@ -4,18 +4,16 @@ from bage_utils.dataset import DataSet
 
 
 class DataSets(object):
-    def __init__(self, train: DataSet = None, test: DataSet = None, validation: DataSet = None):
+    def __init__(self, train: DataSet = None, test: DataSet = None, valid: DataSet = None):
         self.train = train if type(train) is DataSet else None
         self.test = test if type(test) is DataSet else None
-        self.validation = validation if type(validation) is DataSet else None
+        self.valid = valid if type(valid) is DataSet else None
 
     def __repr__(self):
-        return '%s, train: %s, test: %s, valid: %s' % (self.__class__, repr(self.train), repr(self.test), repr(self.validation))
+        return '%s, train: %s, test: %s, valid: %s' % (self.__class__, repr(self.train), repr(self.test), repr(self.valid))
 
-    @staticmethod
-    def to_datasets(d: DataSet, test_rate: float = 0.2, valid_rate: float = 0.2, test_max: int = -1, valid_max: int = -1, shuffle=False):
-        """
-        DataSet을 train, test, validation 로 나누어 반환한다.
+    """
+        DataSet을 train, test, valid 로 나누어 반환한다.
         :param d:
         :param test_rate:
         :param valid_rate:
@@ -24,6 +22,8 @@ class DataSets(object):
         :param shuffle:
         :return: Datasets
         """
+    @staticmethod
+    def to_datasets(d: DataSet, test_rate: float = 0.2, valid_rate: float = 0.2, test_max: int = -1, valid_max: int = -1, shuffle=False):
         # n = len(d)
         # n_train = n - n_test - n_valid
         if test_max == -1 or valid_max == -1:
@@ -47,8 +47,8 @@ class DataSets(object):
 
         test = DataSet(test_features, test_labels, d.features_vector, d.labels_vector, name='test')
         train = DataSet(train_features, train_labels, d.features_vector, d.labels_vector, name='train')
-        valid = DataSet(valid_features, valid_labels, d.features_vector, d.labels_vector, name='validation')
-        return DataSets(train=train, test=test, validation=valid)
+        valid = DataSet(valid_features, valid_labels, d.features_vector, d.labels_vector, name='valid')
+        return DataSets(train=train, test=test, valid=valid)
 
 
 if __name__ == '__main__':

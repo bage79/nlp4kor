@@ -8,6 +8,8 @@ import warnings
 
 import numpy
 
+from bage_utils.string_util import StringUtil
+
 
 def to_sequence(*sequences):
     def to_tuple(sequence):
@@ -193,7 +195,7 @@ class HangulUtil(object):
     def has_english(cls, word):
         """
         :param word: 단어
-        :return: 한글 음절을 포함하는지 여부
+        :return: 영어 음절을 포함하는지 여부
         """
         try:
             for char in word:
@@ -241,7 +243,7 @@ class HangulUtil(object):
         """
         :param exclude_chars: 예외로 둘 문자들 (공백은 기본 포함)
         :param word: 단어
-        :return: 모든 음절이 한글인지 여부
+        :return: 모든 음절이 한글 또는 영어인지 여부
         """
         # print('is_full_hangul(%s)' % word)
         # print('is_full_hangul;', id(log), log.level)
@@ -272,7 +274,7 @@ class HangulUtil(object):
     def has_hanja(cls, word):
         """
         :param word: 단어
-        :return: 한글 음절을 포함하는지 여부
+        :return: 한자 음절을 포함하는지 여부
         """
         try:
             for char in word:
@@ -304,7 +306,7 @@ class HangulUtil(object):
         """
 
         :param char: 음절
-        :return: 한글 여부
+        :return: 영어 여부
         """
         if len(char) == 0:
             return False
@@ -321,7 +323,7 @@ class HangulUtil(object):
         """
 
         :param char: 음절
-        :return: 한글 여부
+        :return: 한자 여부
         """
         if len(char) == 0:
             return False
@@ -564,30 +566,36 @@ class HangulUtil(object):
         return chars
 
     @classmethod
-    def text2sentences(cls, paragraph, sentence_delim='다.'):
-        sentences = []
-        if len(sentence_delim) > 0:  # split lines with delimiter
-            lines = paragraph.split(sentence_delim)
+    def text2sentences(cls, text: str, sentence_delim='다.', remove_only_one_word=True, has_hangul=True):
+        if isinstance(text, str) and len(sentence_delim) > 0:  # split lines with delimiter
+            sentences = []
+            lines = text.split(sentence_delim)
             for i, s in enumerate(lines):
-                s = s.strip()
-                if s.count(' ') == 0:  # only one word in a sentence
+                s = StringUtil.merge_to_one_line(s)
+                if remove_only_one_word and s.count(' ') == 0:  # only one word in a sentence
+                    continue
+                if has_hangul and not HangulUtil.has_hangul(s):
                     continue
 
                 if i + 1 != len(lines):
                     s += sentence_delim
                 sentences.append(s)
+            return sentences
         else:
-            if len(paragraph) > 0:
-                sentences.append(paragraph)
-        return sentences
+            return []
 
 
 HangulUtil.load()
 
 if __name__ == '__main__':
-    print(len(HangulUtil.HANGUL_LIST))
-    print(len(HangulUtil.to_one_hot_vector('ㄱ')))
-    print(len(HangulUtil.to_one_hot_vector('ㄴ')))
+    text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
+숫염소 헤네스는 인근의 쾰른 서커스단으로부터 기증받은 것이다.
+{{축구 클럽팀 정보2| 클럽 이름 = 1. FSV 마인츠 05| 풀 네임 = 1. Fußball- und Sport-Verein Mainz 05 e.V.| 별칭 = Die Nullfünfer (05년) Karnevalsverein (카니발 클럽)| 설립연도 = 1905년 3월 27일| 홈구장 = 코파스 아레나| 수용인원 = 33,500| 회장 = {{국기그림|독일}} 하랄트 슈트르츠| 스포르팅 매니저 = {{국기그림|독일}} 크리스티안 하이델| 감독 = {{국기그림|스위스}} 마틴 슈미트| 리그 = 1 분데스리가| 시즌 = 2013-14| 순위 = 7위| pattern_la1=_fsvmainz1415h| pattern_b1=_fsvmainz1415h| pattern_ra1=_fsvmainz1415h| pattern_sh1
+| pattern_so1'''
+    print(HangulUtil.text2sentences(text))
+    # print(len(HangulUtil.HANGUL_LIST))
+    # print(len(HangulUtil.to_one_hot_vector('ㄱ')))
+    # print(len(HangulUtil.to_one_hot_vector('ㄴ')))
     # print(HangulUtil.text2sentences('사과나무()는 장미목 장미과 배나무아과 사과나무속에 딸린 종이다. 그 열매는 사과(沙果; 砂果)라 하며, 세계적으로 가장 널리 재배되는 과일 품종 가운데 하나이다. 사전적으로 평과(苹果)라고도 한다.'))
     # print(len(HangulUtil.CHAR2ONE_HOT))
     # print(HangulUtil.to_one_hot_vector('ㄲ'))

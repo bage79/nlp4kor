@@ -124,10 +124,12 @@ class StringUtil(object):
 
 
 if __name__ == '__main__':
-    print(StringUtil.mask_passwd_in_url('mongodb://root:passwd@db-local:27017/admin?authMechanism=MONGODB-CR'))
-    print(StringUtil.mask_passwd_in_url('mongodb://root@db-local:27017/admin?authMechanism=MONGODB-CR'))
-    print(StringUtil.mask_passwd_in_url('mongodb://db-local:27017/admin?authMechanism=MONGODB-CR'))
-    print(StringUtil.mask_passwd_in_url('db-local:27017/admin?authMechanism=MONGODB-CR'))
+    a = '\ufeffabc'
+    print('"%s"' % a.replace('\ufeff', ''))
+    # print(StringUtil.mask_passwd_in_url('mongodb://root:passwd@db-local:27017/admin?authMechanism=MONGODB-CR'))
+    # print(StringUtil.mask_passwd_in_url('mongodb://root@db-local:27017/admin?authMechanism=MONGODB-CR'))
+    # print(StringUtil.mask_passwd_in_url('mongodb://db-local:27017/admin?authMechanism=MONGODB-CR'))
+    # print(StringUtil.mask_passwd_in_url('db-local:27017/admin?authMechanism=MONGODB-CR'))
     # print(StringUtil.split_by_bracket('(서울=포커스뉴스) 송민순 전 외교통상부 장관의 회고록 파문이 일파만파 커지며 정치권의 논란이 가열되고 있다.'))
     # print(StringUtil.merge_to_one_line('081116 스브스 인기가요 롱넘버 캡쳐       어쩌다보니 유천이가 없다..\t\t진짜 롱넘버는 레전드인듯T.T 멋지다구ㅠㅠㅠㅠ 나중에 끝에 가면 홍어삼합도아닌 삼합화음?ㅋㅋㅋㅋ 진심 그거대박 나 그부분 너무 좋음 ㅠㅠㅠ'))
     # for line in StringUtil.split_by_size('1234\n56\n7890', size=5):
