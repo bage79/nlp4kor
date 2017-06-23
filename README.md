@@ -20,6 +20,6 @@
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/CNN_for_MNIST.ipynb
 
 ### 2. FFNN for 한글 띄어쓰기 - 박혜웅, 2017.06.03
-- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word-spaceing.ipynb
+- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/FFNN_for_word_spacing.ipynb
 
 ### 3. ??? for 철자 오류 교정 - 박혜웅, 2017.07.01
