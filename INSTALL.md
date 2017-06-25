@@ -8,8 +8,8 @@ brew install git git-lfs
 git lfs install
 ```
 - 개발 환경
-    - 서버: Ubuntu 16.04 + Anaconda3 4.3 + Python 3.5 + Tensorflow-GPU 1.1
-    - 로컬: OSX 10.12 + Anaconda3 4.3 + Python 3.5 + Tensorflow-CPU 1.1
+    - 서버: Ubuntu 16.04 + Anaconda3 4.3 + Python 3.5 + Tensorflow-GPU 1.2
+    - 로컬: OSX 10.12 + Anaconda3 4.3 + Python 3.5 + Tensorflow-CPU 1.2
 
 ### install source codes
 - anaconda3 설치 https://www.continuum.io/downloads
@@ -30,6 +30,6 @@ pip install -r requirements.txt
 ### download datasets
 ```shell
 cd ~/workspace
-git clone https://bitbucket.org/bage79/nlp4kor-mnist
-git clone https://bitbucket.org/bage79/nlp4kor-ko.wikipedia.org
+git clone https://gitlab.com/bage79/nlp4kor-mnist.git
+git clone https://gitlab.com/bage79/nlp4kor-ko.wikipedia.org.git
 ```
