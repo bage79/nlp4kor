@@ -39,15 +39,17 @@ MNIST_DAE_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'dae')
 
 KO_WIKIPEDIA_ORG_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
 
-KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.sentences.gz')
 KO_WIKIPEDIA_ORG_INFO_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.info.txt')
+KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.urls.txt')
+KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'dic', 'ko.wikipedia.org.characters')
+
+KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.sentences.gz')
 KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.train.sentences.gz')
 KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.valid.sentences.gz')
 KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.test.sentences.gz')
 
-KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.urls.txt')
-KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'dic', 'ko.wikipedia.org.characters')
 KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
+KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'spelling_error_correction')
 
 if __name__ == '__main__':
     print('DATA_DIR:', MNIST_DIR)

@@ -2,6 +2,7 @@
 original: https://github.com/sublee/korean/blob/master/korean/hangul.py (sub@subl.ee)
 modified: https://github.com/bage79/nlp4kor/blob/master/bage_utils/hangul_util.py (bage79@gmail.com)
 """
+import random
 import re
 import traceback
 import warnings
@@ -107,7 +108,7 @@ class HangulUtil(object):
         special_vector = numpy.zeros(len(cls.KEYBOARD_SPECIAL_LIST))
 
         if cls.is_hangul_char(c):
-            cho, jung, jong = cls.split_char(c)
+            cho, jung, jong = cls.split2cho_jung_jong(c)
             if len(cho) == 1:
                 cho_vector = _to_one_hot_vector(cho, cls.CHO_LIST)
             else:
@@ -216,12 +217,14 @@ class HangulUtil(object):
         else:
             if len(char) != 1:
                 return cls.IS_NOT_HANGUL
-            if not cls.is_full_hangul(char):
+            elif not cls.is_full_hangul(char):
                 return cls.IS_NOT_HANGUL
             offset = ord(char) - cls.HANGUL_FIRST
+
         if offset >= len(cls.WANSUNG_RANGE):
             return cls.IS_NOT_HANGUL
-        return offset
+        else:
+            return offset
 
     @classmethod
     def is_full_hangul(cls, word, exclude_chars='.,'):
@@ -412,7 +415,8 @@ class HangulUtil(object):
             return char
         elif cls.is_cho(char) or cls.is_jung(char):
             return ''
-        return cls.JONG_LIST[cls.__char_offset(char) % len(cls.JONG_LIST)]
+        else:
+            return cls.JONG_LIST[cls.__char_offset(char) % len(cls.JONG_LIST)]
 
     @classmethod
     def has_cho(cls, char):
@@ -445,7 +449,7 @@ class HangulUtil(object):
         return True if len(cls.get_jong(char)) else False
 
     @classmethod
-    def split_char(cls, char):
+    def split2cho_jung_jong(cls, char):
         """
         :param char: 음절
         :returns: tuple(초성, 중성, 종성)
@@ -453,10 +457,10 @@ class HangulUtil(object):
         cho = cls.get_cho(char)
         jung = cls.get_jung(char)
         jong = cls.get_jong(char)
-        return cho, jung, jong
+        return [cho, jung, jong]
 
     @classmethod
-    def join_char(cls, cho, jung, jong=''):
+    def join_cho_jung_jong(cls, cho, jung, jong=' '):
         """
         :param jong: 초성
         :param jung: 중성
@@ -471,15 +475,30 @@ class HangulUtil(object):
         return chr(cls.HANGUL_FIRST + offset)
 
     @classmethod
+    def encode_noise(cls, char):
+        jaso_list = cls.split2cho_jung_jong(char)
+        x = random.randint(0, 2)
+        if x == 0:
+            target_jaso = cls.CHO_LIST
+        elif x == 1:
+            target_jaso = cls.JUNG_LIST
+        else:
+            target_jaso = cls.JONG_LIST
+
+        randidx = random.randint(0, len(target_jaso) - 1)
+        jaso_list[x] = target_jaso[randidx]
+        return cls.join_cho_jung_jong(*jaso_list)
+
+    @classmethod
     def join_suffix(cls, char, jong_suffix):
         """
         :param jong_suffix: 음절
         :param char: 종성이면서 접미사 (ㄴ, ㄹ, ....)
         :return: 음절
         """
-        cho, jung, jong = cls.split_char(char)
+        cho, jung, jong = cls.split2cho_jung_jong(char)
         if cho != '' and jung != '' and jong == '':
-            return cls.join_char(cho, jung, jong_suffix)
+            return cls.join_cho_jung_jong(cho, jung, jong_suffix)
         else:
             return ''.join([char, jong_suffix])
 
@@ -492,7 +511,7 @@ class HangulUtil(object):
         li = []
         for char in word:
             if cls.is_full_hangul(char):
-                li.extend(cls.split_char(char))
+                li.extend(cls.split2cho_jung_jong(char))
             else:
                 li.append(char)
         return li
@@ -509,18 +528,18 @@ class HangulUtil(object):
             while i >= 0:
                 if cls.is_jong(char_list[i]):
                     try:
-                        letters.insert(0, cls.join_char(char_list[i - 2], char_list[i - 1], char_list[i]))
+                        letters.insert(0, cls.join_cho_jung_jong(char_list[i - 2], char_list[i - 1], char_list[i]))
                         i -= 3
                     except:
                         try:
-                            letters.insert(0, cls.join_char(char_list[i - 1], char_list[i]))
+                            letters.insert(0, cls.join_cho_jung_jong(char_list[i - 1], char_list[i]))
                             i -= 2
                         except:
                             letters.insert(0, char_list[i])
                             i -= 1
                 elif cls.is_jung(char_list[i]):
                     try:
-                        letters.insert(0, cls.join_char(char_list[i - 1], char_list[i]))
+                        letters.insert(0, cls.join_cho_jung_jong(char_list[i - 1], char_list[i]))
                         i -= 2
                     except:
                         letters.insert(0, char_list[i])
@@ -588,11 +607,18 @@ class HangulUtil(object):
 HangulUtil.load()
 
 if __name__ == '__main__':
-    text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
-숫염소 헤네스는 인근의 쾰른 서커스단으로부터 기증받은 것이다.
-{{축구 클럽팀 정보2| 클럽 이름 = 1. FSV 마인츠 05| 풀 네임 = 1. Fußball- und Sport-Verein Mainz 05 e.V.| 별칭 = Die Nullfünfer (05년) Karnevalsverein (카니발 클럽)| 설립연도 = 1905년 3월 27일| 홈구장 = 코파스 아레나| 수용인원 = 33,500| 회장 = {{국기그림|독일}} 하랄트 슈트르츠| 스포르팅 매니저 = {{국기그림|독일}} 크리스티안 하이델| 감독 = {{국기그림|스위스}} 마틴 슈미트| 리그 = 1 분데스리가| 시즌 = 2013-14| 순위 = 7위| pattern_la1=_fsvmainz1415h| pattern_b1=_fsvmainz1415h| pattern_ra1=_fsvmainz1415h| pattern_sh1
-| pattern_so1'''
-    print(HangulUtil.text2sentences(text))
+    # print('"%s"' % str(HangulUtil.CHO_LIST))
+    # print('"%s"' % str(HangulUtil.JUNG_LIST))
+    # print('"%s"' % str(HangulUtil.JONG_LIST))
+    for c in ['한', '사']:
+        jaso_list = HangulUtil.split2cho_jung_jong(c)
+        _c = HangulUtil.encode_noise(c)
+        print(c, '->', jaso_list, '->', _c)
+    #     text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
+    # 숫염소 헤네스는 인근의 쾰른 서커스단으로부터 기증받은 것이다.
+    # {{축구 클럽팀 정보2| 클럽 이름 = 1. FSV 마인츠 05| 풀 네임 = 1. Fußball- und Sport-Verein Mainz 05 e.V.| 별칭 = Die Nullfünfer (05년) Karnevalsverein (카니발 클럽)| 설립연도 = 1905년 3월 27일| 홈구장 = 코파스 아레나| 수용인원 = 33,500| 회장 = {{국기그림|독일}} 하랄트 슈트르츠| 스포르팅 매니저 = {{국기그림|독일}} 크리스티안 하이델| 감독 = {{국기그림|스위스}} 마틴 슈미트| 리그 = 1 분데스리가| 시즌 = 2013-14| 순위 = 7위| pattern_la1=_fsvmainz1415h| pattern_b1=_fsvmainz1415h| pattern_ra1=_fsvmainz1415h| pattern_sh1
+    # | pattern_so1'''
+    #     print(HangulUtil.text2sentences(text))
     # print(len(HangulUtil.HANGUL_LIST))
     # print(len(HangulUtil.to_one_hot_vector('ㄱ')))
     # print(len(HangulUtil.to_one_hot_vector('ㄴ')))
