@@ -1,11 +1,11 @@
 import gzip
 import os
 import sys
+import time
 import traceback
 
 import numpy as np
 import tensorflow as tf
-import time
 
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
@@ -60,15 +60,8 @@ class WordSpacing(object):
         return ''.join(left)
 
     @classmethod
-    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=4):
-        log.info('\nbuild_FFNN(layers=%s)' % layers)
-        if layers == 2:
-            return cls.__build_FFNN_layers2(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
-        else:
-            return cls.__build_FFNN_layers4(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
-
-    @classmethod
-    def __build_FFNN_layers4(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
+    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
+        log.info('\nbuild_FFNN')
         if len(cls.graph_nodes) == 0:
             n_hidden3 = n_hidden2 = n_hidden1
             log.info('create tensorflow graph...')
@@ -113,41 +106,6 @@ class WordSpacing(object):
         return cls.graph_nodes
 
     @classmethod
-    def __build_FFNN_layers2(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
-        if len(cls.graph_nodes) == 0:
-            log.info('create tensorflow graph...')
-            watch.start('create tensorflow graph')
-            log.info('n_features: %s' % n_features)
-            log.info('n_classes: %s' % n_classes)
-            log.info('n_hidden1: %s' % n_hidden1)
-
-            tf.set_random_seed(777)  # for reproducibility
-
-            X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
-            Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
-
-            W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
-            b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
-            layer1 = tf.sigmoid(tf.matmul(X, W1) + b1, name='layer1')
-
-            W2 = tf.Variable(tf.random_normal([n_hidden1, n_classes]), name='W2')
-            b2 = tf.Variable(tf.random_normal([n_classes]), name='b2')
-            hypothesis = tf.sigmoid(tf.matmul(layer1, W2) + b2, name='hypothesis')
-
-            cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
-
-            # train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)  # Too bad. sentences=10000 + layer=2, 20분, Accuracy: 0.689373, cost: 0.8719
-            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-                cost)  # Very good!! sentences=10000 + layer=2, 10분, accuracy 0.9194, cost: 0.2139
-
-            predicted = tf.cast(hypothesis > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
-            accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
-            watch.stop('create tensorflow graph')
-            log.info('create tensorflow graph OK.\n')
-            cls.graph_nodes = {'hypothesis': hypothesis, 'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
-        return cls.graph_nodes
-
-    @classmethod
     def learning(cls, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=100,
                  learning_rate=0.01, layers=2):
         ngram = left_gram + right_gram
@@ -162,7 +120,7 @@ class WordSpacing(object):
                                   'ko.wikipedia.org.dataset.left=%d.right=%d.train.gz' % (left_gram, right_gram))
         valid_file = train_file.replace('.train.', '.valid.')
         test_file = train_file.replace('.train.', '.test.')
-        if True:  # not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
+        if True:  # FIXME: TEST not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
                 os.makedirs(dataset_dir)
@@ -233,7 +191,7 @@ class WordSpacing(object):
                 log.info('[%s] %s -> %s, %s (len=%s) %s (len=%s)' % (i, chars, has_space, feature, len(feature), label, len(label)))
         log.info('check samples OK.\n')
 
-        graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, watch, layers=layers)
+        graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, watch)
 
         train_step, X, Y, cost, hypothesis, predicted, accuracy = graph['train_step'], graph['X'], graph['Y'], graph['cost'], graph['hypothesis'], graph[
             'predicted'], graph['accuracy']
@@ -382,7 +340,7 @@ if __name__ == '__main__':
         watch.start('run tensorflow')
         accuracies, sims = [], []
         with tf.Session() as sess:
-            graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
+            graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate)
             X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
 
             saver = tf.train.Saver()
