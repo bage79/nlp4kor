@@ -353,19 +353,19 @@ if __name__ == '__main__':
                 for i, s in enumerate(sentences):
                     log.info('')
                     log.info('[%s] in : "%s"' % (i, s))
-                    features, labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)  # TODO: with test set
-                    dataset = DataSet(features=features, labels=labels, features_vector=features_vector, labels_vector=labels_vector)
+                    _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)  # TODO: with test set
+                    dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
                     dataset.convert_to_one_hot_vector()
                     if len(dataset) > 0:
                         _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
 
-                        generated_sentence = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                        sim, correct, total = WordSpacing.sim_two_sentence(s, generated_sentence, left_gram=left_gram, right_gram=right_gram)
+                        sentence_hat = WordSpacing.spacing(s.replace(' ', ''), _predicted)
+                        sim, correct, total = WordSpacing.sim_two_sentence(s, sentence_hat, left_gram=left_gram, right_gram=right_gram)
 
                         accuracies.append(_accuracy)
                         sims.append(sim)
 
-                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, generated_sentence, _accuracy * 100, sim * 100, correct, total))
+                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
             except:
                 log.error(traceback.format_exc())
 
