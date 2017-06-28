@@ -5,6 +5,7 @@ import pickle
 
 import numpy as np
 
+from bage_utils.num_util import NumUtil
 from bage_utils.one_hot_vector import OneHotVector
 from nlp4kor.config import log
 
@@ -41,15 +42,29 @@ class DataSet(object):
                 self.labels = np.array([])
 
     def next_batch(self, batch_size=50, to_one_hot_vector=True, verbose=False):
-        splits = len(self.features) // batch_size
-        if len(self.features) % batch_size > 0:
-            splits += 1
+        if len(self.features) <= batch_size:
+            splits = 1
+        else:
+            splits = len(self.features) // batch_size
+            if len(self.features) % batch_size > 0:
+                splits += 1
 
-        for features_batch, labels_batch in zip(np.array_split(self.features, splits), np.array_split(self.labels, splits)):
+        if splits == 1:
+            # log.info('next_batch(batch_size=*splits)= %s * %s = %s' % (NumUtil.comma_str(batch_size), NumUtil.comma_str(splits), NumUtil.comma_str(
+            #     len(self.features))))
             if to_one_hot_vector:
-                features_batch, labels_batch = self.__to_one_hot_vector(features_batch, labels_batch, verbose=verbose)
+                return self.__to_one_hot_vector(self.features, self.labels, verbose=verbose)
+            else:
+                return self.features, self.labels
+        else:
+            # log.info('next_batch(batch_size=*splits)= %s * %s = %s' % (NumUtil.comma_str(batch_size), NumUtil.comma_str(splits), NumUtil.comma_str(
+            #     len(self.features))))
 
-            yield features_batch, labels_batch
+            for features_batch, labels_batch in zip(np.array_split(self.features, splits), np.array_split(self.labels, splits)):
+                if to_one_hot_vector:
+                    features_batch, labels_batch = self.__to_one_hot_vector(features_batch, labels_batch, verbose=verbose)
+
+                yield features_batch, labels_batch
 
     def convert_to_one_hot_vector(self, verbose=False):
         self.features, self.labels = self.__to_one_hot_vector(self.features, self.labels, verbose=verbose)

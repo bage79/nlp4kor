@@ -72,6 +72,11 @@ class HangulUtil(object):
     CHO_LIST = to_sequence(u'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ')  # 초성
     JUNG_LIST = MO_LIST  # 중성
     JONG_LIST = to_sequence(u'', u'ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ')  # 종성
+
+    CHO_NOISE_LIST = to_sequence(u'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ')  # 초성
+    JUNG_NOISE_LIST = to_sequence(u'ㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ')  # 모음
+    JONG_NOISE_LIST = to_sequence(u'', u'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ')  # 종성
+
     CHO_JUNG_JONG_LIST = (CHO_LIST, JUNG_LIST, JONG_LIST)  # 초성 중성 종성
     CHO_RANGE = [ord(c) for c in CHO_LIST if len(c) > 0]  # 초성 범위
     JUNG_RANGE = [ord(c) for c in JUNG_LIST if len(c) > 0]  # 중성 범위
@@ -478,12 +483,13 @@ class HangulUtil(object):
     def encode_noise(cls, char):
         jaso_list = cls.split2cho_jung_jong(char)
         x = random.randint(0, 2)
+
         if x == 0:
-            target_jaso = cls.CHO_LIST
+            target_jaso = cls.CHO_NOISE_LIST
         elif x == 1:
-            target_jaso = cls.JUNG_LIST
+            target_jaso = cls.JUNG_NOISE_LIST
         else:
-            target_jaso = cls.JONG_LIST
+            target_jaso = cls.JONG_NOISE_LIST
 
         randidx = random.randint(0, len(target_jaso) - 1)
         jaso_list[x] = target_jaso[randidx]

@@ -44,7 +44,11 @@ class OneHotVector(object):
         :param v: one hot vector 
         :return: 
         """
-        return self.encoder.inverse_transform(np.array([v]))[0]
+        ch = self.encoder.inverse_transform(np.array([v]))[0]
+        if ch == '':
+            return ' '
+        else:
+            return ch
 
     def to_values(self, vectors: list) -> np.ndarray:
         """
@@ -52,7 +56,13 @@ class OneHotVector(object):
         :param vectors: list of one hot vector 
         :return: 
         """
-        return self.encoder.inverse_transform(vectors)
+        li = []
+        for ch in self.encoder.inverse_transform(vectors):
+            if ch == '':
+                ch = ' '
+            li.append(ch)
+        return ''.join(li)
+
 
     def to_index(self, c: str) -> int:
         return np.argmax(self.to_vector(c))
