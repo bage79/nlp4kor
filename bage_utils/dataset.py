@@ -55,7 +55,12 @@ class DataSet(object):
         return self
 
     def __repr__(self):
-        return '%s "%s" (feature: %s, label:%s, size: %s)' % (self.__class__.__name__, self.name, type(self.features[0]), type(self.labels[0]), self.size)
+        return '%s "%s" (size: %s, feature: %s %s, label:%s %s)' % (self.__class__.__name__, self.name, self.size,
+                                                                    self.features.dtype, self.features.shape,
+                                                                    self.labels.dtype, self.labels.shape)
+
+    def __str__(self):
+        return self.__repr__()
 
     def __len__(self):
         return self.size
@@ -64,16 +69,16 @@ class DataSet(object):
         _features, _labels = [], []
         check_interval = min(1000, math.ceil(features_batch.shape[0]))
 
-        for i, (chars, has_space) in enumerate(zip(features_batch, labels_batch)):
-            chars_v = self.features_vector.to_vectors(chars)
+        for i, (feature_string, label_string) in enumerate(zip(features_batch, labels_batch)):
+            chars_v = self.features_vector.to_vectors(feature_string)
             feature = np.concatenate(chars_v)  # concated feature
 
-            label = self.labels_vector.to_vector(has_space)
+            label = self.labels_vector.to_vector(label_string)
             _features.append(feature)
             _labels.append(label)
 
             if verbose and i % check_interval == 0:
-                log.info('[%s] to_one_hot_vector %s -> %s, %s (len=%s) %s (len=%s)' % (i, chars, label, feature, len(feature), label, len(label)))
+                log.info('[%s] to_one_hot_vector %s -> %s, %s (len=%s) %s (len=%s)' % (i, feature_string, label, feature, len(feature), label, len(label)))
         return np.asarray(_features, dtype=np.int32), np.asarray(_labels, dtype=np.int32)
 
     @classmethod
@@ -86,19 +91,24 @@ class DataSet(object):
 
         with f:
             d = DataSet()
-            d.name, d.size, d.features_vector, d.labels_vector, d.labels = \
-                pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f)
+            d.name, d.size, d.features_vector, d.labels_vector = pickle.load(f), pickle.load(f), pickle.load(f), pickle.load(f)
 
             check_interval = min(100000, math.ceil(d.size))
-            li = []
+            features, labels = [], []
             for i in range(d.size):
-                if 0 < max_len <= len(li):
+                if 0 < max_len <= len(features):
                     break
-                li.append(pickle.load(f))
+                feature, label = pickle.load(f), pickle.load(f)
+                # print('load feature:', feature, 'label:', label)
+                features.append(feature)
+                labels.append(label)
                 if verbose and i % check_interval == 0:
                     log.info('%s %.1f%% loaded.' % (filename, i / d.size * 100))
             log.info('%s 100%% loaded.' % filename)
-            d.features = np.asarray(li)
+            d.features = np.asarray(features)
+            d.labels = np.asarray(labels)
+            log.info('%s features shape: %s' % (filename, d.features.shape))
+            log.info('%s labels shape: %s' % (filename, d.features.shape))
         return d
 
     def save(self, filepath: str, gzip_format=False, verbose=False):
@@ -109,15 +119,19 @@ class DataSet(object):
             f = open(filepath, 'wb')
 
         with f:
-            for o in [self.name, self.size, self.features_vector, self.labels_vector, self.labels]:
+            for o in [self.name, self.size, self.features_vector, self.labels_vector]:
                 pickle.dump(o, f)
 
             check_interval = min(100000, math.ceil(self.size))
-            for i, o in enumerate(self.features):
-                pickle.dump(o, f)
+            for i, (feature, label) in enumerate(zip(self.features, self.labels)):
+                # print('save feature:', feature, 'label:', label)
+                pickle.dump(feature, f)
+                pickle.dump(label, f)
                 if verbose and i % check_interval == 0:
                     log.info('%s %.1f%% saved.' % (filename, i / self.size * 100))
+
             log.info('%s 100%% saved.' % filename)
+            log.info('shape: %s' % self.features.shape)
 
 
 if __name__ == '__main__':

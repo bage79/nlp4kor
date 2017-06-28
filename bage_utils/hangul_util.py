@@ -614,7 +614,7 @@ if __name__ == '__main__':
         jaso_list = HangulUtil.split2cho_jung_jong(c)
         _c = HangulUtil.encode_noise(c)
         print(c, '->', jaso_list, '->', _c)
-    #     text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
+    # text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
     # 숫염소 헤네스는 인근의 쾰른 서커스단으로부터 기증받은 것이다.
     # {{축구 클럽팀 정보2| 클럽 이름 = 1. FSV 마인츠 05| 풀 네임 = 1. Fußball- und Sport-Verein Mainz 05 e.V.| 별칭 = Die Nullfünfer (05년) Karnevalsverein (카니발 클럽)| 설립연도 = 1905년 3월 27일| 홈구장 = 코파스 아레나| 수용인원 = 33,500| 회장 = {{국기그림|독일}} 하랄트 슈트르츠| 스포르팅 매니저 = {{국기그림|독일}} 크리스티안 하이델| 감독 = {{국기그림|스위스}} 마틴 슈미트| 리그 = 1 분데스리가| 시즌 = 2013-14| 순위 = 7위| pattern_la1=_fsvmainz1415h| pattern_b1=_fsvmainz1415h| pattern_ra1=_fsvmainz1415h| pattern_sh1
     # | pattern_so1'''
