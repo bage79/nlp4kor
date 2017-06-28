@@ -44,6 +44,7 @@ class DataSet(object):
         splits = len(self.features) // batch_size
         if len(self.features) % batch_size > 0:
             splits += 1
+
         for features_batch, labels_batch in zip(np.array_split(self.features, splits), np.array_split(self.labels, splits)):
             if to_one_hot_vector:
                 features_batch, labels_batch = self.__to_one_hot_vector(features_batch, labels_batch, verbose=verbose)
@@ -68,12 +69,19 @@ class DataSet(object):
     def __to_one_hot_vector(self, features_batch: np.ndarray, labels_batch: np.ndarray, verbose=False):
         _features, _labels = [], []
         check_interval = min(1000, math.ceil(features_batch.shape[0]))
-
         for i, (feature_string, label_string) in enumerate(zip(features_batch, labels_batch)):
-            chars_v = self.features_vector.to_vectors(feature_string)
-            feature = np.concatenate(chars_v)  # concated feature
+            if isinstance(feature_string, str) or isinstance(feature_string, list):
+                feature_v = self.features_vector.to_vectors(feature_string)  # to 2 dim
+                feature = np.concatenate(feature_v)  # to 1 dim
+            else:
+                feature = self.features_vector.to_vector(feature_string)  # to 1 dim
 
-            label = self.labels_vector.to_vector(label_string)
+            if isinstance(label_string, str) or isinstance(label_string, list):
+                label_v = self.labels_vector.to_vectors(label_string)  # to 2 dim
+                label = np.concatenate(label_v)  # to 1 dim
+            else:
+                label = self.labels_vector.to_vector(label_string)  # to 1 dim
+
             _features.append(feature)
             _labels.append(label)
 

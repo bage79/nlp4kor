@@ -7,7 +7,7 @@ class OneHotVector(object):
         if not chars or type(chars) is not list or len(chars) == 0:
             raise Exception('values must be list and len(values)>0 %s' % chars)
 
-        self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)  # TODO: performance test
+        self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)
         self.encoder.fit(chars)
 
     @property
@@ -34,7 +34,7 @@ class OneHotVector(object):
         :param chars: list of characters. len(chars)>0
         :return:
         """
-        if type(chars) is str or np.str_:
+        if type(chars) is str or type(chars) is np.str_:
             chars = [c for c in chars]
         return self.encoder.transform(chars)
 
