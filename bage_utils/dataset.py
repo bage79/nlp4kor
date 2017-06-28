@@ -56,9 +56,8 @@ class DataSet(object):
         return self
 
     def __repr__(self):
-        return '%s "%s" (size: %s, feature: %s %s, label:%s %s)' % (self.__class__.__name__, self.name, self.size,
-                                                                    self.features.dtype, self.features.shape,
-                                                                    self.labels.dtype, self.labels.shape)
+        return '%s "%s" (size: %s, feature: %s * %s, label: %s * %s)' % (self.__class__.__name__, self.name, self.size,
+                                                                         self.features.dtype, self.features.shape, self.labels.dtype, self.labels.shape)
 
     def __str__(self):
         return self.__repr__()
