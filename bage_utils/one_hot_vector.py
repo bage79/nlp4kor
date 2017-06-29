@@ -7,6 +7,7 @@ class OneHotVector(object):
         if not chars or type(chars) is not list or len(chars) == 0:
             raise Exception('values must be list and len(values)>0 %s' % chars)
 
+        self.chars = chars
         self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)
         self.encoder.fit(chars)
 
@@ -63,6 +64,11 @@ class OneHotVector(object):
             li.append(ch)
         return ''.join(li)
 
+    def index2value(self, index):
+        if 0 < index < len(self.chars):
+            return self.classes[index]
+        else:
+            return ''
 
     def to_index(self, c: str) -> int:
         return np.argmax(self.to_vector(c))
@@ -80,8 +86,9 @@ if __name__ == '__main__':
         # @formatter:off
     # chars = ['0', '1', '2']
     # chars = [1, 0]
-    # chars = ['ㅎ', 'ㄱ', 'a', 'b']
-    # ohv = OneHotVector(chars)
+    chars = ['ㅎ', 'ㄱ', 'a', 'b']
+    ohv = OneHotVector(chars)
+    print(ohv.classes)
     # for c in chars:
     #     v = ohv.to_vector(c)
     #     print(c, type(v), v, ohv.to_value(v))
