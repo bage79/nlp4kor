@@ -480,9 +480,10 @@ class HangulUtil(object):
         return chr(cls.HANGUL_FIRST + offset)
 
     @classmethod
-    def encode_noise(cls, char):
+    def encode_noise(cls, char, max_retry=10):
         jaso_list = cls.split2cho_jung_jong(char)
         x = random.randint(0, 2)
+        ch = jaso_list[x]
 
         if x == 0:
             target_jaso = cls.CHO_NOISE_LIST
@@ -491,8 +492,11 @@ class HangulUtil(object):
         else:
             target_jaso = cls.JONG_NOISE_LIST
 
-        randidx = random.randint(0, len(target_jaso) - 1)
-        jaso_list[x] = target_jaso[randidx]
+        for _ in range(max_retry):
+            randidx = random.randint(0, len(target_jaso) - 1)
+            jaso_list[x] = target_jaso[randidx]
+            if ch != jaso_list[x]:
+                break
         return cls.join_cho_jung_jong(*jaso_list)
 
     @classmethod

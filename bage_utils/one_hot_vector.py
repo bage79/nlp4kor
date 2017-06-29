@@ -3,7 +3,8 @@ from sklearn.preprocessing import LabelBinarizer
 
 
 class OneHotVector(object):
-    def __init__(self, chars: list):
+    def __init__(self, chars: list, added: list=[]):
+        chars.extend(added)
         if not chars or type(chars) is not list or len(chars) == 0:
             raise Exception('values must be list and len(values)>0 %s' % chars)
 
@@ -18,16 +19,20 @@ class OneHotVector(object):
     def __len__(self):
         return self.encoder.classes_.shape[0]
 
+    @property
+    def size(self):
+        return self.encoder.classes_.shape[0]
+
     def __repr__(self):
         return '%s(len:%s)' % (self.__class__.__name__, self.__len__())
 
-    def to_vector(self, c: str) -> np.ndarray:
+    def to_vector(self, char: str) -> np.ndarray:
         """
         
-        :param c: character. len(c)==1
+        :param char: character. len(c)==1
         :return:
         """
-        return self.encoder.transform([c])[0]
+        return self.encoder.transform([char])[0]
 
     def to_vectors(self, chars: list) -> np.ndarray:
         """
@@ -39,30 +44,32 @@ class OneHotVector(object):
             chars = [c for c in chars]
         return self.encoder.transform(chars)
 
-    def to_value(self, v: np.ndarray) -> np.ndarray:
+    def to_value(self, vector: np.ndarray) -> np.ndarray:
         """
         
-        :param v: one hot vector 
+        :param vector: one hot vector
         :return: 
         """
-        ch = self.encoder.inverse_transform(np.array([v]))[0]
-        if ch == '':
-            return ' '
-        else:
-            return ch
+        if vector.ndim != 1:
+            vector = vector.flatten()
+        return self.encoder.inverse_transform(np.array([vector]))[0]
+        # if not ch or ch == '':
+        #     return ' '
+        # else:
+        #     return ch
 
-    def to_values(self, vectors: list) -> np.ndarray:
+    def to_values(self, vectors: np.ndarray) -> np.ndarray:
         """
 
         :param vectors: list of one hot vector 
         :return: 
         """
-        li = []
-        for ch in self.encoder.inverse_transform(vectors):
-            if ch == '':
-                ch = ' '
-            li.append(ch)
-        return ''.join(li)
+        if vectors.ndim != 2:
+            vectors = vectors.reshape((len(vectors) // self.size, self.size))
+        return ''.join(self.encoder.inverse_transform(vectors))
+
+    def to_index(self, c: str) -> int:
+        return np.argmax(self.to_vector(c))
 
     def index2value(self, index):
         if 0 < index < len(self.chars):
@@ -70,25 +77,34 @@ class OneHotVector(object):
         else:
             return ''
 
-    def to_index(self, c: str) -> int:
-        return np.argmax(self.to_vector(c))
+            # def indexs2values(self, indexs):
+            #     for
+            #     if 0 < index < len(self.chars):
+            #         return self.classes[index]
+            #     else:
+            #         return ''
 
 
 if __name__ == '__main__':
-    unary_vector = OneHotVector([0])
-    binary_vector = OneHotVector([0, 1])
-    ternary_vector = OneHotVector([0, 1, 2])
-    print(unary_vector, binary_vector, ternary_vector)
-    print('%6s\t%6s\t%6s\t%6s' % ('', 'unary', 'binary', 'ternary'))
-    for i in [0, 1, 2]:
-        print('%6s\t%6s\t%6s\t%6s' % (i, unary_vector.to_vector(i), binary_vector.to_vector(i), ternary_vector.to_vector(i)))
-
-        # @formatter:off
     # chars = ['0', '1', '2']
     # chars = [1, 0]
-    chars = ['ㅎ', 'ㄱ', 'a', 'b']
+    chars = ['ㄷ', 'ㄱ', 'ㄴ', 'ㄹ']
     ohv = OneHotVector(chars)
-    print(ohv.classes)
+    _input = 'ㄱㄴㄷㄹ'
+    feature_v = ohv.to_vectors(_input)
+    print(_input)
+    print(feature_v)
+    print(ohv.to_values(feature_v))
+
+    # unary_vector = OneHotVector([0])
+    # binary_vector = OneHotVector([0, 1])
+    # ternary_vector = OneHotVector([0, 1, 2])
+    # print(unary_vector, binary_vector, ternary_vector)
+    # print('%6s\t%6s\t%6s\t%6s' % ('', 'unary', 'binary', 'ternary'))
+    # for i in [0, 1, 2]:
+    #     print('%6s\t%6s\t%6s\t%6s' % (i, unary_vector.to_vector(i), binary_vector.to_vector(i), ternary_vector.to_vector(i)))
+
+    # @formatter:off
     # for c in chars:
     #     v = ohv.to_vector(c)
     #     print(c, type(v), v, ohv.to_value(v))
