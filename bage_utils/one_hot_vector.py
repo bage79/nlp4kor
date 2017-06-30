@@ -95,6 +95,7 @@ if __name__ == '__main__':
     print(_input)
     print(feature_v)
     print(ohv.to_values(feature_v))
+    print(ohv.to_values(np.array([[0.1, 1., 0.5, 0.5]])))
 
     # unary_vector = OneHotVector([0])
     # binary_vector = OneHotVector([0, 1])
