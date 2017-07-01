@@ -185,7 +185,11 @@ class SpellingErrorCorrection(object):
             log.info('create tensorflow graph...')
             watch.start('create tensorflow graph')
 
+            features_vector_size = n_features // window_size
             log.info('n_features: %s' % n_features)
+            log.info('window_size: %s' % window_size)
+            log.info('features_vector_size: %s' % features_vector_size)
+
             log.info('noise_rate: %.1f' % noise_rate)
             log.info('n_hidden1: %s' % n_hidden1)
 
@@ -221,8 +225,8 @@ class SpellingErrorCorrection(object):
             b2 = tf.Variable(tf.random_normal([n_features]), name='b2')
             y_hat = tf.add(tf.matmul(layer1_dropout, W2), b2, name='y_hat')  # shape=(batch_size, window_size * feature_vector.size)
 
-            labels_hat = tf.reshape(y_hat, shape=(-1, window_size, features_vector.size))  # shape=(batch_size, window_size, feature_vector.size)
-            labels = tf.reshape(Y, shape=(-1, window_size, features_vector.size))  # shape=(batch_size, window_size, feature_vector.size)
+            labels_hat = tf.reshape(y_hat, shape=(-1, window_size, features_vector_size))  # shape=(batch_size, window_size, feature_vector.size)
+            labels = tf.reshape(Y, shape=(-1, window_size, features_vector_size))  # shape=(batch_size, window_size, feature_vector.size)
 
             cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=labels_hat, labels=labels), name='cost')
             train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
