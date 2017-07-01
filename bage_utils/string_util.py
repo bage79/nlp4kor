@@ -123,9 +123,24 @@ class StringUtil(object):
         return ' '.join(lines)
 
 
+    @staticmethod
+    def replace_with_index(s, newstring, index, nofail=False):
+        if not nofail and index not in range(len(s)):
+            raise ValueError("index outside given string")  # raise an error if index is outside of the string
+
+        # if not erroring, but the index is still not in the correct range..
+        if index < 0:  # add it to the beginning
+            return newstring + s
+        if index > len(s):  # add it to the end
+            return s + newstring
+
+        # insert the new string between "slices" of the original
+        return s[:index] + newstring + s[index + 1:]
+
 if __name__ == '__main__':
-    a = '\ufeffabc'
-    print('"%s"' % a.replace('\ufeff', ''))
+    print(StringUtil.replace_with_index('01234567890', 'ab', 4))
+    # a = '\ufeffabc'
+    # print('"%s"' % a.replace('\ufeff', ''))
     # print(StringUtil.mask_passwd_in_url('mongodb://root:passwd@db-local:27017/admin?authMechanism=MONGODB-CR'))
     # print(StringUtil.mask_passwd_in_url('mongodb://root@db-local:27017/admin?authMechanism=MONGODB-CR'))
     # print(StringUtil.mask_passwd_in_url('mongodb://db-local:27017/admin?authMechanism=MONGODB-CR'))
