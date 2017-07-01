@@ -57,7 +57,7 @@ def is_my_gpu_pc():
 
 def is_server():
     """ full batch 용 서버 """
-    return not is_my_pc()
+    return not is_my_pc() and not is_my_gpu_pc()
 
 
 def hostname():

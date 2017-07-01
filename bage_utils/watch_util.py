@@ -52,13 +52,23 @@ class WatchUtil(object):
     def elapsed_string(self, name=DEFAULT_WATCH_NAME) -> str:
         return DateUtil.secs_to_string(self.elapsed(name))
 
-    def summary(self, prefix='') -> str:
+    def summary(self, prefix='', include_total_time=False) -> str:
         import operator
         li = [(name, self.__watches[name].elapsed()) for name in self.__watches]
         li = sorted(li, key=operator.itemgetter(1), reverse=True)
         s = ''
         # for name, total_milli_secs in li:
         #     s += 'total [%s] %s\n' % (DateUtil.millisecs_to_string(total_milli_secs), name)
+        if include_total_time:
+            for name, total_milli_secs in li:
+                if self.__cnt[name] > 0:
+                    if len(prefix) > 0:
+                        s += '%s total [%s] %s\n' % (
+                            prefix, DateUtil.millisecs_to_string(float(total_milli_secs)), name)
+                    else:
+                        s += 'total [%s] %s\n' % (
+                            DateUtil.millisecs_to_string(float(total_milli_secs)), name)
+
         for name, total_milli_secs in li:
             if self.__cnt[name] > 0:
                 if len(prefix) > 0:
