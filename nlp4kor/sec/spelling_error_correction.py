@@ -387,8 +387,8 @@ if __name__ == '__main__':
                                       n_train, window_size, noise_rate, n_hidden1))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        features_vector = OneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
-        labels_vector = OneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
+        features_vector = OneHotVector(DataFileUtil.read_list(characters_file))
+        labels_vector = OneHotVector(DataFileUtil.read_list(characters_file))
         n_features = len(features_vector) * window_size  # number of features = 17,450 * 10
         n_classes = len(labels_vector) * window_size  # number of features = 17,450 * 10
         log.info('')
