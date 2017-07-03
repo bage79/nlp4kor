@@ -150,10 +150,11 @@ class TextPreprocess(object):
 
 
 if __name__ == '__main__':
+    info_file = KO_WIKIPEDIA_ORG_INFO_FILE
     urls_file = KO_WIKIPEDIA_ORG_URLS_FILE
     sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
-    info_file = KO_WIKIPEDIA_ORG_INFO_FILE
     characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+    log.info('info_file: %s' % info_file)
     log.info('urls_file: %s' % urls_file)
     log.info('sentences_file: %s' % sentences_file)
     log.info('characters_file: %s' % characters_file)
