@@ -45,10 +45,7 @@ class MongodbUtil(object):
         return self.collection.count(query, no_cursor_timeout=True)
 
     def find_one(self, query: dict, limit=0) -> dict:
-        if limit > 0:
-            return self.collection.find_one(query, no_cursor_timeout=True).limit(limit)
-        else:
-            return self.collection.find_one(query, no_cursor_timeout=True)
+        return self.collection.find_one(query, no_cursor_timeout=True).limit(limit)
 
     def create_index(self, field_list=None, unique=False):
         if field_list is None:
