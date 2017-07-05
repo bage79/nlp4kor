@@ -52,7 +52,7 @@ class WordSpacing(object):
                           ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
 
             for name, data_file, total, dataset_file, to_one_hot_vector in data_files:
-                check_interval = max(1, min(10000, batch_size // 10))
+                check_interval = 10000
                 log.info('check_interval: %s' % check_interval)
                 log.info('%s %s total: %s' % (name, os.path.basename(data_file), NumUtil.comma_str(total)))
 
@@ -290,7 +290,7 @@ if __name__ == '__main__':
                                       n_train, left_gram, right_gram))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        batch_size = 1000  # mini batch size
+        batch_size = 100  # mini batch size
         log.info('batch_size: %s' % batch_size)
 
         total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
             if n_train >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s start (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
-            WordSpacing.learning(total_epoch, n_test, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector,
+            WordSpacing.learning(total_epoch, n_train, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector,
                                  n_hidden1=n_hidden1,
                                  learning_rate=learning_rate, early_stop_cost=early_stop_cost)
             if n_train >= int('100,000'.replace(',', '')):
@@ -333,6 +333,7 @@ if __name__ == '__main__':
 
         sentences = []  # '아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
         max_test_sentences = 100
+
         if n_train >= int('100,000'.replace(',', '')):
             sentences_file = test_sentences_file
         else:
