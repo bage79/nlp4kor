@@ -56,7 +56,7 @@ class SpellingErrorCorrection(object):
                           ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
 
             for (name, data_file, total, dataset_file, to_one_hot_vector) in data_files:
-                check_interval = max(1, min(10000, batch_size // 10))
+                check_interval = 10000
                 log.info('check_interval: %s' % check_interval)
                 log.info('%s %s total: %s' % (name, os.path.basename(data_file), NumUtil.comma_str(total)))
                 log.info('noise_rate: %s' % noise_rate)
