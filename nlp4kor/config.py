@@ -12,9 +12,12 @@ if log is None:
     if is_my_pc():  # my pc(pycharm client, mac)
         log = LogUtil.get_logger(None, level=logging.DEBUG, console_mode=True)  # global log
     if is_my_gpu_pc():  # gpu pc(pycharm remote, ubuntu)
-        log = LogUtil.get_logger(None, level=logging.INFO, console_mode=True)  # global log
+        if len(sys.argv) == 1: # remote mode
+            log = LogUtil.get_logger(None, level=logging.INFO, console_mode=True)  # global log
+        else: # batch mode
+            log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
     else:  # gpu pc(batch job, ubuntu)
-        log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log # console_mode=True for jupyter notebook
+        log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log # console_mode=True for jupyter notebook
 
 MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
     'root', os.getenv('MONGODB_PASSWD'), 'db-local', '27017', 'admin')
