@@ -9,7 +9,7 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
-from bage_utils.base_util import is_server, is_my_pc, is_my_gpu_pc
+from bage_utils.base_util import is_server
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.hangul_util import HangulUtil
@@ -43,7 +43,7 @@ class SpellingErrorCorrection(object):
                                   'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.valid.gz' % (n_valid, window_size))
         test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.test.gz' % (n_test, window_size))
-        if is_my_pc() or is_my_gpu_pc() or not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
+        if not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
                 os.makedirs(dataset_dir)
@@ -422,13 +422,13 @@ if __name__ == '__main__':
 
         # if is_my_pc() or is_my_gpu_pc() or not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
         if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
-            if n_train > int('100,000'.replace(',', '')):
+            if n_train >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s start (max_sentences=%s, window_size=%s, noise_rate=%.1f)' % (sys.argv[0], n_train, window_size, noise_rate))
 
             SpellingErrorCorrection.learning(total_epoch, n_train, n_valid, n_test, batch_size, window_size, noise_rate,
                                              model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
                                              learning_rate=learning_rate, dropout_keep_rate=dropout_keep_rate, early_stop_cost=early_stop_cost)
-            if n_train > int('100,000'.replace(',', '')):
+            if n_train >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s end (max_sentences=%s, window_size=%s, noise_rate=%.1f)' % (sys.argv[0], n_train, window_size, noise_rate))
 
         log.info('chek result...')
