@@ -386,6 +386,7 @@ if __name__ == '__main__':
         log.info('total_epoch: %s' % total_epoch)
         log.info('batch_size: %s' % batch_size)
         log.info('early_stop_cost: %s' % early_stop_cost)
+        log.info('total_epoch: %s' % total_epoch)
 
         model_file = os.path.join(KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR,
                                   'spelling_error_correction_model.sentences=%s.window_size=%s.noise_rate=%.1f.n_hidden=%s/model' % (
