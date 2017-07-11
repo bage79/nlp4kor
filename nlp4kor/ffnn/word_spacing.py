@@ -201,6 +201,8 @@ class WordSpacing(object):
             X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
             Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
 
+            # W1 = tf.Variable(tf.truncated_normal([n_features, n_hidden1], mean=0.0, stddev=0.1), name='W1')
+            # b1 = tf.Variable(tf.constant(0.1, shape=[n_hidden1]), name='b1')
             W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
             b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
             layer1 = tf.nn.relu(tf.matmul(X, W1) + b1, name='layer1')
@@ -226,6 +228,7 @@ class WordSpacing(object):
             predicted = tf.cast(y_hat > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
 
             accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
+
             watch.stop('create tensorflow graph')
             log.info('create tensorflow graph OK.\n')
             cls.graph_nodes = {'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
@@ -308,6 +311,7 @@ if __name__ == '__main__':
         log.info('n_hidden1: %s' % n_hidden1)
         log.info('learning_rate: %s' % learning_rate)
         log.info('early_stop_cost: %s' % early_stop_cost)
+        log.info('total_epoch: %s' % total_epoch)
 
         # log.info('sample testing...')
         # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
