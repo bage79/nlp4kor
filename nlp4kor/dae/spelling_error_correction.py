@@ -9,7 +9,7 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
-from bage_utils.base_util import is_server
+from bage_utils.base_util import is_my_pc, is_my_gpu_pc
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.hangul_util import HangulUtil
@@ -346,18 +346,17 @@ if __name__ == '__main__':
         else:
             n_train, noise_rate, window_size = None, None, None
 
-        if n_train is None or n_train == 0:
+        if is_my_pc() or is_my_gpu_pc():  # for demo
+            n_train = n_valid = n_test = 3
+        elif n_train is None or n_train == 0:
             n_train = int('1,000,000'.replace(',', ''))
-
-        if is_server():  # batch server
-            n_train = 10000
-            n_valid = min(10, n_train)
-            n_test = min(10, n_train)
-        else:  # for demo
+            n_valid = min(100, n_train // 10)
+            n_test = min(100, n_train // 10)
+        else:
             n_train = n_valid = n_test = 3
 
         if noise_rate is None or window_size is None:
-            window_size = 10  # 2 ~ 10 # feature로 추출할 문자 수 (label과 동일)
+            window_size = 6  # 2 ~ 10 # feature로 추출할 문자 수 (label과 동일)
             noise_rate = max(0.1, 1 / window_size)  # 0.0 ~ 1.0 # noise_rate = 노이즈 문자 수 / 전체 문자 수 (windos 안에서 최소 한 글자는 노이즈가 생기도록 함.)
 
         dropout_keep_rate = 1.0  # 0.0 ~ 1.0 # one hot vector에 경우에 dropout 사용시, 학습이 안 됨.
@@ -453,7 +452,6 @@ if __name__ == '__main__':
         watch.stop('read sentences')
 
         watch.start('run tensorflow')
-
         with tf.Session() as sess:
             X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
                                                                                                            learning_rate, watch)
@@ -492,7 +490,7 @@ if __name__ == '__main__':
                             dataset.convert_to_one_hot_vector()
                             try:
                                 _y_hat, _cost, _accuracy = sess.run([y_hat, cost, accuracy],
-                                                         feed_dict={X: dataset.features, Y: dataset.labels, dropout_keep_prob: dropout_keep_rate})
+                                                                    feed_dict={X: dataset.features, Y: dataset.labels, dropout_keep_prob: dropout_keep_rate})
                                 costs.append(_cost)
                                 accuracies.append(_accuracy)
                             except:

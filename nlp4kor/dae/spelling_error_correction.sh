@@ -4,7 +4,7 @@ PROJECT_DIR=${HOME}'/workspace/nlp4kor'
 
 if [ "$#" -ne 3 ]; then
     echo "[Usage] $0 n_train window_size noise_rate"
-    echo "[Usage] $0 1000000 10 0.1"
+    echo "[Usage] $0 1000000 6 0.1"
     exit
 fi
 
