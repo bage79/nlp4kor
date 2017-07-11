@@ -475,7 +475,7 @@ if __name__ == '__main__':
                 for i, sentence in enumerate(sentences):
                     for nth in range(total_test_sampling):
                         # log.info('[%s] noise(%.1f) "%s" -> "%s"' % (nth, noise_rate, sentence, noised_sentence))
-                        noised_sentence = SpellingErrorCorrection.encode_noise(sentence, noise_rate=0.1)
+                        noised_sentence = SpellingErrorCorrection.encode_noise(sentence, noise_rate=noise_rate)
                         log.info('')
                         log.info('[%s] ori: "%s"' % (nth, sentence))
                         log.info('[%s] in : "%s"' % (nth, noised_sentence))
