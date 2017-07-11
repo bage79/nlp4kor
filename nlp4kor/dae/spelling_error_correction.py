@@ -346,22 +346,20 @@ if __name__ == '__main__':
         else:
             n_train, noise_rate, window_size = None, None, None
 
-        if is_my_pc() or is_my_gpu_pc():  # for demo
-            n_train = n_valid = n_test = 3
-        elif n_train is None or n_train == 0:
-            n_train = int('1,000,000'.replace(',', ''))
-            n_valid = min(100, n_train // 10)
-            n_test = min(100, n_train // 10)
-        else:
-            n_train = n_valid = n_test = 3
+        if n_train is None or n_train == 0:  # default
+            if is_my_pc() or is_my_gpu_pc():  # for demo
+                n_train = n_valid = n_test = 3
+            else:
+                n_train = int('1,000,000'.replace(',', ''))
 
-        if noise_rate is None or window_size is None:
+        n_valid = min(100, n_train // 10)
+        n_test = min(100, n_train // 10)
+
+        if noise_rate is None or window_size is None:  # default
             window_size = 6  # 2 ~ 10 # feature로 추출할 문자 수 (label과 동일)
             noise_rate = max(0.1, 1 / window_size)  # 0.0 ~ 1.0 # noise_rate = 노이즈 문자 수 / 전체 문자 수 (windos 안에서 최소 한 글자는 노이즈가 생기도록 함.)
 
         dropout_keep_rate = 1.0  # 0.0 ~ 1.0 # one hot vector에 경우에 dropout 사용시, 학습이 안 됨.
-        noise_sampling = 100  # 한 입력에 대하여 몇 개의 노이즈 샘플을 생성할지. blank 방식(문자 단위)으로 noise 생성할 때는 사용 안함.
-
         # total_epoch = max(10, 100 // window_size)  # 10 ~ 100 # window_size 가 클 수록 total_epoch는 작아도 됨.
         total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
         batch_size = min(100, 10 * window_size)  # 1 ~ 100 # one hot vector 입력이면, batch_size 작게 잡아야 학습이 잘 된다. batch_size가 너무 크면, 전혀 학습이 안 됨.
@@ -377,7 +375,6 @@ if __name__ == '__main__':
         log.info('window_size: %s' % window_size)
         log.info('noise_rate: %s' % noise_rate)
         log.info('dropout_keep_rate: %s' % dropout_keep_rate)
-        log.info('noise_sampling: %s' % noise_sampling)
         log.info('')
         log.info('n_hidden1: %s' % n_hidden1)
         log.info('learning_rate: %s' % learning_rate)
