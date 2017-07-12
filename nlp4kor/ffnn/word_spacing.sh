@@ -17,8 +17,8 @@ right_gram=$3
 echo "pkill -f ${PROGRAM}"
 pkill -f ${PROGRAM}
 
-echo "rm -f logs/${PROGRAM}.*"
-rm -f logs/${PROGRAM}.*
+#echo "rm -f logs/${PROGRAM}.*"
+#rm -f logs/${PROGRAM}.*
 
 echo "python3 ./${PROGRAM} $n_train $left_gram $right_gram >/dev/null 2>&1 &"
 nohup python3 ./${PROGRAM} $n_train $left_gram $right_gram >/dev/null 2>&1 &

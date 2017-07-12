@@ -17,8 +17,8 @@ noise_rate=$3
 echo "pkill -f ${PROGRAM}"
 pkill -f ${PROGRAM}
 
-echo "rm -f logs/${PROGRAM}.*"
-rm -f logs/${PROGRAM}.*
+#echo "rm -f logs/${PROGRAM}.*"
+#rm -f logs/${PROGRAM}.*
 
 echo "python3 ./${PROGRAM} $n_train $window_size $noise_rate >/dev/null 2>&1 &"
 nohup python3 ./${PROGRAM} $n_train $window_size $noise_rate >/dev/null 2>&1 &
