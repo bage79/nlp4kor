@@ -39,6 +39,10 @@ class WordSpacing(object):
                                   'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.test.gz' % (n_valid, left_gram, right_gram))
         test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'word_spacing',
                                  'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.valid.gz' % (n_test, left_gram, right_gram))
+
+        log.info('train_file: %s' % train_file)
+        log.info('valid_file: %s' % valid_file)
+        log.info('test_file: %s' % test_file)
         if not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
