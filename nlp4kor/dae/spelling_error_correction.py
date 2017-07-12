@@ -43,12 +43,16 @@ class SpellingErrorCorrection(object):
                                   'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.valid.gz' % (n_valid, window_size))
         test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.test.gz' % (n_test, window_size))
+
+        log.info('train_file: %s' % train_file)
+        log.info('valid_file: %s' % valid_file)
+        log.info('test_file: %s' % test_file)
         if not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
                 os.makedirs(dataset_dir)
 
-            watch.start('create dataset')
+            watch.start('create dataset')  # FIXME: out of memory (1M sentences)
             log.info('create dataset...')
 
             data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),
@@ -450,6 +454,7 @@ if __name__ == '__main__':
         watch.stop('read sentences')
 
         watch.start('run tensorflow')
+        accuracies, costs, sims = [], [], []
         with tf.Session() as sess:
             X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
                                                                                                            learning_rate, watch)
@@ -467,7 +472,7 @@ if __name__ == '__main__':
             train_vector = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector.convert_to_one_hot_vector()
             try:
-                accuracies, costs, sims = [], [], []
+
                 total_test_sampling = 1
                 for i, sentence in enumerate(sentences):
                     for nth in range(total_test_sampling):
