@@ -3,9 +3,7 @@
 # nlp4kor
 - Natural Language Processing for Korean with Deep Learning (딥러닝을 이용한 한글 자연어 처리)
 - 소스코드: http://github.com/bage79/nlp4kor
-- 전체일정: https://fb.com/nlp4kor 의 상단 게시물
-- 발표자료: 발표(행아웃) 직후 공개 
-    - 동영상: 다음 발표 전까지 공개
+- 전체일정: https://www.facebook.com/nlp4kor/posts/143362066206127
 - 문의: nlp4kor@gmail.com 또는 https://fb.com/nlp4kor 의 `메시지` 메뉴
     - 자주 소스를 변경하고 있습니다. 작동하지 않는 부분이 있으면 꼭 피드백 부탁드립니다.
 - 설치: [INSTALL.md](https://github.com/bage79/nlp4kor/blob/master/INSTALL.md)
