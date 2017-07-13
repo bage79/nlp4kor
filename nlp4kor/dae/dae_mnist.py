@@ -1,19 +1,12 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import os
+from tensorflow.examples.tutorials.mnist import input_data
 
 from bage_utils.base_util import is_server
 from nlp4kor.config import MNIST_DATA_DIR, MNIST_DAE_MODEL_DIR, log
-from tensorflow.examples.tutorials.mnist import input_data
-import matplotlib.pyplot as plt
-import numpy as np
-import tensorflow as tf
-import os
-
-from bage_utils.base_util import is_server
-from nlp4kor.config import MNIST_DATA_DIR, MNIST_DAE_MODEL_DIR, log
-from tensorflow.examples.tutorials.mnist import input_data
 
 if __name__ == '__main__':
     mnist_data = os.path.join(MNIST_DATA_DIR, MNIST_DAE_MODEL_DIR)  # input

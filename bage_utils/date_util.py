@@ -57,9 +57,9 @@ class DateUtil(object):
             return '%02d:%02d:%02d %.4f' % (hours, mins, secs, mili_secs)
 
     @staticmethod
-    def current_datetime_string():
+    def current_datetime_string(datetime_format='%04d-%02d-%02d %02d:%02d:%02d'):
         now = time.localtime()
-        return '%04d-%02d-%02d %02d:%02d:%02d' % (
+        return datetime_format % (
             now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
 
     @staticmethod

@@ -27,10 +27,9 @@ class SlackUtil(object):
         :param channel: 채널
         :return: 
         """
-        if is_linux_os():
-            with lock:
-                time.sleep(0.1)
-                cls.slack_client.api_call("chat.postMessage", channel=channel, text=message)
+        with lock:
+            time.sleep(0.1)
+            cls.slack_client.api_call("chat.postMessage", channel=channel, text=message)
 
 
 if __name__ == '__main__':
