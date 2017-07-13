@@ -188,7 +188,7 @@ class WordSpacing(object):
         return ''.join(left)
 
     @classmethod
-    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):
+    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):  # TODO: 2 layers
         log.info('\nbuild_FFNN')
         if len(cls.graph_nodes) == 0:
             n_hidden3 = n_hidden2 = n_hidden1
@@ -273,10 +273,8 @@ if __name__ == '__main__':
             left_gram = int(sys.argv[2])
             right_gram = int(sys.argv[3])
         else:
-            n_train, left_gram, right_gram = None, None, None
-
-        if n_train is None or n_train == 0:
-            n_train = int('1,000,000'.replace(',', ''))  # 1M data (학습: 17시간 소요)
+            n_train, left_gram, right_gram = 10000, 2, 2
+            # n_train, left_gram, right_gram = int('1,000,000'.replace(',', '')), 2, 2
 
         if left_gram is None:
             left_gram = 2
@@ -297,7 +295,7 @@ if __name__ == '__main__':
                                       n_train, left_gram, right_gram))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        batch_size = 100  # mini batch size
+        batch_size = 1000  # mini batch size
         log.info('batch_size: %s' % batch_size)
 
         total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
