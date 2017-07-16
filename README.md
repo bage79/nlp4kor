@@ -24,3 +24,6 @@
 
 ### 3. DAE for 철자 오류 교정 - 박혜웅, 2017.07.01
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/DAE_for_spelling_error_correction.ipynb
+
+### 4. DL for NLP: A to Z - 박혜웅, 2017.07.15
+- https://github.com/bage79/nlp4kor/blob/master/ipynb/DL_for_NLP_A_to_Z.pdf
