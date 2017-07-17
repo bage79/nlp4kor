@@ -273,7 +273,7 @@ if __name__ == '__main__':
             left_gram = int(sys.argv[2])
             right_gram = int(sys.argv[3])
         else:
-            n_train, left_gram, right_gram = 10000, 2, 2
+            n_train, left_gram, right_gram = 1000000, 3, 3
             # n_train, left_gram, right_gram = int('1,000,000'.replace(',', '')), 2, 2
 
         if left_gram is None:
