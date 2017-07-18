@@ -45,6 +45,10 @@ def is_windows_os():
     return platform.system().lower() == 'windows'
 
 
+def is_pycharm_remote():
+    return os.getenv('PYTHONUNBUFFERED') is not None
+
+
 def is_my_pc():
     """ 맥 또는 내 PC로 판단함."""
     return is_osx_os() or is_windows_os()
