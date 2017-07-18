@@ -595,7 +595,7 @@ class HangulUtil(object):
         return chars
 
     @classmethod
-    def text2sentences(cls, text: str, sentence_delim='다.', remove_only_one_word=True, has_hangul=True):
+    def text2sentences(cls, text: str, sentence_delim='다.', remove_only_one_word=True, has_hangul=True, remove_markdown=True):
         if isinstance(text, str) and len(sentence_delim) > 0:  # split lines with delimiter
             sentences = []
             lines = text.split(sentence_delim)
@@ -604,6 +604,8 @@ class HangulUtil(object):
                 if remove_only_one_word and s.count(' ') == 0:  # only one word in a sentence
                     continue
                 if has_hangul and not HangulUtil.has_hangul(s):
+                    continue
+                if remove_markdown and s.startswith('{{'):
                     continue
 
                 if i + 1 != len(lines):

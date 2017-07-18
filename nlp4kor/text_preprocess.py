@@ -82,8 +82,7 @@ class TextPreprocess(object):
 
                 sentences = []
                 for c in row['content']:
-                    sentences.extend(HangulUtil.text2sentences(c['sentences'], remove_only_one_word=True, has_hangul=True))
-                # sentences = HangulUtil.text2sentences(row['content'], remove_only_one_word=True, has_hangul=True)
+                    sentences.extend(HangulUtil.text2sentences(c['sentences'], remove_only_one_word=True, has_hangul=True, remove_markdown=True))
 
                 log.debug('url: %s, len: %s' % (row['url'], len(sentences)))
                 if len(sentences) == 0:
