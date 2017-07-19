@@ -185,7 +185,7 @@ class MySQLPoolGeventUtil(DatabaseConnectionPool):
 
 
 if __name__ == '__main__':
-    db = MySQLPoolGeventUtil(host='localhost', user='root', passwd=os.getenv('MYSQL_PASSWD'), db='test', port=20006,
+    db = MySQLPoolGeventUtil(host='localhost', user='root', passwd=os.getenv('MYSQL_PASSWD'), db='test', port=3306,
                              max_size=100)
     room_id = '11112'
     room_name = '홍길동 모임'

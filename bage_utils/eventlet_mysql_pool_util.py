@@ -109,7 +109,7 @@ class EventletMySQLPoolUtil(object):
 
 
 if __name__ == '__main__':
-    db = EventletMySQLPoolUtil('localhost', 'root', os.getenv('MYSQL_PASSWD'), 'test', port=20006, min_size=10,
+    db = EventletMySQLPoolUtil('localhost', 'root', os.getenv('MYSQL_PASSWD'), 'test', port=3306, min_size=10,
                                max_size=100)
 
 
