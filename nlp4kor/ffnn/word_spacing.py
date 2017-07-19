@@ -277,9 +277,9 @@ if __name__ == '__main__':
             # n_train, left_gram, right_gram = int('1,000,000'.replace(',', '')), 2, 2
 
         if left_gram is None:
-            left_gram = 2
+            left_gram = 3
         if right_gram is None:
-            right_gram = 2
+            right_gram = 3
 
         ngram = left_gram + right_gram
         n_valid, n_test = 100, 100
