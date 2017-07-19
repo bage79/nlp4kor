@@ -1,11 +1,10 @@
-import tensorflow as tf
-import numpy as np
-from matplotlib import pyplot as plt
 import os
-from nlp4kor.config import MNIST_DATA_DIR, MNIST_CNN_MODEL_DIR
-from tensorflow.examples.tutorials.mnist import input_data
-
 import numpy
+import numpy as np
+import tensorflow as tf
+from matplotlib import pyplot as plt, gridspec
+from tensorflow.examples.tutorials.mnist import input_data
+from nlp4kor.config import MNIST_DATA_DIR, MNIST_CNN_MODEL_DIR
 
 
 def show_image(image: numpy.ndarray, title: str = 'title',
