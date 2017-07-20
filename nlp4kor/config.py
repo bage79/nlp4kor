@@ -26,10 +26,10 @@ MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_P
 PROJECT_DIR = os.path.join(os.getenv("HOME"), 'workspace/nlp4kor')
 # log.info('PROJECT_DIR: %s' % PROJECT_DIR)
 
-DATA_DIR = os.path.join(PROJECT_DIR, 'data/')
+SAMPLE_DATA_DIR = os.path.join(PROJECT_DIR, 'sample_data/')
 # log.info('DATA_DIR: %s' % DATA_DIR)
-if not os.path.exists(DATA_DIR):
-    os.mkdir(DATA_DIR)
+if not os.path.exists(SAMPLE_DATA_DIR):
+    os.mkdir(SAMPLE_DATA_DIR)
 
 TENSORBOARD_LOG_DIR = os.path.join(os.getenv("HOME"), 'tensorboard_log')
 # log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
