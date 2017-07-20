@@ -6,13 +6,13 @@ import pickle
 import numpy as np
 
 from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import OneHotVector
+from bage_utils.one_hot_vector import CharOneHotVector
 from nlp4kor.config import log
 
 
 class DataSet(object):
-    def __init__(self, features: np.ndarray = None, labels: np.ndarray = None, features_vector: OneHotVector = None,
-                 labels_vector: OneHotVector = None, size=0, name: str = ''):
+    def __init__(self, features: np.ndarray = None, labels: np.ndarray = None, features_vector: CharOneHotVector = None,
+                 labels_vector: CharOneHotVector = None, size=0, name: str = ''):
         """
         
         :param features: list of data

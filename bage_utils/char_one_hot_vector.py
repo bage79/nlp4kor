@@ -2,12 +2,13 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 
-class OneHotVector(object):
-    def __init__(self, chars: list, added: list=[]):
+class CharOneHotVector(object):
+    def __init__(self, chars: list, added: list = [], unkown_char=' '):
         chars.extend(added)
         if not chars or type(chars) is not list or len(chars) == 0:
             raise Exception('values must be list and len(values)>0 %s' % chars)
 
+        self.unkown_char = unkown_char
         self.chars = chars
         self.encoder = LabelBinarizer(neg_label=0, pos_label=1, sparse_output=False)
         self.encoder.fit(chars)
@@ -52,11 +53,11 @@ class OneHotVector(object):
         """
         if vector.ndim != 1:
             vector = vector.flatten()
-        return self.encoder.inverse_transform(np.array([vector]))[0]
-        # if not ch or ch == '':
-        #     return ' '
-        # else:
-        #     return ch
+
+        if not vector.any():
+            return self.unkown_char
+        else:
+            return self.encoder.inverse_transform(np.array([vector]))[0]
 
     def to_values(self, vectors: np.ndarray) -> np.ndarray:
         """
@@ -66,7 +67,12 @@ class OneHotVector(object):
         """
         if vectors.ndim != 2:
             vectors = vectors.reshape((len(vectors) // self.size, self.size))
-        return ''.join(self.encoder.inverse_transform(vectors))
+
+        chars = []
+        for vector in vectors:
+            chars.append(self.to_value(vector))
+        return ''.join(chars)
+        # return ''.join(self.encoder.inverse_transform(vectors))
 
     def to_index(self, c: str) -> int:
         return np.argmax(self.to_vector(c))
@@ -77,23 +83,17 @@ class OneHotVector(object):
         else:
             return ''
 
-            # def indexs2values(self, indexs):
-            #     for
-            #     if 0 < index < len(self.chars):
-            #         return self.classes[index]
-            #     else:
-            #         return ''
-
 
 if __name__ == '__main__':
     # chars = ['0', '1', '2']
     # chars = [1, 0]
     chars = ['ㄷ', 'ㄱ', 'ㄴ', 'ㄹ']
-    ohv = OneHotVector(chars)
-    _input = 'ㄱㄴㄷㄹ'
+    ohv = CharOneHotVector(chars)
+    _input = 'ㄱㄴㄷㄹㅎ'
     feature_v = ohv.to_vectors(_input)
     print(_input)
     print(feature_v)
+    # print(ohv.to_value(feature_v[-1]))
     print(ohv.to_values(feature_v))
     print(ohv.to_values(np.array([[0.1, 1., 0.5, 0.5]])))
 

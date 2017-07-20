@@ -14,7 +14,7 @@ from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import OneHotVector
+from bage_utils.one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.string_util import StringUtil
 from bage_utils.watch_util import WatchUtil
@@ -393,8 +393,8 @@ if __name__ == '__main__':
                                       n_train, window_size, noise_rate, n_hidden1))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        features_vector = OneHotVector(DataFileUtil.read_list(characters_file))
-        labels_vector = OneHotVector(DataFileUtil.read_list(characters_file))
+        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
+        labels_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
         n_features = len(features_vector) * window_size  # number of features = 17,450 * 10
         n_classes = len(labels_vector) * window_size  # number of features = 17,450 * 10
         log.info('')
