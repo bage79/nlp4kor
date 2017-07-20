@@ -11,7 +11,7 @@ from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.file_util import FileUtil
 from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import OneHotVector
+from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DIR, KO_WIKIPEDIA_ORG_CHARACTERS_FILE, \
@@ -299,8 +299,8 @@ if __name__ == '__main__':
         log.info('batch_size: %s' % batch_size)
 
         total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
-        features_vector = OneHotVector(DataFileUtil.read_list(characters_file))
-        labels_vector = OneHotVector([0, 1])  # 붙여쓰기=0, 띄어쓰기=1
+        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
+        labels_vector = CharOneHotVector([0, 1])  # 붙여쓰기=0, 띄어쓰기=1
         n_features = len(features_vector) * ngram  # number of features = 17,380 * 4
         n_classes = len(labels_vector) if len(labels_vector) >= 3 else 1  # number of classes = 2 but len=1
         n_hidden1 = 100
