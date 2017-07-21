@@ -5,8 +5,7 @@ import pickle
 
 import numpy as np
 
-from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import CharOneHotVector
+from bage_utils.char_one_hot_vector import CharOneHotVector
 from nlp4kor.config import log
 
 
