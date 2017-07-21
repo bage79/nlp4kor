@@ -1,11 +1,13 @@
 import logging
 import os
 import sys
+import warnings
 
-from bage_utils.base_util import db_hostname, is_my_pc, is_my_gpu_pc
+from bage_utils.base_util import db_hostname, is_my_pc
 from bage_utils.log_util import LogUtil
 
-# warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)  # ignore future warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
 
 log = None
 if log is None:
@@ -22,15 +24,17 @@ MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
 MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_PASSWD'), 'db': 'kr_nlp'}
 
 PROJECT_DIR = os.path.join(os.getenv("HOME"), 'workspace/nlp4kor')
-# log.info('PROJECT_DIR: %s' % PROJECT_DIR)
 
-SAMPLE_DATA_DIR = os.path.join(PROJECT_DIR, 'sample_data/')
-# log.info('DATA_DIR: %s' % DATA_DIR)
-if not os.path.exists(SAMPLE_DATA_DIR):
-    os.mkdir(SAMPLE_DATA_DIR)
+DATA_DIR = os.path.join(PROJECT_DIR, 'data')
+if not os.path.exists(DATA_DIR):
+    os.mkdir(DATA_DIR)
+
+MODELS_DIR = os.path.join(PROJECT_DIR, 'models')
+if not os.path.exists(MODELS_DIR):
+    os.mkdir(MODELS_DIR)
 
 TENSORBOARD_LOG_DIR = os.path.join(os.getenv("HOME"), 'tensorboard_log')
-# log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
+log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
 if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
 
@@ -53,7 +57,3 @@ KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data'
 
 KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
 KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'spelling_error_correction')
-
-if __name__ == '__main__':
-    print('DATA_DIR:', MNIST_DIR)
-    print('MONGODB_PASSWD', os.getenv('MONGODB_PASSWD'), os.environ.get('MONGODB_PASSWD'))
