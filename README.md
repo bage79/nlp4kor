@@ -27,3 +27,5 @@
 
 ### 4. DL for NLP: A to Z - 박혜웅, 2017.07.15
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/DL_for_NLP_A_to_Z.pdf
+
+### 5. Restart of Tensorflow - 박혜웅, 2017.07.29

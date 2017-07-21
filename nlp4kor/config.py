@@ -13,7 +13,7 @@ if log is None:
         if is_my_pc():  # my pc (pycharm client, mac)
             log = LogUtil.get_logger(None, level=logging.DEBUG, console_mode=True)  # global log
         else:  # gpu pc (batch job, ubuntu)
-            log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log # console_mode=True for jupyter
+            log = LogUtil.get_logger(sys.argv[0], level=logging.DEBUG, console_mode=True)  # global log # console_mode=True for jupyter
     else:  # by batch script
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
 
