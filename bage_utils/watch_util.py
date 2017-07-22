@@ -46,7 +46,7 @@ class WatchUtil(object):
             try:
                 self.__get(name).stop()  # must call start() later.
             except AssertionError:
-                return 0
+                pass
         return self.__get(name).elapsed()
 
     def elapsed_string(self, name=DEFAULT_WATCH_NAME) -> str:
