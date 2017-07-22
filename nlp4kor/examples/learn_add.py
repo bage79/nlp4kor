@@ -30,30 +30,6 @@ def input_pipeline(filenames, batch_size=100, shuffle=True, delim='\t', tokens=2
     return features_batch, labels_batch
 
 
-def batch_from_cpu(filenames, batch_size=100, shuffle=True, delim='\t'):
-    features, labels = [], []
-    for filename in filenames:
-        with open(filename) as f:
-            for line in f:
-                f, l = line.split(delim)
-                features.append(f)
-                labels.append(l)
-
-    if shuffle:
-        random_idx = np.random.permutation(len(features))
-        features, labels = features[random_idx], labels[random_idx]
-    else:
-        features, labels = np.array(features), np.array(labels)
-
-    features_batch, labels_batch = [], []
-    for f, l in zip(features, labels):
-        features_batch.append(f)
-        labels_batch.append(l)
-        if len(features) >= batch_size:
-            yield features_batch, labels_batch
-            features_batch, labels_batch = [], []
-
-
 def create_data4add(data_file, n_data, digit_max=99):
     input_len = 2  # x1, x2
     train_x = np.random.randint(digit_max + 1, size=input_len * n_data).reshape(-1, input_len)
@@ -68,6 +44,7 @@ def create_data4add(data_file, n_data, digit_max=99):
 
 
 if __name__ == '__main__':
+    reuse_model = False  # if model file exists, reuse it.
     train_file = os.path.join(DATA_DIR, 'add.train.tsv')
     test_file = os.path.join(DATA_DIR, 'add.test.tsv')
 
@@ -75,11 +52,14 @@ if __name__ == '__main__':
     output_len = 1  # y
 
     n_train, n_test = 1000, 10
-    batch_size = 1
-    total_epochs = 10
-    model_save_interval_epoch = 1
+    batch_size = 100
+    total_epochs = 2  # 20
 
-    scope_postfix = DateUtil.current_yyyymmddhhmm()
+    graph_exists = False
+
+    # for batch_size in [1, 10, 100]:
+    scope_postfix = '%s.batch_size=%s.total_epochs=%s' % (DateUtil.current_yyyymmdd_hhmm(), batch_size, total_epochs)
+    log.debug('scope_postfix: %s' % scope_postfix)
 
     variable_scope = os.path.basename(__file__)
     if not os.path.exists(train_file):
@@ -95,7 +75,8 @@ if __name__ == '__main__':
         os.makedirs(model_dir)
     log.info('model_file: %s' % model_file)
 
-    with tf.variable_scope(variable_scope):
+    with tf.variable_scope(variable_scope, reuse=True if graph_exists else None):
+        graph_exists = True
         x = tf.placeholder(dtype=tf.float32, shape=[None, input_len], name='x')
         y = tf.placeholder(dtype=tf.float32, shape=[None, output_len], name='y')
 
@@ -104,7 +85,7 @@ if __name__ == '__main__':
 
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
-        train_op = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
+        train_step = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
 
         tf.summary.histogram(values=W1, name='W1/' + scope_postfix)
         tf.summary.histogram(values=b1, name='b1/' + scope_postfix)
@@ -126,19 +107,19 @@ if __name__ == '__main__':
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True  # do not use entire memory for this session
+
         # with queue runner
         saver = tf.train.Saver(max_to_keep=100)
-        checkpoint = tf.train.get_checkpoint_state(model_dir)  # TODO:
+        checkpoint = tf.train.get_checkpoint_state(model_dir)
         log.debug('')
         log.debug('checkpoint:')
         log.debug(checkpoint)
 
         min_epoch, min_cost = 0, 1e10
-        nth_batch = 0
         with tf.Session(config=config) as sess:
             sess.run(tf.global_variables_initializer())
 
-            if checkpoint and checkpoint.model_checkpoint_path:  # TODO:
+            if reuse_model and checkpoint and checkpoint.model_checkpoint_path:  # predicting
                 log.debug('')
                 log.debug('model loaded... %s' % checkpoint.model_checkpoint_path)
                 saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -151,7 +132,7 @@ if __name__ == '__main__':
                 try:
                     _features_batch, _labels_batch = sess.run([test_features_batch, test_labels_batch])
 
-                    _, _test_cost, _y_hat_batch, _W1, _b1 = sess.run([train_op, cost, y_hat, W1, b1], feed_dict={x: _features_batch, y: _labels_batch})
+                    _, _test_cost, _y_hat_batch, _W1, _b1 = sess.run([train_step, cost, y_hat, W1, b1], feed_dict={x: _features_batch, y: _labels_batch})
                     log.info('')
                     log.info('test cost: %.4f' % _test_cost)
                     log.info('W1: %s' % ['%.4f' % i for i in _W1])
@@ -163,48 +144,36 @@ if __name__ == '__main__':
                 finally:
                     coordinator.request_stop()
                     coordinator.join(threads)  # Wait for threads to finish.
-            else:
+            else:  # learning
                 writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR, sess.graph)
 
                 train_features_batch, train_labels_batch = input_pipeline([train_file], batch_size=batch_size, tokens=3)
 
                 coordinator = tf.train.Coordinator()
                 threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
+
+                batch_count = n_train // batch_size  # batch count for one epoch
                 try:
-                    for epoch in range(total_epochs):
-                        for i in range(n_train // batch_size):
-                            nth_batch += 1
+                    for epoch in range(1, total_epochs + 1):
+                        for i in range(1, batch_count + 1):
+                            nth_batch = epoch * batch_count + i
                             if coordinator.should_stop():
                                 break
 
                             _features_batch, _labels_batch = sess.run([train_features_batch, train_labels_batch])
-                            _, _train_cost, _summary_merge = sess.run([train_op, cost, summary_merge], feed_dict={x: _features_batch, y: _labels_batch})
+                            _, _train_cost, _summary_merge = sess.run([train_step, cost, summary_merge], feed_dict={x: _features_batch, y: _labels_batch})
 
                             writer.add_summary(_summary_merge, global_step=nth_batch)
 
                         if _train_cost < min_cost:
                             min_cost = _train_cost
                             min_epoch = epoch
-
                         log.info('[epoch: %s, nth_batch: %s] train cost: %.4f' % (epoch, nth_batch, _train_cost))
-                        if epoch == 0 or epoch % model_save_interval_epoch == 0:
-                            saver.save(sess, model_file + '.epoch=%s' % epoch)
+                        saver.save(sess, model_file, global_step=epoch)  # end of each epoch
                     log.info('[min_epoch: %s] min_cost: %.4f' % (min_epoch, min_cost))
                 except:
                     log.info(traceback.format_exc())
                 finally:
                     coordinator.request_stop()
                     coordinator.join(threads)  # Wait for threads to finish.
-
     log.info('with queue runner: %.2f secs' % watch.elapsed())
-
-    # without queue runner
-    watch.start()
-    # with tf.Session() as sess:
-    #     sess.run(tf.global_variables_initializer())
-    #     try:
-    #         for i in range(total_input // batch_size):
-    #             _features_batch, _labels_batch = sess.run([features_batch, labels_batch])
-    #     except:
-    #         log.info(traceback.format_exc())
-    # log.info('without queue runner: %.2f' % watch.elapsed())
