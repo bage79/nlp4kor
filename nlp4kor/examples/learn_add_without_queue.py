@@ -26,6 +26,12 @@ def next_batch(filenames, data_size, batch_size=100, delim='\t'):
         with open(filename) as f:
             _features, _labels = [], []
             for line in f.readlines():
+                _data_size += 1
+                line = line.strip()
+                x1, x2, y = line.split(delim)
+                _features.append((float(x1), float(x2)))
+                _labels.append(float(y))
+
                 if len(_features) >= batch_size:
                     features_batch = np.array(_features, dtype=np.float32)
                     labels_batch = np.array(_labels, dtype=np.float32)
@@ -34,12 +40,6 @@ def next_batch(filenames, data_size, batch_size=100, delim='\t'):
                     yield features_batch, labels_batch
                 if _data_size > data_size:
                     return
-
-                line = line.strip()
-                x1, x2, y = line.split(delim)
-                _features.append((float(x1), float(x2)))
-                _labels.append(float(y))
-                _data_size += 1
 
 
 def next_batch_in_memory(filenames, data_size, batch_size=100, shuffle=True, delim='\t'):
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     output_len = 1  # y
 
     n_train, n_test = 1000, 10
-    total_epochs = 10
+    total_epochs = 10  # FIXME:
 
     if not os.path.exists(train_file):
         create_data4add(train_file, n_train, digit_max=99)
@@ -180,6 +180,7 @@ if __name__ == '__main__':
                                 _, _train_cost, _summary_merge = sess.run([train_step, cost, summary_merge],
                                                                           feed_dict={x: _features_batch, y: _labels_batch})
                                 writer.add_summary(_summary_merge, global_step=nth_batch)
+                                # print(_features_batch.shape, _labels_batch.shape)
 
                             if _train_cost < min_cost:
                                 min_cost = _train_cost
