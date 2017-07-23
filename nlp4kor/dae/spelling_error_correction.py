@@ -14,7 +14,7 @@ from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.num_util import NumUtil
-from bage_utils.one_hot_vector import CharOneHotVector
+from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.string_util import StringUtil
 from bage_utils.watch_util import WatchUtil
