@@ -158,14 +158,14 @@ if __name__ == '__main__':
     output_len = 1  # y
 
     n_train, n_test = 1000, 10
-    total_epochs = 10
+    # total_epochs = 20
 
     if not os.path.exists(train_file):
         create_data4add(train_file, n_train, digit_max=99)
     if not os.path.exists(test_file):
         create_data4add(test_file, n_test, digit_max=99)
 
-    for batch_size in [1, 10, 100]:
+    for batch_size, total_epochs in zip([1, 10, 100], [1, 10, 100]):
         log.info('batch_size: %s' % batch_size)
 
         model_name = os.path.basename(__file__).replace('.py', '')
@@ -181,13 +181,12 @@ if __name__ == '__main__':
         with tf.device('/gpu:0'):
             with tf.Graph().as_default():  # for reusing graph
                 checkpoint = tf.train.get_checkpoint_state(model_dir)
-                if checkpoint:
-                    log.debug('')
-                    log.debug('checkpoint:')
-                    log.debug(checkpoint)
-                    log.debug('checkpoint.model_checkpoint_path: %s' % checkpoint.model_checkpoint_path)
-
-                is_learning = True if learning_mode or not checkpoint else False  # testing or learning
+                # if checkpoint:
+                #     log.debug('')
+                #     log.debug('checkpoint:')
+                #     log.debug(checkpoint)
+                #     log.debug('checkpoint.model_checkpoint_path: %s' % checkpoint.model_checkpoint_path)
+                is_learning = True if learning_mode or not checkpoint else False  # learning or testing
 
                 x, y, W1, b1, y_hat, cost, train_step, summary_merge = create_graph(variable_scope, reuse=reuse, is_learning=is_learning)
                 reuse = True
@@ -202,7 +201,7 @@ if __name__ == '__main__':
                     saver = tf.train.Saver(max_to_keep=100)
 
                     if is_learning:  # learning
-                        writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR, sess.graph)
+                        writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR, sess.graph)  # tensorboard writer
 
                         batch_count = math.ceil(n_train / batch_size)  # batch count for one epoch
                         try:
@@ -223,8 +222,8 @@ if __name__ == '__main__':
                                 # saver.save(sess, model_file, global_step=epoch)  # no need, redundant models
                                 if min_epoch == epoch:  # save lastest best model
                                     saver.save(sess, model_file)
-                            log.info('[min_epoch: %s] min_cost: %.4f' % (min_epoch, min_cost))
                             log.info('')
+                            log.info('[min_epoch: %s] min_cost: %.4f' % (min_epoch, min_cost))
                             log.info('train with %s: %.2f secs (batch_size: %s)' % (model_name, watch.elapsed(), batch_size))
                             log.info('')
                         except:

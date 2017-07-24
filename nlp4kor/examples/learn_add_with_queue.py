@@ -140,7 +140,7 @@ if __name__ == '__main__':
                     log.debug(checkpoint)
                     log.debug('checkpoint.model_checkpoint_path: %s' % checkpoint.model_checkpoint_path)
 
-                is_learning = True if learning_mode or not checkpoint else False  # testing or learning
+                is_learning = True if learning_mode or not checkpoint else False  # learning or testing
 
                 x, y, W1, b1, y_hat, cost, train_step, summary_merge = create_graph(variable_scope, reuse=reuse, is_learning=is_learning)
                 reuse = True

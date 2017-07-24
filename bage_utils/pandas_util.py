@@ -80,6 +80,8 @@ class PandasUtil(object):
 
     @staticmethod
     def table(df: pd.DataFrame) -> str:
+        if not isinstance(df, pd.DataFrame):
+            df = pd.DataFrame(df)
         return tabulate(df, headers='keys', tablefmt='grid', floatfmt=".2f")
 
     @staticmethod
