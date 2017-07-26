@@ -7,7 +7,6 @@ from bage_utils.base_util import db_hostname, is_my_pc
 from bage_utils.log_util import LogUtil
 
 warnings.simplefilter(action='ignore', category=FutureWarning)  # ignore future warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
 
 log = None
 if log is None:
