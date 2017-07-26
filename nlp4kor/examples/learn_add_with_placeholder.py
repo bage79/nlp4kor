@@ -156,7 +156,7 @@ if __name__ == '__main__':
     input_len = 2  # x1, x2
     output_len = 1  # y
 
-    n_train, n_valid, n_test = 1000, 100, 100
+    n_train, n_valid, n_test = 1000, 100, 20
 
     if not os.path.exists(train_file):
         create_data4add(train_file, n_train, digit_max=99)
@@ -167,6 +167,7 @@ if __name__ == '__main__':
 
     for learning_mode in [True, False]:
         for batch_size, total_epochs in zip([1, 10, 100], [6, 50, 100]):
+            tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
             log.info('')
             log.info('learning_mode: %s, batch_size: %s, total_epochs: %s' % (learning_mode, batch_size, total_epochs))
 
@@ -192,7 +193,7 @@ if __name__ == '__main__':
                     is_learning = True if learning_mode or not checkpoint else False  # learning or testing
 
                     x, y, W1, b1, y_hat, cost, train_step, summary_all = create_graph(variable_scope, is_learning=is_learning)
-                    min_epoch, min_cost = 0, 1e10
+                    min_valid_epoch, min_valid_cost = 0, 1e10
                     nth_batch = 0
                     valid_interval = 10
 
@@ -226,17 +227,18 @@ if __name__ == '__main__':
                                                                                         feed_dict={x: _features_batch, y: _labels_batch})
                                                 valid_writer.add_summary(_summary_all, global_step=nth_batch)
 
-                                    if _valid_cost < min_cost:
-                                        min_cost = _valid_cost
-                                        min_epoch = epoch
+                                    if _valid_cost < min_valid_cost:
+                                        min_valid_cost = _valid_cost
+                                        min_valid_epoch = epoch
                                     # noinspection PyUnboundLocalVariable
                                     log.info('[epoch: %s, nth_batch: %s] train cost: %.4f valid cost: %.4f' % (epoch, nth_batch, _train_cost, _valid_cost))
                                     # saver.save(sess, model_file, global_step=epoch)  # no need, redundant models
-                                    if min_epoch == epoch:  # save lastest best model
+                                    if min_valid_epoch == epoch:  # save lastest best model
                                         saver.save(sess, model_file)
                                 log.info('')
-                                log.info('[min_epoch: %s] min_cost: %.4f' % (min_epoch, min_cost))
-                                log.info('train with %s: %.2f secs (batch_size: %s)' % (model_name, watch.elapsed(), batch_size))
+                                log.info('"%s" min_valid_epoch: %s, min_valid_cost: %.4f' % (model_name, min_valid_epoch, min_valid_cost))
+                                log.info(
+                                    '"%s" train: %.2f secs (batch_size: %s, total_epochs: %s)' % (model_name, watch.elapsed(), batch_size, total_epochs))
                                 log.info('')
                             except:
                                 log.info(traceback.format_exc())
