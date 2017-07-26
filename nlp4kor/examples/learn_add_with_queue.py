@@ -23,13 +23,13 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     min_after_dequeue = max(100, batch_size * 2)  # batch_size
     capacity = min_after_dequeue + 3 * batch_size
 
-    filename_queue = tf.train.string_input_producer(filenames, name='filename_queue', shuffle=shuffle)
+    filename_queue = tf.train.string_input_producer(filenames, shuffle=shuffle, name='filename_queue')
     reader = tf.TextLineReader(skip_header_lines=None, name='reader')
     _key, value = reader.read(filename_queue)
     tokens = tf.decode_csv(value, field_delim=delim, record_defaults=[[0.] for _ in range(splits)], name='decode_csv')
     # log.debug('%s %s %s' % (x1, x2, y))
-    feature = tf.reshape([tokens[:-1]], shape=[splits - 1])
-    label = tf.reshape([tokens[-1]], shape=[1])
+    feature = tf.reshape([tokens[:-1]], shape=[splits - 1], name='x_reshape')
+    label = tf.reshape([tokens[-1]], shape=[1], name='y_reshape')
     # log.debug(feature)
 
     if shuffle:
@@ -38,8 +38,7 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     else:
         features_batch, labels_batch = tf.train.batch([feature, label], batch_size=batch_size, capacity=capacity)
 
-    # return tf.identity(features_batch, name='x'), tf.identity(labels_batch, name='y') # FIXME: naming
-    return features_batch, labels_batch
+    return tf.identity(features_batch, name='x'), tf.identity(labels_batch, name='y')
 
 
 def create_data4add(data_file, n_data, digit_max=99):
@@ -62,21 +61,24 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
-def create_graph(variable_scope_name, is_learning=False, verbose=False):
+def create_graph(variable_scope_name, is_training=False, is_validating=False, verbose=False):
     """
     create or reuse graph
     :param variable_scope_name: variable scope name
-    :param is_learning: is learning mode
+    :param is_training: is learning mode
+    :param is_validating: is validation graph
     :param verbose: print graph nodes
     :return: tensorflow graph nodes
     """
     with tf.variable_scope(variable_scope_name) as variable_scope:  # for reusing graph
-        if is_learning:
+        if is_training:
             x, y = input_pipeline([train_file], batch_size=batch_size, shuffle=True, delim='\t', splits=3)
         else:
             # x, y = input_pipeline([test_file], batch_size=n_test, shuffle=True, delim='\t', splits=3)
             x = tf.placeholder(dtype=tf.float32, shape=[None, input_len], name='x')
             y = tf.placeholder(dtype=tf.float32, shape=[None, output_len], name='y')
+
+        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
 
         # W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.contrib.layers.xavier_initializer(), name='W1')
         W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
@@ -84,12 +86,12 @@ def create_graph(variable_scope_name, is_learning=False, verbose=False):
 
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
-        train_step = tf.train.AdamOptimizer(learning_rate=0.01, name='optimizer').minimize(cost, name='train_step')
+        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
 
         tf.summary.histogram(values=W1, name='summary_W1')
         tf.summary.histogram(values=b1, name='summary_b1')
-        tf.summary.scalar(tensor=cost, name='summary_cost')
-        summary_all = tf.summary.merge_all()
+        summary_cost = tf.summary.scalar(tensor=cost, name='summary_cost')
+        summary_all = tf.summary.merge([summary_cost])  # merge_all()
 
         if verbose:  # print graph if the first of learning mode
             log.info('')
@@ -102,7 +104,7 @@ def create_graph(variable_scope_name, is_learning=False, verbose=False):
             log.info(cost)  # cost operation is valid? check y_hat's shape and y's shape
 
         variable_scope.reuse_variables()
-    return x, y, W1, b1, y_hat, cost, train_step, summary_all
+    return learning_rate, x, y, W1, b1, y_hat, cost, train_step, summary_all
 
 
 if __name__ == '__main__':
@@ -127,11 +129,11 @@ if __name__ == '__main__':
     if not os.path.exists(test_file):
         create_data4add(test_file, n_test, digit_max=99)
 
-    for learning_mode in [True, False]:  # learning & training
+    for training_mode in [True, False]:  # training & testing
         for batch_size, total_epochs in zip([1, 10, 100], [6, 18, 20]):
             tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
             log.info('')
-            log.info('learning_mode: %s, batch_size: %s, total_epochs: %s' % (learning_mode, batch_size, total_epochs))
+            log.info('training_mode: %s, batch_size: %s, total_epochs: %s' % (training_mode, batch_size, total_epochs))
 
             model_name = os.path.basename(__file__).replace('.py', '')
             model_file = os.path.join(MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_epochs_%s/model' % (model_name, n_train, batch_size, total_epochs))
@@ -152,18 +154,19 @@ if __name__ == '__main__':
                     #     log.debug('checkpoint:')
                     #     log.debug(checkpoint)
                     #     log.debug('checkpoint.model_checkpoint_path: %s' % checkpoint.model_checkpoint_path)
-                    is_learning = True if learning_mode or not checkpoint else False  # learning or testing
+                    is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    x, y, W1, b1, y_hat, cost, train_step, summary_all = create_graph(variable_scope, is_learning=is_learning)
+                    learning_rate, x, y, W1, b1, y_hat, cost, train_step, summary_all = create_graph(variable_scope, is_training=is_training, is_validating=False)
+                    # learning_rate, x, y, W1, b1, y_hat, cost, train_step, summary_all = create_graph(variable_scope, is_training=is_training, is_validating=True)
 
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
                         sess.run(tf.global_variables_initializer())
                         saver = tf.train.Saver(max_to_keep=None)
 
-                        if is_learning:  # learning
+                        if is_training:  # training
                             train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
-                            valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
+                            # valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
 
                             valid_features_batch, valid_labels_batch = input_pipeline([valid_file], batch_size=n_valid, splits=3)
 
@@ -180,7 +183,8 @@ if __name__ == '__main__':
                                             break
 
                                         nth_batch += 1
-                                        _, _train_cost, _summary_all = sess.run([train_step, cost, summary_all])  # no feed_dict
+                                        _, _train_cost, _summary_all = sess.run([train_step, cost, summary_all],
+                                                                                feed_dict={learning_rate: 0.01})
                                         train_writer.add_summary(_summary_all, global_step=nth_batch)
 
                                         # if nth_batch % valid_interval == 0:  # FIXME:
@@ -222,7 +226,8 @@ if __name__ == '__main__':
                                 watch = WatchUtil()
                                 watch.start()
                                 _features_batch, _labels_batch = sess.run([test_features_batch, test_labels_batch])
-                                _test_cost, _y_hat_batch, _W1, _b1 = sess.run([cost, y_hat, W1, b1], feed_dict={x: _features_batch, y: _labels_batch})
+                                _test_cost, _y_hat_batch, _W1, _b1 = sess.run([cost, y_hat, W1, b1],
+                                                                              feed_dict={x: _features_batch, y: _labels_batch, learning_rate: 0.01})
 
                                 log.info('')
                                 log.info('W1: %s' % ['%.4f' % i for i in _W1])
