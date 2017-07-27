@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from bage_utils.date_util import DateUtil
+from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
 
@@ -109,15 +110,14 @@ def create_data4add(data_file, n_data, digit_max=99):
 
 
 # noinspection PyUnusedLocal
-def create_graph(variable_scope_name, is_training=False, verbose=False):
+def create_graph(scope_name, verbose=False):
     """
     create or reuse graph
-    :param variable_scope_name: variable scope name
-    :param is_training: is learning mode
+    :param scope_name:
     :param verbose: print graph nodes
     :return: tensorflow graph nodes
     """
-    with tf.variable_scope(variable_scope_name) as variable_scope:  # for reusing graph
+    with tf.variable_scope('common') as variable_scope:  # for reusing graph
         learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
 
         x = tf.placeholder(dtype=tf.float32, shape=[None, input_len], name='x')
@@ -131,23 +131,22 @@ def create_graph(variable_scope_name, is_training=False, verbose=False):
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate, name='optimizer').minimize(cost, name='train_step')
 
-        tf.summary.histogram(values=W1, name='summary_W1')
-        tf.summary.histogram(values=b1, name='summary_b1')
-        tf.summary.scalar(tensor=cost, name='summary_cost')
-        summary_all = tf.summary.merge_all()
+    with tf.variable_scope(scope_name, reuse=None) as scope:
+        _W1 = tf.summary.histogram(values=W1, name='_W1')
+        _b1 = tf.summary.histogram(values=b1, name='_b1')
+        _cost = tf.summary.scalar(tensor=cost, name='_cost')
+        summary = tf.summary.merge([_W1, _b1, _cost])
 
-        if verbose:  # print graph if the first of learning mode
-            log.info('')
-            log.info(x)
-            log.info(W1)
-            log.info(b1)
-            log.info('')
-            log.info(y)
-            log.info(y_hat)
-            log.info(cost)  # cost operation is valid? check y_hat's shape and y's shape
-
-        variable_scope.reuse_variables()
-    return learning_rate, x, y, W1, b1, y_hat, cost, train_step, summary_all
+    if verbose:
+        log.info('')
+        log.info(x)
+        log.info(W1)
+        log.info(b1)
+        log.info('')
+        log.info(y)
+        log.info(y_hat)
+        log.info(cost)
+    return x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary
 
 
 if __name__ == '__main__':
@@ -158,13 +157,15 @@ if __name__ == '__main__':
     valid_file = os.path.join(DATA_DIR, 'add.valid.tsv')
     test_file = os.path.join(DATA_DIR, 'add.test.tsv')
 
-    valid_interval = 10
+    total_train_time = 5
+    valid_check_interval = 0.5
     save_model_each_epochs = False  # defualt False
 
     input_len = 2  # x1, x2
     output_len = 1  # y
+    _learning_rate = 0.01
 
-    n_train, n_valid, n_test = 1000, 100, 20
+    n_train, n_valid, n_test = 1000, 100, 10
     if not os.path.exists(train_file):
         create_data4add(train_file, n_train, digit_max=99)
     if not os.path.exists(valid_file):
@@ -173,35 +174,30 @@ if __name__ == '__main__':
         create_data4add(test_file, n_test, digit_max=99)
 
     for training_mode in [True, False]:  # training & testing
-        for batch_size, total_epochs in zip([1, 10, 100], [6, 50, 120]):
+        for batch_size in [1, 10, 100]:
             tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
             log.info('')
-            log.info('training_mode: %s, batch_size: %s, total_epochs: %s' % (training_mode, batch_size, total_epochs))
+            log.info('training_mode: %s, batch_size: %s, total_train_time: %s secs' % (training_mode, batch_size, total_train_time))
 
             model_name = os.path.basename(__file__).replace('.py', '')
-            model_file = os.path.join(MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_epochs_%s/model' % (model_name, n_train, batch_size, total_epochs))
+            model_file = os.path.join(MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
             model_dir = os.path.dirname(model_file)
             log.info('model_name: %s' % model_name)
             log.info('model_file: %s' % model_file)
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
 
-            variable_scope = '%s.%s.batch_size_%s.total_epochs_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_epochs)
-            log.info('variable_scope: %s' % variable_scope)
+            scope_name = '%s.%s.batch_size_%s.total_train_time_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_train_time)
+            log.info('scope_name: %s' % scope_name)
 
             with tf.device('/gpu:0'):
                 with tf.Graph().as_default():  # for reusing graph
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
                         checkpoint = tf.train.get_checkpoint_state(model_dir)
-                        # if checkpoint:
-                        #     log.debug('')
-                        #     log.debug('checkpoint:')
-                        #     log.debug(checkpoint)
-                        #     log.debug('checkpoint.model_checkpoint_path: %s' % checkpoint.model_checkpoint_path)
                         is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                        learning_rate, x, y, W1, b1, y_hat, cost, train_step, summary_all = create_graph(variable_scope, is_training=is_training)
+                        x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(scope_name, verbose=False)
 
                         sess.run(tf.global_variables_initializer())
                         saver = tf.train.Saver(max_to_keep=None)
@@ -213,40 +209,52 @@ if __name__ == '__main__':
                             batch_count = math.ceil(n_train / batch_size)  # batch count for one epoch
                             try:
                                 watch = WatchUtil()
+                                stop_timer = TimerUtil(interval_secs=total_train_time)
+                                valid_timer = TimerUtil(interval_secs=valid_check_interval)
                                 watch.start()
-                                for epoch in range(1, total_epochs + 1):
-                                    nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
+                                stop_timer.start()
+                                valid_timer.start()
+
+                                nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
+                                epoch, running = 0, True
+                                while running:
+                                    epoch += 1
                                     for _features_batch, _labels_batch in next_batch([train_file], data_size=n_train, batch_size=batch_size, delim='\t',
                                                                                      splits=3):
+                                        if stop_timer.is_over():
+                                            running = False
+                                            break
+
                                         nth_batch += 1
-                                        _, _train_cost, _summary_all = sess.run([train_step, cost, summary_all],
-                                                                                feed_dict={x: _features_batch, y: _labels_batch, learning_rate: 0.01})
-                                        train_writer.add_summary(_summary_all, global_step=nth_batch)
+                                        _, _train_cost, _summary = sess.run([train_step, cost, summary],
+                                                                            feed_dict={x: _features_batch, y: _labels_batch, learning_rate: _learning_rate})
+                                        train_writer.add_summary(_summary, global_step=nth_batch)
                                         # print(_features_batch.shape, _labels_batch.shape)
 
-                                        if nth_batch % valid_interval == 0:
+                                        if valid_timer.is_over():
                                             # noinspection PyAssignmentToLoopOrWithParameter
-                                            for _features_batch, _labels_batch in next_batch([train_file], data_size=n_valid, batch_size=n_valid, delim='\t',
+                                            for _features_batch, _labels_batch in next_batch([valid_file], data_size=n_valid, batch_size=n_valid, delim='\t',
                                                                                              splits=3):
-                                                _, _valid_cost, _summary_all = sess.run([train_step, cost, summary_all],
-                                                                                        feed_dict={x: _features_batch, y: _labels_batch, learning_rate: 0.01})
-                                                valid_writer.add_summary(_summary_all, global_step=nth_batch)
+                                                _, _valid_cost, _summary = sess.run([train_step, cost, summary],
+                                                                                    feed_dict={x: _features_batch, y: _labels_batch,
+                                                                                               learning_rate: _learning_rate})
+                                                valid_writer.add_summary(_summary, global_step=nth_batch)
                                                 if _valid_cost < min_valid_cost:
                                                     min_valid_cost = _valid_cost
                                                     min_valid_epoch = epoch
-
                                                 # noinspection PyUnboundLocalVariable
-                                                log.info('[epoch: %s, nth_batch: %s] train cost: %.4f valid cost: %.4f' % (epoch, nth_batch, _train_cost, _valid_cost))
+                                                log.info('[epoch: %s, nth_batch: %s] train cost: %.4f valid cost: %.4f' % (
+                                                    epoch, nth_batch, _train_cost, _valid_cost))
+                                                if min_valid_epoch == epoch:  # save the lastest best model
+                                                    saver.save(sess, model_file)
 
                                     if save_model_each_epochs:
                                         saver.save(sess, model_file, global_step=epoch)
-                                    if min_valid_epoch == epoch:  # save the lastest best model
-                                        saver.save(sess, model_file)
                                 log.info('')
-                                # noinspection PyUnboundLocalVariable
-                                log.info('"%s" train: min_valid_cost: %.4f, min_valid_epoch: %s,  %.2f secs (batch_size: %s, total_epochs: %s)' % (
-                                    model_name, min_valid_cost, min_valid_epoch, watch.elapsed(),
-                                    batch_size, total_epochs))
+                                log.info(
+                                    '"%s" train: min_valid_cost: %.8f, min_valid_epoch: %s,  %.2f secs (batch_size: %s, total_epochs: %s, total_train_time: %s secs)' % (
+                                        model_name, min_valid_cost, min_valid_epoch, watch.elapsed(),
+                                        batch_size, epoch, total_train_time))
                                 log.info('')
                             except:
                                 log.info(traceback.format_exc())
@@ -261,7 +269,8 @@ if __name__ == '__main__':
                                 watch.start()
                                 for _features_batch, _labels_batch in next_batch([test_file], data_size=n_test, batch_size=n_test, delim='\t', splits=3):
                                     _, _test_cost, _y_hat_batch, _W1, _b1 = sess.run([train_step, cost, y_hat, W1, b1],
-                                                                                     feed_dict={x: _features_batch, y: _labels_batch, learning_rate: 0.01})
+                                                                                     feed_dict={x: _features_batch, y: _labels_batch,
+                                                                                                learning_rate: _learning_rate})
 
                                     log.info('')
                                     log.info('W1: %s' % ['%.4f' % i for i in _W1])
@@ -270,9 +279,7 @@ if __name__ == '__main__':
                                         log.debug('%3d + %3d = %4d (y_hat: %4.1f)' % (x1, x2, _y, _y_hat))
                                     log.info('')
                                     log.info(
-                                        '"%s" test: test_cost: %.4f, %.2f secs (batch_size: %s, total_epochs: %s)' % (
-                                            model_name, _test_cost, watch.elapsed(),
-                                            batch_size, total_epochs))
+                                        '"%s" test: test_cost: %.8f, %.2f secs (batch_size: %s)' % (model_name, _test_cost, watch.elapsed(), batch_size))
                                     log.info('')
                             except:
                                 log.info(traceback.format_exc())
