@@ -77,9 +77,9 @@ def create_graph(scope_name, mode, input_file, batch_len=1, verbose=False, reuse
         b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
 
     with tf.variable_scope(mode, reuse=None):
-        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
-
         x, y = input_pipeline([input_file], batch_size=batch_len, shuffle=True, delim='\t', splits=3)
+
+        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
