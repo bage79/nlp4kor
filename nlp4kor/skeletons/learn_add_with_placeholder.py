@@ -61,8 +61,6 @@ def next_batch_in_memory(filenames, data_size, batch_size=1, delim='\t', splits=
         next_batch_in_memory.batch_size = batch_size
 
         _features, _labels = [], []  # read all data
-        watch = WatchUtil()
-        watch.start()
         for filename in filenames:
             if len(_features) > data_size:
                 return
