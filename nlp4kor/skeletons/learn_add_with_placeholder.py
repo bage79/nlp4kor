@@ -11,7 +11,7 @@ from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
 
 
-def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2):
+def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle=False):
     """
     read big data can't be loaded in memory
     :param filenames: list of input file names
@@ -41,12 +41,13 @@ def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2):
                     labels_batch = np.array(_labels, dtype=np.float32)
                     labels_batch = labels_batch.reshape(len(_labels), -1)
                     _features, _labels = [], []
+                    # print('next_batch(batch_size: %s yield' % batch_size)
                     yield features_batch, labels_batch
-                if _data_size > data_size:
-                    return
+                    if _data_size >= data_size:
+                        return
 
 
-def next_batch_in_memory(filenames, data_size, batch_size=100, delim='\t', splits=2, shuffle=True):
+def next_batch_in_memory(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle=False):
     """
     read small data can be loaded in memory
     :param filenames: list of input file names
@@ -57,35 +58,42 @@ def next_batch_in_memory(filenames, data_size, batch_size=100, delim='\t', split
     :param shuffle: shuffle data
     :return: batch data (features_batch, labels_batch)
     """
-    _features, _labels = [], []  # read all data
-    for filename in filenames:
-        if len(_features) > data_size:
-            return
-        with open(filename) as f:
-            for line in f.readlines():
-                line = line.strip()
-                tokens = line.split(delim)
-                if len(tokens) != splits:  # invalid line
-                    continue
-                _features.append([float(t) for t in tokens[:-1]])
-                _labels.append(float(tokens[-1]))
-                if len(_features) >= data_size:
-                    return
+    if not hasattr(next_batch_in_memory, 'batches') or not hasattr(next_batch_in_memory, 'batch_size') or next_batch_in_memory.batch_size != batch_size:
+        # print('next_batch_in_memory(batch_size: %s)' % batch_size)
+        next_batch_in_memory.batches = []
+        next_batch_in_memory.batch_size = batch_size
 
-    features = np.array(_features, dtype=np.float32)
-    labels = np.array(_labels, dtype=np.float32)
-    if shuffle:
-        random_idx = np.random.permutation(len(_features))
-        features, labels = features[random_idx], labels[random_idx]
+        _features, _labels = [], []  # read all data
+        watch = WatchUtil()
+        watch.start()
+        for filename in filenames:
+            if len(_features) > data_size:
+                return
+            with open(filename) as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    tokens = line.split(delim)
+                    if len(tokens) != splits:  # invalid line
+                        continue
+                    _features.append([float(t) for t in tokens[:-1]])
+                    _labels.append(float(tokens[-1]))
 
-    labels = labels.reshape(len(labels), -1)
+        # print('len:', len(_features))
+        features = np.array(_features, dtype=np.float32)
+        labels = np.array(_labels, dtype=np.float32)
+        if shuffle:
+            random_idx = np.random.permutation(len(_features))
+            features, labels = features[random_idx], labels[random_idx]
 
-    splits = len(features) // batch_size
-    if len(features) % batch_size > 0:
-        splits += 1
-    batches = zip(np.array_split(features, splits), np.array_split(labels, splits))
+        labels = labels.reshape(len(labels), -1)
 
-    for features_batch, labels_batch in batches:
+        splits = len(features) // batch_size
+        if len(features) % batch_size > 0:
+            splits += 1
+        next_batch_in_memory.batches = list(zip(np.array_split(features, splits), np.array_split(labels, splits)))
+        # print('read OK. ', watch.elapsed_string())
+
+    for features_batch, labels_batch in next_batch_in_memory.batches:
         yield features_batch, labels_batch
 
 
@@ -157,6 +165,7 @@ if __name__ == '__main__':
     valid_file = os.path.join(DATA_DIR, 'add.valid.tsv')
     test_file = os.path.join(DATA_DIR, 'add.test.tsv')
 
+    is_big_data = True
     total_train_time = 5
     valid_check_interval = 0.5
     save_model_each_epochs = False  # defualt False
@@ -217,13 +226,17 @@ if __name__ == '__main__':
 
                                 nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
                                 epoch, running = 0, True
+                                batch_func = next_batch_in_memory if is_big_data else next_batch
                                 while running:
                                     epoch += 1
-                                    for _features_batch, _labels_batch in next_batch([train_file], data_size=n_train, batch_size=batch_size, delim='\t',
-                                                                                     splits=3):
+                                    for _features_batch, _labels_batch in batch_func([train_file], data_size=n_train, batch_size=batch_size, delim='\t',
+                                                                                     splits=3, shuffle=False):
                                         if stop_timer.is_over():
                                             running = False
                                             break
+
+                                        if len(_features_batch) != batch_size:
+                                            log.error('len(_features_batch): %s' % _features_batch.shape)
 
                                         nth_batch += 1
                                         _, _train_cost, _summary = sess.run([train_step, cost, summary],
