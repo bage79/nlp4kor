@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from bage_utils.date_util import DateUtil
+from bage_utils.num_util import NumUtil
 from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
@@ -205,9 +206,9 @@ if __name__ == '__main__':
 
                                 log.info('')
                                 log.info(
-                                    '"%s" train: min_valid_cost: %.8f, min_valid_epoch: %s,  %.2f secs (batch_size: %s, total_epochs: %s, total_train_time: %s secs)' % (
+                                    '"%s" train: min_valid_cost: %.8f, min_valid_epoch: %s,  %.2f secs (batch_size: %s,  total_input_data: %s, total_epochs: %s, total_train_time: %s secs)' % (
                                         model_name, min_valid_cost, min_valid_epoch, watch.elapsed(),
-                                        batch_size, epoch, total_train_time))
+                                        batch_size, NumUtil.comma_str(batch_size * nth_batch), epoch, total_train_time))
                                 log.info('')
                             except:
                                 log.info(traceback.format_exc())
