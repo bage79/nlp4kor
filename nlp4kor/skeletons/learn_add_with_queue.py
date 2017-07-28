@@ -85,11 +85,10 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
     with tf.variable_scope('common', reuse=reuse):  # for reusing graph
         W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
         b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
+        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
 
     with tf.variable_scope(mode, reuse=None):
         x, y = input_pipeline([input_file], batch_size=batch_size, delim='\t', splits=3, n_threads=n_threads)
-
-        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
@@ -157,11 +156,11 @@ if __name__ == '__main__':
                     checkpoint = tf.train.get_checkpoint_state(model_dir)
                     is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    train_x, train_y, train_learning_rate, W1, b1, train_y_hat, train_cost, train_step, train_summary = create_graph(
+                    _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
                         scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
-                    valid_x, valid_y, valid_learning_rate, W1, b1, valid_y_hat, valid_cost, valid_train_step, valid_summary = create_graph(
+                    _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
                         scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
-                    test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, test_train_step, test_summary = create_graph(
+                    test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
                         scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
 
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
@@ -197,19 +196,16 @@ if __name__ == '__main__':
                                             break
 
                                         nth_batch += 1
-                                        _, _train_cost, _summary = sess.run([train_step, train_cost, train_summary],
-                                                                            feed_dict={train_learning_rate: _learning_rate})
+                                        _, _train_cost, _summary = sess.run([train_step, train_cost, train_summary], feed_dict={train_learning_rate: _learning_rate})
                                         train_writer.add_summary(_summary, global_step=nth_batch)
 
                                         if valid_timer.is_over():
-                                            _valid_cost, _y_hat_batch, _W1, _b1 = sess.run([valid_cost, valid_y_hat, W1, b1],
-                                                                                           feed_dict={valid_learning_rate: _learning_rate})
+                                            _valid_cost, _valid_summary = sess.run([valid_cost, valid_summary], feed_dict={valid_learning_rate: _learning_rate})
                                             valid_writer.add_summary(_summary, global_step=nth_batch)
                                             if _valid_cost < min_valid_cost:
                                                 min_valid_cost = _valid_cost
                                                 min_valid_epoch = epoch
-                                            log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (epoch, nth_batch, _train_cost,
-                                                                                                                        _valid_cost))
+                                            log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (epoch, nth_batch, _train_cost, _valid_cost))
                                             if min_valid_epoch == epoch:  # save the lastest best model
                                                 saver.save(sess, model_file)
 
@@ -239,11 +235,10 @@ if __name__ == '__main__':
                                 watch = WatchUtil()
                                 watch.start()
 
-                                _test_cost, _y_hat_batch, _W1, _b1, _x_batch, _y_batch = sess.run([test_cost, test_y_hat, W1, b1, test_x, test_y],
-                                                                                                  feed_dict={test_learning_rate: _learning_rate})
+                                _test_cost, _y_hat_batch, _W1, _b1, _x_batch, _y_batch = sess.run([test_cost, test_y_hat, W1, b1, test_x, test_y], feed_dict={test_learning_rate: _learning_rate})
 
                                 log.info('')
-                                log.info('W1: %s' % ['%.4f' % i for i in _W1])
+                                log.info('W1: %s' % ['%.4f' % w for w in _W1])
                                 log.info('b1: %.4f' % _b1)
                                 for (x1, x2), _y, _y_hat in zip(_x_batch, _y_batch, _y_hat_batch):
                                     log.debug('%3d + %3d = %4d (y_hat: %4.1f)' % (x1, x2, _y, _y_hat))

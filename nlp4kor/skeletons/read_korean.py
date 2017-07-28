@@ -24,6 +24,7 @@ def input_pipeline(filenames, batch_size=100, shuffle=True, delim='\t', tokens=2
 
 
 if __name__ == '__main__':
+    shuffle = False
     batch_size = 5
     data_file = os.path.join(DATA_DIR, 'en2kor.tsv')
 
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     config.gpu_options.allow_growth = True
 
     filenames = [data_file]
-    features_batch, labels_batch = input_pipeline(filenames, batch_size=batch_size, shuffle=False, tokens=2)
+    features_batch, labels_batch = input_pipeline(filenames, batch_size=batch_size, shuffle=shuffle, tokens=2)
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
 
