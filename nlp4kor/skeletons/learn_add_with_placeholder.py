@@ -4,6 +4,7 @@ import traceback
 
 import numpy as np
 import tensorflow as tf
+import time
 
 from bage_utils.date_util import DateUtil
 from bage_utils.timer_util import TimerUtil
@@ -23,8 +24,6 @@ def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle
     """
     _data_size = 0
     for filename in filenames:
-        if _data_size > data_size:
-            return
         with open(filename) as f:
             _features, _labels = [], []
             for line in f.readlines():
@@ -42,7 +41,7 @@ def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle
                     y_batch = y_batch.reshape(len(_labels), -1)
                     _features, _labels = [], []
                     yield x_batch, y_batch
-                    if _data_size >= data_size:
+                    if _data_size >= data_size:  # restart this function
                         return
 
 
@@ -223,7 +222,6 @@ if __name__ == '__main__':
                                 nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
                                 epoch, running = 0, True
                                 batch_func = next_batch if is_big_data else next_batch_in_memory
-                                print('batch_func:', batch_func)
                                 while running:
                                     epoch += 1
                                     for _x_batch, _y_batch in batch_func([train_file], data_size=n_train, batch_size=batch_size, delim='\t',
@@ -234,6 +232,10 @@ if __name__ == '__main__':
 
                                         if len(_x_batch) != batch_size:
                                             log.error('len(_x_batch): %s' % _x_batch.shape)
+
+                                        # print(_x_batch[:2], _x_batch.shape)
+                                        # print()
+                                        # time.sleep(1)
 
                                         nth_batch += 1
                                         _, _train_cost, _summary = sess.run([train_step, cost, summary],
