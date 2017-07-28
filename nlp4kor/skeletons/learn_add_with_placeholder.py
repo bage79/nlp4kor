@@ -113,9 +113,11 @@ def create_data4add(data_file, n_data, digit_max=99):
 
 
 # noinspection PyUnusedLocal
-def create_graph(scope_name, verbose=False):
+def create_graph(scope_name, input_len=2, output_len=1, verbose=False):
     """
     create or reuse graph
+    :param output_len: x1, x2
+    :param input_len: y
     :param scope_name:
     :param verbose: print graph nodes
     :return: tensorflow graph nodes
@@ -199,7 +201,7 @@ if __name__ == '__main__':
                     checkpoint = tf.train.get_checkpoint_state(model_dir)
                     is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(scope_name, verbose=False)
+                    x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(scope_name, input_len=input_len, output_len=output_len, verbose=False)
 
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:

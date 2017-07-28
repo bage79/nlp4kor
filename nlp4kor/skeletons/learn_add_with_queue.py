@@ -70,12 +70,14 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
-def create_graph(scope_name, mode, input_file, batch_size=1, verbose=False, reuse=None, n_threads=2):
+def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_size=1, verbose=False, reuse=None, n_threads=2):
     """
     create or reuse graph
     :param scope_name: variable scope name
     :param mode: 'train', 'valid', 'test'
     :param input_file: train or valid or test file path
+    :param input_len: x1, x2
+    :param output_len: y
     :param batch_size: batch size > 0
     :param verbose: print graph nodes
     :param reuse: reuse graph or not
@@ -158,11 +160,11 @@ if __name__ == '__main__':
                     is_training = True if training_mode or not checkpoint else False  # learning or testing
 
                     train_x, train_y, train_learning_rate, W1, b1, train_y_hat, train_cost, train_step, train_summary = create_graph(
-                        scope_name, 'train', input_file=train_file, batch_size=batch_size, reuse=None)
+                        scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
                     valid_x, valid_y, valid_learning_rate, W1, b1, valid_y_hat, valid_cost, valid_train_step, valid_summary = create_graph(
-                        scope_name, 'valid', input_file=valid_file, batch_size=n_valid, reuse=True)
+                        scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
                     test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, test_train_step, test_summary = create_graph(
-                        scope_name, 'test', input_file=test_file, batch_size=n_test, reuse=True)
+                        scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
 
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
