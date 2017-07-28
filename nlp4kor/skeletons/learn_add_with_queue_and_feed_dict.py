@@ -31,7 +31,7 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     # log.debug('%s %s %s' % (x1, x2, y))
     feature = tf.reshape([tokens[:-1]], shape=[splits - 1], name='x_reshape')
     label = tf.reshape([tokens[-1]], shape=[1], name='y_reshape')
-    # print('input_pipeline(filenames: %s, batch_size: %s' % (os.path.basename(filenames[0]), batch_size))
+    # log.debug(feature)
 
     if shuffle:
         x_batch, y_batch = tf.train.shuffle_batch([feature, label], batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
@@ -61,25 +61,23 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
-def create_graph(scope_name, mode, input_file, batch_len=1, verbose=False, reuse=None):
+def create_graph(model_name, scope_name, verbose=False):
     """
     create or reuse graph
+    :param model_name:
     :param scope_name:
-    :param mode: 'train', 'valid', 'test'
-    :param input_file:
-    :param batch_len:
     :param verbose: print graph nodes
-    :param reuse:
     :return: tensorflow graph nodes
     """
-    with tf.variable_scope('common', reuse=reuse):  # for reusing graph
+    with tf.variable_scope('common'):  # for reusing graph
+        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
+
         W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
         b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
 
-    with tf.variable_scope(mode, reuse=None):
-        x, y = input_pipeline([input_file], batch_size=batch_len, shuffle=True, delim='\t', splits=3)
+        x = tf.placeholder(dtype=tf.float32, shape=[None, input_len], name='x')
+        y = tf.placeholder(dtype=tf.float32, shape=[None, output_len], name='y')
 
-        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
@@ -147,20 +145,20 @@ if __name__ == '__main__':
                     checkpoint = tf.train.get_checkpoint_state(model_dir)
                     is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    train_x, train_y, train_learning_rate, W1, b1, train_y_hat, train_cost, train_step, train_summary = create_graph(
-                        scope_name, 'train', input_file=train_file, batch_len=batch_size, reuse=None)
-                    valid_x, valid_y, valid_learning_rate, W1, b1, valid_y_hat, valid_cost, valid_train_step, valid_summary = create_graph(
-                        scope_name, 'valid', input_file=valid_file, batch_len=n_valid, reuse=True)
-                    test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, test_train_step, test_summary = create_graph(
-                        scope_name, 'test', input_file=test_file, batch_len=n_test, reuse=True)
-
-
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
-                        sess.run(tf.global_variables_initializer())
-                        saver = tf.train.Saver(max_to_keep=None)
+                        train_pipeline = input_pipeline([train_file], batch_size=batch_size, shuffle=True, delim='\t', splits=3)
+                        valid_pipeline = input_pipeline([valid_file], batch_size=n_valid, shuffle=True, delim='\t', splits=3)
+                        test_pipeline = input_pipeline([test_file], batch_size=n_test, shuffle=True, delim='\t', splits=3)
 
                         if is_training:  # training
+                            x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(model_name, scope_name, verbose=False)
+                            train_x_batch, train_y_batch = input_pipeline([train_file], batch_size=batch_size, delim='\t', splits=3)
+                            valid_x_batch, valid_y_batch = input_pipeline([valid_file], batch_size=n_valid, delim='\t', splits=3)
+
+                            sess.run(tf.global_variables_initializer())
+                            saver = tf.train.Saver(max_to_keep=None)
+
                             train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
                             valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
 
@@ -188,19 +186,21 @@ if __name__ == '__main__':
                                             break
 
                                         nth_batch += 1
-                                        _, _train_cost, _summary = sess.run([train_step, train_cost, train_summary],
-                                                                            feed_dict={train_learning_rate: _learning_rate})
+                                        _train_x_batch, _train_y_batch = sess.run([train_x_batch, train_y_batch])
+                                        _, _train_cost, _summary = sess.run(
+                                            [train_step, cost, summary], feed_dict={learning_rate: _learning_rate, x: _train_x_batch, y: _train_y_batch})
                                         train_writer.add_summary(_summary, global_step=nth_batch)
 
                                         if valid_timer.is_over():
-                                            _valid_cost, _y_hat_batch, _W1, _b1 = sess.run([valid_cost, valid_y_hat, W1, b1],
-                                                                                           feed_dict={valid_learning_rate: _learning_rate})
+                                            _valid_x_batch, _valid_y_batch = sess.run([valid_x_batch, valid_y_batch])
+                                            _valid_cost, = sess.run(
+                                                [cost], feed_dict={learning_rate: _learning_rate, x: _valid_x_batch, y: _valid_y_batch})
                                             valid_writer.add_summary(_summary, global_step=nth_batch)
                                             if _valid_cost < min_valid_cost:
                                                 min_valid_cost = _valid_cost
                                                 min_valid_epoch = epoch
-                                            log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (epoch, nth_batch, _train_cost,
-                                                                                                                        _valid_cost))
+                                            log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (
+                                                epoch, nth_batch, _train_cost, _valid_cost))
                                             if min_valid_epoch == epoch:  # save the lastest best model
                                                 saver.save(sess, model_file)
 
@@ -219,8 +219,12 @@ if __name__ == '__main__':
                                 coordinator.request_stop()
                                 coordinator.join(threads)  # Wait for threads to finish.
                         else:  # testing
+                            x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(model_name, scope_name, verbose=False)
+                            test_x_batch, test_y_batch = input_pipeline([test_file], batch_size=n_test, delim='\t', splits=3)
+
                             log.info('')
                             log.info('model loaded... %s' % model_file)
+                            saver = tf.train.Saver(max_to_keep=None)
                             saver.restore(sess, model_file)
                             log.info('model loaded OK. %s' % model_file)
 
@@ -229,9 +233,9 @@ if __name__ == '__main__':
                             try:
                                 watch = WatchUtil()
                                 watch.start()
-
-                                _test_cost, _y_hat_batch, _W1, _b1, _x_batch, _y_batch = sess.run([test_cost, test_y_hat, W1, b1, test_x, test_y],
-                                                                                                  feed_dict={test_learning_rate: _learning_rate})
+                                _test_x_batch, _test_y_batch = sess.run([test_x_batch, test_y_batch])
+                                _test_cost, _W1, _b1, _x_batch, _y_batch, _y_hat_batch = sess.run(
+                                    [cost, W1, b1, x, y, y_hat], feed_dict={learning_rate: _learning_rate, x: _test_x_batch, y: _test_y_batch})
 
                                 log.info('')
                                 log.info('W1: %s' % ['%.4f' % i for i in _W1])

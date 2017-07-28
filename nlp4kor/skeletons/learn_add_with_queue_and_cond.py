@@ -19,9 +19,9 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     :param delim: delimiter of line
     :param splits: splits of line
     :param shuffle: shuffle fileanames and datas
-    :return: graph nodes (features_batch, labels_batch)
+    :return: graph nodes (x_batch, y_batch)
     """
-    min_after_dequeue = max(100, batch_size * 2)  # batch_size
+    min_after_dequeue = max(1000, batch_size * 10)  # batch_size
     capacity = min_after_dequeue + 3 * batch_size
 
     filename_queue = tf.train.string_input_producer(filenames, shuffle=shuffle, name='filename_queue')
@@ -34,11 +34,11 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     # log.debug(feature)
 
     if shuffle:
-        features_batch, labels_batch = tf.train.shuffle_batch([feature, label], batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
+        x_batch, y_batch = tf.train.shuffle_batch([feature, label], batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
     else:
-        features_batch, labels_batch = tf.train.batch([feature, label], batch_size=batch_size, capacity=capacity)
+        x_batch, y_batch = tf.train.batch([feature, label], batch_size=batch_size, capacity=capacity)
 
-    return tf.identity(features_batch, name='x'), tf.identity(labels_batch, name='y')
+    return tf.identity(x_batch, name='x'), tf.identity(y_batch, name='y')
 
 
 def create_data4add(data_file, n_data, digit_max=99):
@@ -61,6 +61,7 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
+# noinspection PyUnusedLocal
 def create_graph(model_name, scope_name, first_pipeline, second_pipeline, verbose=False):
     """
     create or reuse graph
@@ -224,7 +225,7 @@ if __name__ == '__main__':
                                                                                                                              scope_name,
                                                                                                                              first_pipeline=test_pipeline,
                                                                                                                              second_pipeline=test_pipeline,
-                                                                                                                             verbose=True)
+                                                                                                                             verbose=False)
 
                             log.info('')
                             log.info('model loaded... %s' % model_file)
