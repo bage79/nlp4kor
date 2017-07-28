@@ -4,7 +4,6 @@ import traceback
 
 import numpy as np
 import tensorflow as tf
-import time
 
 from bage_utils.date_util import DateUtil
 from bage_utils.timer_util import TimerUtil
@@ -20,6 +19,7 @@ def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle
     :param batch_size: batch size >= 1
     :param delim: delimiter of line
     :param splits: splits of line
+    :param shuffle: shuffle data in a batch(subset)
     :return: batch data (x_batch, y_batch)
     """
     _data_size = 0
@@ -38,6 +38,9 @@ def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle
                 if len(_features) >= batch_size:
                     x_batch = np.array(_features, dtype=np.float32)
                     y_batch = np.array(_labels, dtype=np.float32)
+                    if shuffle:
+                        random_idx = np.random.permutation(len(_features))
+                        x_batch, y_batch = x_batch[random_idx], y_batch[random_idx]
                     y_batch = y_batch.reshape(len(_labels), -1)
                     _features, _labels = [], []
                     yield x_batch, y_batch
@@ -53,14 +56,14 @@ def next_batch_in_memory(filenames, data_size, batch_size=1, delim='\t', splits=
     :param batch_size: batch size >= 1
     :param delim: delimiter of line
     :param splits: splits of line
-    :param shuffle: shuffle data
+    :param shuffle: shuffle data in entire set
     :return: batch data (x_batch, y_batch)
     """
     if not hasattr(next_batch_in_memory, 'batches') or not hasattr(next_batch_in_memory, 'batch_size') or next_batch_in_memory.batch_size != batch_size:
         next_batch_in_memory.batches = []
         next_batch_in_memory.batch_size = batch_size
 
-        _features, _labels = [], []  # read all data
+        _features, _labels = [], []  # read all data into memory
         for filename in filenames:
             if len(_features) > data_size:
                 return
@@ -233,28 +236,21 @@ if __name__ == '__main__':
                                         if len(_x_batch) != batch_size:
                                             log.error('len(_x_batch): %s' % _x_batch.shape)
 
-                                        # print(_x_batch[:2], _x_batch.shape)
-                                        # print()
-                                        # time.sleep(1)
-
                                         nth_batch += 1
                                         _, _train_cost, _summary = sess.run([train_step, cost, summary],
                                                                             feed_dict={x: _x_batch, y: _y_batch, learning_rate: _learning_rate})
                                         train_writer.add_summary(_summary, global_step=nth_batch)
-                                        # print(_x_batch.shape, _y_batch.shape)
 
                                         if valid_timer.is_over():
-                                            # noinspection PyAssignmentToLoopOrWithParameter
-                                            for _x_batch, _y_batch in next_batch([valid_file], data_size=n_valid, batch_size=n_valid, delim='\t',
-                                                                                 splits=3):
+                                            for _x_valid_batch, _y_valid_batch in next_batch([valid_file], data_size=n_valid, batch_size=n_valid, delim='\t',
+                                                                                             splits=3):
                                                 _, _valid_cost, _summary = sess.run([train_step, cost, summary],
-                                                                                    feed_dict={x: _x_batch, y: _y_batch,
+                                                                                    feed_dict={x: _x_valid_batch, y: _y_valid_batch,
                                                                                                learning_rate: _learning_rate})
                                                 valid_writer.add_summary(_summary, global_step=nth_batch)
                                                 if _valid_cost < min_valid_cost:
                                                     min_valid_cost = _valid_cost
                                                     min_valid_epoch = epoch
-                                                # noinspection PyUnboundLocalVariable
                                                 log.info('[epoch: %s, nth_batch: %s] train cost: %.8f valid cost: %.8f' % (
                                                     epoch, nth_batch, _train_cost, _valid_cost))
                                                 if min_valid_epoch == epoch:  # save the lastest best model

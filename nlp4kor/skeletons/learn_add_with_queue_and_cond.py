@@ -28,10 +28,8 @@ def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False)
     reader = tf.TextLineReader(skip_header_lines=None, name='reader')
     _key, value = reader.read(filename_queue)
     tokens = tf.decode_csv(value, field_delim=delim, record_defaults=[[0.] for _ in range(splits)], name='decode_csv')
-    # log.debug('%s %s %s' % (x1, x2, y))
     feature = tf.reshape([tokens[:-1]], shape=[splits - 1], name='x_reshape')
     label = tf.reshape([tokens[-1]], shape=[1], name='y_reshape')
-    # log.debug(feature)
 
     if shuffle:
         x_batch, y_batch = tf.train.shuffle_batch([feature, label], batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
@@ -52,12 +50,9 @@ def create_data4add(data_file, n_data, digit_max=99):
     input_len = 2  # x1, x2
     train_x = np.random.randint(digit_max + 1, size=input_len * n_data).reshape(-1, input_len)
     train_y = np.array([a + b for a, b in train_x])
-    # log.info(train_x.shape)
-    # log.info(train_y.shape)
 
     with open(data_file, 'wt') as f:
         for (x1, x2), y in zip(train_x, train_y):
-            # log.info('%s + %s = %s' % (x1, x2, y))
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 

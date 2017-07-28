@@ -50,12 +50,9 @@ def create_data4add(data_file, n_data, digit_max=99):
     input_len = 2  # x1, x2
     train_x = np.random.randint(digit_max + 1, size=input_len * n_data).reshape(-1, input_len)
     train_y = np.array([a + b for a, b in train_x])
-    # log.info(train_x.shape)
-    # log.info(train_y.shape)
 
     with open(data_file, 'wt') as f:
         for (x1, x2), y in zip(train_x, train_y):
-            # log.info('%s + %s = %s' % (x1, x2, y))
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
