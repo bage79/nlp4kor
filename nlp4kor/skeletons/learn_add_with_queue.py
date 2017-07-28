@@ -11,32 +11,37 @@ from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
 
 
-def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False):
+def read_from_filename_queue(filename_queue, delim='\t', splits=2):
+    reader = tf.TextLineReader(skip_header_lines=None, name='reader')
+    _key, line = reader.read(filename_queue)
+    tokens = tf.decode_csv(line, field_delim=delim, record_defaults=[[0.] for _ in range(splits)], name='decode_csv')
+
+    feature, label = tf.split(tokens, [splits - 1, 1], axis=0)
+    return feature, label
+
+
+def input_pipeline(filenames, n_threads=10, batch_size=1, delim='\t', splits=2, shuffle=False):
     """
     create graph nodes for streaming data input
     :param filenames: list of input file names
+    :param n_threads:
     :param batch_size: batch size >= 1
     :param delim: delimiter of line
     :param splits: splits of line
     :param shuffle: shuffle fileanames and datas
     :return: graph nodes (x_batch, y_batch)
     """
-    min_after_dequeue = max(1000, batch_size * 10)  # batch_size
+    # print('input_pipeline(filenames: %s, batch_size: %s' % (os.path.basename(filenames[0]), batch_size))
+    min_after_dequeue = max(100, batch_size * 10)  # batch_size
     capacity = min_after_dequeue + 3 * batch_size
 
     filename_queue = tf.train.string_input_producer(filenames, shuffle=shuffle, name='filename_queue')
-    reader = tf.TextLineReader(skip_header_lines=None, name='reader')
-    _key, value = reader.read(filename_queue)
-    tokens = tf.decode_csv(value, field_delim=delim, record_defaults=[[0.] for _ in range(splits)], name='decode_csv')
-    # log.debug('%s %s %s' % (x1, x2, y))
-    feature = tf.reshape([tokens[:-1]], shape=[splits - 1], name='x_reshape')
-    label = tf.reshape([tokens[-1]], shape=[1], name='y_reshape')
-    # print('input_pipeline(filenames: %s, batch_size: %s' % (os.path.basename(filenames[0]), batch_size))
+    example_list = [read_from_filename_queue(filename_queue, delim=delim, splits=splits) for _ in range(n_threads)]
 
     if shuffle:
-        x_batch, y_batch = tf.train.shuffle_batch([feature, label], batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
+        x_batch, y_batch = tf.train.shuffle_batch_join(example_list, batch_size=batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
     else:
-        x_batch, y_batch = tf.train.batch([feature, label], batch_size=batch_size, capacity=capacity)
+        x_batch, y_batch = tf.train.batch_join(example_list, batch_size=batch_size, capacity=capacity)
 
     return tf.identity(x_batch, name='x'), tf.identity(y_batch, name='y')
 
@@ -77,7 +82,7 @@ def create_graph(scope_name, mode, input_file, batch_len=1, verbose=False, reuse
         b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
 
     with tf.variable_scope(mode, reuse=None):
-        x, y = input_pipeline([input_file], batch_size=batch_len, shuffle=True, delim='\t', splits=3)
+        x, y = input_pipeline([input_file], n_threads=3, batch_size=batch_len, shuffle=True, delim='\t', splits=3)
 
         learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
@@ -153,7 +158,6 @@ if __name__ == '__main__':
                         scope_name, 'valid', input_file=valid_file, batch_len=n_valid, reuse=True)
                     test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, test_train_step, test_summary = create_graph(
                         scope_name, 'test', input_file=test_file, batch_len=n_test, reuse=True)
-
 
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
