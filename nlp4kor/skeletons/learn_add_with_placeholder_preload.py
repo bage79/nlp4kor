@@ -11,42 +11,65 @@ from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
 
+batches = {}
+batch_sizes = {}
 
-def next_batch(filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle=False):
+
+def preload_batches(key, filenames, data_size, batch_size=1, delim='\t', splits=2, shuffle=False):
     """
-    read big data can't be loaded in memory
+    read small data can be loaded in memory
+    :param key: 'train', 'valid', 'test'
     :param filenames: list of input file names
     :param data_size: max data size
     :param batch_size: batch size >= 1
     :param delim: delimiter of line
     :param splits: splits of line
-    :param shuffle: shuffle data in a batch(subset)
+    :param shuffle: shuffle data in entire set
+    :return:
+    """
+    global batches
+    if key not in batches or batch_size not in batch_sizes or batch_sizes[key] != batch_size:
+        _data_size = 0
+        _features, _labels = [], []  # read all data into memory
+        for filename in filenames:
+            if _data_size >= data_size:
+                break
+            with open(filename) as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    tokens = line.split(delim)
+                    if len(tokens) != splits:  # invalid line
+                        continue
+                    _features.append([float(t) for t in tokens[:-1]])
+                    _labels.append(float(tokens[-1]))
+                    _data_size += 1
+                    if _data_size >= data_size:
+                        break
+
+        features = np.array(_features, dtype=np.float32)
+        labels = np.array(_labels, dtype=np.float32)
+        if shuffle:
+            random_idx = np.random.permutation(len(_features))
+            features, labels = features[random_idx], labels[random_idx]
+
+        labels = labels.reshape(len(labels), -1)
+
+        splits = len(features) // batch_size
+        if len(features) % batch_size > 0:
+            splits += 1
+        batches[key] = list(zip(np.array_split(features, splits), np.array_split(labels, splits)))
+    return batches[key]
+
+
+def next_batch_in_memory(key):
+    """
+
+    :param key: key name for batch data
     :return: batch data (x_batch, y_batch)
     """
-    _data_size = 0
-    for filename in filenames:
-        with open(filename) as f:
-            _features, _labels = [], []
-            for line in f.readlines():
-                line = line.strip()
-                tokens = line.split(delim)
-                if len(tokens) != splits:  # invalid line
-                    continue
-                _features.append([float(t) for t in tokens[:-1]])
-                _labels.append(float(tokens[-1]))
-                _data_size += 1
-
-                if len(_features) >= batch_size:
-                    x_batch = np.array(_features, dtype=np.float32)
-                    y_batch = np.array(_labels, dtype=np.float32)
-                    if shuffle:
-                        random_idx = np.random.permutation(len(_features))
-                        x_batch, y_batch = x_batch[random_idx], y_batch[random_idx]
-                    y_batch = y_batch.reshape(len(_labels), -1)
-                    _features, _labels = [], []
-                    yield x_batch, y_batch
-                if _data_size >= data_size:  # restart this function
-                    return
+    global batches
+    for x_batch, y_batch in batches[key]:
+        yield x_batch, y_batch
 
 
 def create_data4add(data_file, n_data, digit_max=99):
@@ -160,6 +183,10 @@ if __name__ == '__main__':
 
                     x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(scope_name, input_len=input_len, output_len=output_len, verbose=False)
 
+                    preload_batches('train', [train_file], data_size=n_train, batch_size=batch_size, delim='\t', splits=3, shuffle=False)
+                    preload_batches('valid', [valid_file], data_size=n_valid, batch_size=n_valid, delim='\t', splits=3, shuffle=False)
+                    preload_batches('test', [test_file], data_size=n_test, batch_size=n_test, delim='\t', splits=3, shuffle=False)
+
                     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
                     with tf.Session(config=config) as sess:
                         sess.run(tf.global_variables_initializer())
@@ -182,26 +209,18 @@ if __name__ == '__main__':
                                 epoch, running = 0, True
                                 while running:
                                     epoch += 1
-                                    for _x_batch, _y_batch in next_batch([train_file], data_size=n_train, batch_size=batch_size, delim='\t',
-                                                                         splits=3, shuffle=False):
+                                    for _x_batch, _y_batch in next_batch_in_memory('train'):
                                         if stop_timer.is_over():
                                             running = False
                                             break
 
-                                        if len(_x_batch) != batch_size:
-                                            log.error('len(_x_batch): %s' % _x_batch.shape)
-
                                         nth_batch += 1
-                                        _, _train_cost, _summary = sess.run([train_step, cost, summary],
-                                                                            feed_dict={x: _x_batch, y: _y_batch, learning_rate: _learning_rate})
+                                        _, _train_cost, _summary = sess.run([train_step, cost, summary], feed_dict={x: _x_batch, y: _y_batch, learning_rate: _learning_rate})
                                         train_writer.add_summary(_summary, global_step=nth_batch)
 
                                         if valid_timer.is_over():
-                                            for _x_valid_batch, _y_valid_batch in next_batch([valid_file], data_size=n_valid, batch_size=n_valid, delim='\t',
-                                                                                             splits=3):
-                                                _, _valid_cost, _summary = sess.run([train_step, cost, summary],
-                                                                                    feed_dict={x: _x_valid_batch, y: _y_valid_batch,
-                                                                                               learning_rate: _learning_rate})
+                                            for _x_valid_batch, _y_valid_batch in next_batch_in_memory('valid'):
+                                                _, _valid_cost, _summary = sess.run([train_step, cost, summary], feed_dict={x: _x_valid_batch, y: _y_valid_batch, learning_rate: _learning_rate})
                                                 valid_writer.add_summary(_summary, global_step=nth_batch)
                                                 if _valid_cost < min_valid_cost:
                                                     min_valid_cost = _valid_cost
@@ -230,10 +249,8 @@ if __name__ == '__main__':
                             try:
                                 watch = WatchUtil()
                                 watch.start()
-                                for _x_batch, _y_batch in next_batch([test_file], data_size=n_test, batch_size=n_test, delim='\t', splits=3):
-                                    _, _test_cost, _y_hat_batch, _W1, _b1 = sess.run([train_step, cost, y_hat, W1, b1],
-                                                                                     feed_dict={x: _x_batch, y: _y_batch,
-                                                                                                learning_rate: _learning_rate})
+                                for _x_batch, _y_batch in next_batch_in_memory('test'):
+                                    _, _test_cost, _y_hat_batch, _W1, _b1 = sess.run([train_step, cost, y_hat, W1, b1], feed_dict={x: _x_batch, y: _y_batch, learning_rate: _learning_rate})
 
                                     log.info('')
                                     log.info('W1: %s' % ['%.8f' % i for i in _W1])
