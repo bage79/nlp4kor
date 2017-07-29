@@ -9,7 +9,7 @@
 - 설치: [INSTALL.md](https://github.com/bage79/nlp4kor/blob/master/INSTALL.md)
 - 라이센스: [LICENSE.md](https://github.com/bage79/nlp4kor/blob/master/LICENSE.md)
 - 소스구조 [PACKAGES.md](https://github.com/bage79/nlp4kor/blob/master/PACKAGES.md)
-
+    - 소스 한 줄 길이: 200
 
 # 발표 영상
 - https://www.youtube.com/playlist?list=PLE_yleP-KQefhFSNh16hJKnq6stIG05fu
