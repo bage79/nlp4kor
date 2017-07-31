@@ -109,6 +109,11 @@ class DateUtil(object):
         return '%04d%02d%02d_%02d%02d' % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
 
     @staticmethod
+    def current_yyyymmdd_hhmmss():
+        now = time.localtime()
+        return '%04d%02d%02d_%02d%02d%2d' % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
+
+    @staticmethod
     def current_yyyymmddhhmmss():
         now = time.localtime()
         return '%04d%02d%02d%02d%02d%02d' % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
