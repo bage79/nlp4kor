@@ -147,8 +147,6 @@ if __name__ == '__main__':
             model_dir = os.path.dirname(model_file)
             log.info('model_name: %s' % model_name)
             log.info('model_file: %s' % model_file)
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
 
             scope_name = '%s.%s.batch_size_%s.total_train_time_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_train_time)
             log.info('scope_name: %s' % scope_name)
