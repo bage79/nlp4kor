@@ -82,7 +82,7 @@ class PandasUtil(object):
     def table(df: pd.DataFrame) -> str:
         if not isinstance(df, pd.DataFrame):
             df = pd.DataFrame(df)
-        return tabulate(df, headers='keys', tablefmt='grid', floatfmt=".2f")
+        return tabulate(df, headers='keys', tablefmt='grid', floatfmt=".8f")
 
     @staticmethod
     def to_json(df: pd.DataFrame) -> str:
