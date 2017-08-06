@@ -124,7 +124,6 @@ if __name__ == '__main__':
 
     input_len = 2  # x1, x2
     output_len = 1  # y
-    _learning_rate = 0.01
 
     n_train, n_valid, n_test = 1000, 100, 10
     if not os.path.exists(train_file):
@@ -149,103 +148,104 @@ if __name__ == '__main__':
             scope_name = '%s.%s.batch_size_%s.total_train_time_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_train_time)
             log.info('scope_name: %s' % scope_name)
 
-            with tf.device('/gpu:0'):
-                with tf.Graph().as_default():  # for reusing graph
-                    checkpoint = tf.train.get_checkpoint_state(model_dir)
-                    is_training = True if training_mode or not checkpoint else False  # learning or testing
+            for _learning_rate in [0.01]:
+                with tf.device('/gpu:0'):
+                    with tf.Graph().as_default():  # for reusing graph
+                        checkpoint = tf.train.get_checkpoint_state(model_dir)
+                        is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
-                        scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
-                    _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
-                        scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
-                    test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
-                        scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
+                        _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
+                            scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
+                        _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
+                            scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
+                        test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
+                            scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
 
-                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
-                    with tf.Session(config=config) as sess:
-                        sess.run(tf.global_variables_initializer())
-                        saver = tf.train.Saver(max_to_keep=None)
+                        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                        with tf.Session(config=config) as sess:
+                            sess.run(tf.global_variables_initializer())
+                            saver = tf.train.Saver(max_to_keep=None)
 
-                        if is_training:  # training
-                            train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
-                            valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
+                            if is_training:  # training
+                                train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
+                                valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
 
-                            coordinator = tf.train.Coordinator()  # coordinator for enqueue threads
-                            threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)  # start filename queue
-                            batch_count = math.ceil(n_train / batch_size)  # batch count for one epoch
-                            try:
-                                watch = WatchUtil()
-                                stop_timer = TimerUtil(interval_secs=total_train_time)
-                                valid_timer = TimerUtil(interval_secs=valid_check_interval)
-                                watch.start()
-                                stop_timer.start()
-                                valid_timer.start()
+                                coordinator = tf.train.Coordinator()  # coordinator for enqueue threads
+                                threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)  # start filename queue
+                                batch_count = math.ceil(n_train / batch_size)  # batch count for one epoch
+                                try:
+                                    watch = WatchUtil()
+                                    stop_timer = TimerUtil(interval_secs=total_train_time)
+                                    valid_timer = TimerUtil(interval_secs=valid_check_interval)
+                                    watch.start()
+                                    stop_timer.start()
+                                    valid_timer.start()
 
-                                nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
-                                epoch, running = 0, True
-                                while running:
-                                    epoch += 1
-                                    for i in range(1, batch_count + 1):
-                                        if stop_timer.is_over():
-                                            running = False
-                                            break
+                                    nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
+                                    epoch, running = 0, True
+                                    while running:
+                                        epoch += 1
+                                        for i in range(1, batch_count + 1):
+                                            if stop_timer.is_over():
+                                                running = False
+                                                break
 
-                                        if coordinator.should_stop():
-                                            break
+                                            if coordinator.should_stop():
+                                                break
 
-                                        nth_batch += 1
-                                        _, _train_cost, _summary = sess.run([train_step, train_cost, train_summary], feed_dict={train_learning_rate: _learning_rate})
-                                        train_writer.add_summary(_summary, global_step=nth_batch)
+                                            nth_batch += 1
+                                            _, _train_cost, _summary = sess.run([train_step, train_cost, train_summary], feed_dict={train_learning_rate: _learning_rate})
+                                            train_writer.add_summary(_summary, global_step=nth_batch)
 
-                                        if valid_timer.is_over():
-                                            _valid_cost, _valid_summary = sess.run([valid_cost, valid_summary], feed_dict={valid_learning_rate: _learning_rate})
-                                            valid_writer.add_summary(_summary, global_step=nth_batch)
-                                            if _valid_cost < min_valid_cost:
-                                                min_valid_cost = _valid_cost
-                                                min_valid_epoch = epoch
-                                            log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (epoch, nth_batch, _train_cost, _valid_cost))
-                                            if min_valid_epoch == epoch:  # save the lastest best model
-                                                saver.save(sess, model_file)
+                                            if valid_timer.is_over():
+                                                _valid_cost, _valid_summary = sess.run([valid_cost, valid_summary], feed_dict={valid_learning_rate: _learning_rate})
+                                                valid_writer.add_summary(_summary, global_step=nth_batch)
+                                                if _valid_cost < min_valid_cost:
+                                                    min_valid_cost = _valid_cost
+                                                    min_valid_epoch = epoch
+                                                log.info('[epoch: %s, nth_batch: %s] train cost: %.8f, valid cost: %.8f' % (epoch, nth_batch, _train_cost, _valid_cost))
+                                                if min_valid_epoch == epoch:  # save the lastest best model
+                                                    saver.save(sess, model_file)
 
-                                    if save_model_each_epochs:
-                                        saver.save(sess, model_file, global_step=epoch)
+                                        if save_model_each_epochs:
+                                            saver.save(sess, model_file, global_step=epoch)
 
+                                    log.info('')
+                                    log.info(
+                                        '"%s" train: min_valid_cost: %.8f, min_valid_epoch: %s,  %.2f secs (batch_size: %s,  total_input_data: %s, total_epochs: %s, total_train_time: %s secs)' % (
+                                            model_name, min_valid_cost, min_valid_epoch, watch.elapsed(),
+                                            batch_size, NumUtil.comma_str(batch_size * nth_batch), epoch, total_train_time))
+                                    log.info('')
+                                except:
+                                    log.info(traceback.format_exc())
+                                finally:
+                                    coordinator.request_stop()
+                                    coordinator.join(threads)  # Wait for threads to finish.
+                            else:  # testing
                                 log.info('')
-                                log.info(
-                                    '"%s" train: min_valid_cost: %.8f, min_valid_epoch: %s,  %.2f secs (batch_size: %s,  total_input_data: %s, total_epochs: %s, total_train_time: %s secs)' % (
-                                        model_name, min_valid_cost, min_valid_epoch, watch.elapsed(),
-                                        batch_size, NumUtil.comma_str(batch_size * nth_batch), epoch, total_train_time))
-                                log.info('')
-                            except:
-                                log.info(traceback.format_exc())
-                            finally:
-                                coordinator.request_stop()
-                                coordinator.join(threads)  # Wait for threads to finish.
-                        else:  # testing
-                            log.info('')
-                            log.info('model loaded... %s' % model_file)
-                            saver.restore(sess, model_file)
-                            log.info('model loaded OK. %s' % model_file)
+                                log.info('model loaded... %s' % model_file)
+                                saver.restore(sess, model_file)
+                                log.info('model loaded OK. %s' % model_file)
 
-                            coordinator = tf.train.Coordinator()
-                            threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
-                            try:
-                                watch = WatchUtil()
-                                watch.start()
+                                coordinator = tf.train.Coordinator()
+                                threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
+                                try:
+                                    watch = WatchUtil()
+                                    watch.start()
 
-                                _test_cost, _y_hat_batch, _W1, _b1, _x_batch, _y_batch = sess.run([test_cost, test_y_hat, W1, b1, test_x, test_y], feed_dict={test_learning_rate: _learning_rate})
+                                    _test_cost, _y_hat_batch, _W1, _b1, _x_batch, _y_batch = sess.run([test_cost, test_y_hat, W1, b1, test_x, test_y], feed_dict={test_learning_rate: _learning_rate})
 
-                                log.info('')
-                                log.info('W1: %s' % ['%.4f' % w for w in _W1])
-                                log.info('b1: %.4f' % _b1)
-                                for (x1, x2), _y, _y_hat in zip(_x_batch, _y_batch, _y_hat_batch):
-                                    log.debug('%3d + %3d = %4d (y_hat: %4.1f)' % (x1, x2, _y, _y_hat))
-                                log.info('')
-                                log.info(
-                                    '"%s" test: test_cost: %.8f, %.2f secs (batch_size: %s)' % (model_name, _test_cost, watch.elapsed(), batch_size))
-                                log.info('')
-                            except:
-                                log.info(traceback.format_exc())
-                            finally:
-                                coordinator.request_stop()
-                                coordinator.join(threads)  # Wait for threads to finish.
+                                    log.info('')
+                                    log.info('W1: %s' % ['%.4f' % w for w in _W1])
+                                    log.info('b1: %.4f' % _b1)
+                                    for (x1, x2), _y, _y_hat in zip(_x_batch, _y_batch, _y_hat_batch):
+                                        log.debug('%3d + %3d = %4d (y_hat: %4.1f)' % (x1, x2, _y, _y_hat))
+                                    log.info('')
+                                    log.info(
+                                        '"%s" test: test_cost: %.8f, %.2f secs (batch_size: %s)' % (model_name, _test_cost, watch.elapsed(), batch_size))
+                                    log.info('')
+                                except:
+                                    log.info(traceback.format_exc())
+                                finally:
+                                    coordinator.request_stop()
+                                    coordinator.join(threads)  # Wait for threads to finish.
