@@ -9,7 +9,7 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
-from bage_utils.base_util import is_my_pc, is_my_gpu_pc
+from bage_utils.base_util import is_server, is_my_pc, is_my_gpu_pc
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.hangul_util import HangulUtil
@@ -27,10 +27,10 @@ class SpellingErrorCorrection(object):
     graph = {}
 
     @classmethod
-    def learning(cls, total_epoch, n_train, n_valid, n_test, batch_size, window_size, noise_rate, model_file, features_vector, labels_vector,
+    def learning(cls, total_epoch, n_train, n_valid, n_test, batch_size, window_size, noise_rate, noise_sampling, model_file, features_vector, labels_vector,
                  n_hidden1,
                  learning_rate,
-                 dropout_keep_rate, early_stop_cost=0.001):
+                 dropout_keep_rate):
         n_features = len(features_vector) * window_size  # number of features = 17,382 * 10
 
         log.info('load characters list...')
@@ -40,27 +40,26 @@ class SpellingErrorCorrection(object):
         train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
                                   'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
         valid_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
-                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.valid.gz' % (n_valid, window_size))
+                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_valid, window_size))
         test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
-                                 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.test.gz' % (n_test, window_size))
-
-        log.info('train_file: %s' % train_file)
-        log.info('valid_file: %s' % valid_file)
-        log.info('test_file: %s' % test_file)
-        if not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
+                                 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_test, window_size))
+        if is_my_pc() or is_my_gpu_pc() or not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
                 os.makedirs(dataset_dir)
 
-            watch.start('create dataset')  # FIXME: out of memory (1M sentences)
+            watch.start('create dataset')
             log.info('create dataset...')
 
-            data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),
-                          ('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, n_valid, valid_file, False),
-                          ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
+            if is_server():
+                data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),
+                              ('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, n_valid, valid_file, False),
+                              ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
+            else:
+                data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),)
 
-            for (name, data_file, total, dataset_file, to_one_hot_vector) in data_files:
-                check_interval = 10000
+            for (name, data_file, total, dataset_file, to_one_hot_vector) in (data_files):
+                check_interval = max(1, min(10000, batch_size // 10))
                 log.info('check_interval: %s' % check_interval)
                 log.info('%s %s total: %s' % (name, os.path.basename(data_file), NumUtil.comma_str(total)))
                 log.info('noise_rate: %s' % noise_rate)
@@ -113,10 +112,10 @@ class SpellingErrorCorrection(object):
         log.info('dataset load...')
         train = DataSet.load(train_file, gzip_format=True, verbose=True)
 
-        if n_train >= int('100,000'.replace(',', '')):
+        if is_server():
             valid = DataSet.load(valid_file, gzip_format=True, verbose=True)
         else:
-            valid = DataSet.load(train_file, gzip_format=True, verbose=True)
+            valid = DataSet.load(train_file, gzip_format=True, verbose=True)  # valid with train set
         log.info('valid.convert_to_one_hot_vector()...')
         valid = valid.convert_to_one_hot_vector(verbose=True)
         log.info('valid.convert_to_one_hot_vector() OK.')
@@ -133,8 +132,8 @@ class SpellingErrorCorrection(object):
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             check_interval = max(1, min(1000, n_train // 10))
-            nth_train, nth_input, total_input = 0, 0, total_epoch * train.size
 
+            nth_train, nth_input, total_input = 0, 0, total_epoch * train.size
             log.info('')
             log.info('learn...')
             log.info('total_epoch: %s' % total_epoch)
@@ -145,21 +144,15 @@ class SpellingErrorCorrection(object):
             log.info('total_input: %s (total_epoch * train.size)' % total_input)
             log.info('')
             watch.start('learn')
-            valid_cost = sys.float_info.max
             for epoch in range(1, total_epoch + 1):
-                if valid_cost < early_stop_cost:
-                    log.info('valid_cost: %s, early_stop_cost: %s, early stopped.' % (valid_cost, early_stop_cost))
-                    break
                 for step, (features_batch, labels_batch) in enumerate(train.next_batch(batch_size=batch_size, to_one_hot_vector=True), 1):
-                    if valid_cost < early_stop_cost:
-                        break
-
                     nth_train += 1
                     nth_input += features_batch.shape[0]
                     sess.run(train_step, feed_dict={X: features_batch, Y: labels_batch, dropout_keep_prob: dropout_keep_rate})
 
-                    # if nth_train % check_interval == 1:
                     percent = nth_input / total_input * 100
+
+                    # if nth_train % check_interval == 1:
                     valid_cost = sess.run(cost, feed_dict={X: valid.features, Y: valid.labels, dropout_keep_prob: 1.0})
                     log.info('[epoch=%s][%.1f%%] %s cost: %.8f' % (epoch, percent, valid.name, valid_cost))
 
@@ -350,27 +343,29 @@ if __name__ == '__main__':
         else:
             n_train, noise_rate, window_size = None, None, None
 
-        if n_train is None or n_train == 0:  # default
-            if is_my_pc() or is_my_gpu_pc():  # for demo
-                n_train = n_valid = n_test = 3
-            else:
-                n_train = int('1,000,000'.replace(',', ''))
+        if n_train is None or n_train == 0:
+            n_train = int('1,000,000'.replace(',', ''))
 
-        n_valid = min(100, n_train // 10)
-        n_test = min(100, n_train // 10)
+        if is_server():  # batch server
+            n_train = 10000
+            n_valid = min(10, n_train)
+            n_test = min(10, n_train)
+        else:  # for demo
+            n_train = n_valid = n_test = 3
 
-        if noise_rate is None or window_size is None:  # default
-            window_size = 6  # 2 ~ 10 # feature로 추출할 문자 수 (label과 동일)
+        if noise_rate is None or window_size is None:
+            window_size = 10  # 2 ~ 10 # feature로 추출할 문자 수 (label과 동일)
             noise_rate = max(0.1, 1 / window_size)  # 0.0 ~ 1.0 # noise_rate = 노이즈 문자 수 / 전체 문자 수 (windos 안에서 최소 한 글자는 노이즈가 생기도록 함.)
 
         dropout_keep_rate = 1.0  # 0.0 ~ 1.0 # one hot vector에 경우에 dropout 사용시, 학습이 안 됨.
-        # total_epoch = max(10, 100 // window_size)  # 10 ~ 100 # window_size 가 클 수록 total_epoch는 작아도 됨.
-        total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
+        noise_sampling = 100  # 한 입력에 대하여 몇 개의 노이즈 샘플을 생성할지. blank 방식(문자 단위)으로 noise 생성할 때는 사용 안함.
+
+        total_epoch = max(10, 100 // window_size)  # 10 ~ 100 # window_size 가 클 수록 total_epoch는 작아도 됨.
         batch_size = min(100, 10 * window_size)  # 1 ~ 100 # one hot vector 입력이면, batch_size 작게 잡아야 학습이 잘 된다. batch_size가 너무 크면, 전혀 학습이 안 됨.
 
         n_hidden1 = min(1000, 10 * window_size)  # 10 ~ 1000
         learning_rate = 1 / total_epoch  # 0.01  # 0.1 ~ 0.001  # total_epoch 가 클 수록 learning_rate는 작아도 됨.
-        early_stop_cost = 0.0001
+
         log.info('')
         log.info('n_train (sentences): %s' % NumUtil.comma_str(n_train))
         log.info('n_valid (sentences): %s' % NumUtil.comma_str(n_valid))
@@ -379,22 +374,21 @@ if __name__ == '__main__':
         log.info('window_size: %s' % window_size)
         log.info('noise_rate: %s' % noise_rate)
         log.info('dropout_keep_rate: %s' % dropout_keep_rate)
+        log.info('noise_sampling: %s' % noise_sampling)
         log.info('')
         log.info('n_hidden1: %s' % n_hidden1)
         log.info('learning_rate: %s' % learning_rate)
         log.info('')
         log.info('total_epoch: %s' % total_epoch)
         log.info('batch_size: %s' % batch_size)
-        log.info('early_stop_cost: %s' % early_stop_cost)
-        log.info('total_epoch: %s' % total_epoch)
 
         model_file = os.path.join(KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR,
                                   'spelling_error_correction_model.sentences=%s.window_size=%s.noise_rate=%.1f.n_hidden=%s/model' % (
                                       n_train, window_size, noise_rate, n_hidden1))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
-        labels_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
+        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
+        labels_vector = CharOneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
         n_features = len(features_vector) * window_size  # number of features = 17,450 * 10
         n_classes = len(labels_vector) * window_size  # number of features = 17,450 * 10
         log.info('')
@@ -423,13 +417,13 @@ if __name__ == '__main__':
 
         # if is_my_pc() or is_my_gpu_pc() or not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
         if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
-            if n_train >= int('100,000'.replace(',', '')):
+            if n_train > int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s start (max_sentences=%s, window_size=%s, noise_rate=%.1f)' % (sys.argv[0], n_train, window_size, noise_rate))
 
-            SpellingErrorCorrection.learning(total_epoch, n_train, n_valid, n_test, batch_size, window_size, noise_rate,
+            SpellingErrorCorrection.learning(total_epoch, n_train, n_valid, n_test, batch_size, window_size, noise_rate, noise_sampling,
                                              model_file, features_vector, labels_vector, n_hidden1=n_hidden1,
-                                             learning_rate=learning_rate, dropout_keep_rate=dropout_keep_rate, early_stop_cost=early_stop_cost)
-            if n_train >= int('100,000'.replace(',', '')):
+                                             learning_rate=learning_rate, dropout_keep_rate=dropout_keep_rate)
+            if n_train > int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s end (max_sentences=%s, window_size=%s, noise_rate=%.1f)' % (sys.argv[0], n_train, window_size, noise_rate))
 
         log.info('chek result...')
@@ -438,7 +432,7 @@ if __name__ == '__main__':
 
         max_test_sentences = 1
         sentences = []
-        if n_train >= int('100,000'.replace(',', '')):
+        if is_server():
             sentences_file = test_sentences_file
         else:
             sentences_file = train_sentences_file
@@ -454,7 +448,7 @@ if __name__ == '__main__':
         watch.stop('read sentences')
 
         watch.start('run tensorflow')
-        accuracies, costs, sims = [], [], []
+
         with tf.Session() as sess:
             X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
                                                                                                            learning_rate, watch)
@@ -472,12 +466,12 @@ if __name__ == '__main__':
             train_vector = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector.convert_to_one_hot_vector()
             try:
-
+                accuracies, costs, sims = [], [], []
                 total_test_sampling = 1
                 for i, sentence in enumerate(sentences):
                     for nth in range(total_test_sampling):
                         # log.info('[%s] noise(%.1f) "%s" -> "%s"' % (nth, noise_rate, sentence, noised_sentence))
-                        noised_sentence = SpellingErrorCorrection.encode_noise(sentence, noise_rate=noise_rate)
+                        noised_sentence = SpellingErrorCorrection.encode_noise(sentence, noise_rate=0.1)
                         log.info('')
                         log.info('[%s] ori: "%s"' % (nth, sentence))
                         log.info('[%s] in : "%s"' % (nth, noised_sentence))
@@ -493,7 +487,7 @@ if __name__ == '__main__':
                             dataset.convert_to_one_hot_vector()
                             try:
                                 _y_hat, _cost, _accuracy = sess.run([y_hat, cost, accuracy],
-                                                                    feed_dict={X: dataset.features, Y: dataset.labels, dropout_keep_prob: dropout_keep_rate})
+                                                         feed_dict={X: dataset.features, Y: dataset.labels, dropout_keep_prob: dropout_keep_rate})
                                 costs.append(_cost)
                                 accuracies.append(_accuracy)
                             except:

@@ -35,14 +35,19 @@ class CharOneHotVector(object):
         """
         return self.encoder.transform([char])[0]
 
-    def to_vectors(self, chars: list) -> np.ndarray:
+    def to_vectors(self, chars: list, to_1dim=False) -> np.ndarray:
         """
-        
+
         :param chars: list of characters. len(chars)>0
+        :param to_1dim:
         :return:
         """
         if type(chars) is str or type(chars) is np.str_:
             chars = [c for c in chars]
+
+        # if to_1dim:
+        #     return np.expand_dims(np.concatenate(self.encoder.transform(chars)), axis=0)
+        # else:
         return self.encoder.transform(chars)
 
     def to_value(self, vector: np.ndarray) -> np.ndarray:
