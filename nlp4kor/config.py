@@ -33,7 +33,7 @@ if not os.path.exists(MODELS_DIR):
     os.mkdir(MODELS_DIR)
 
 TENSORBOARD_LOG_DIR = os.path.join(os.getenv("HOME"), 'tensorboard_log')
-log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
+# log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
 if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
 
