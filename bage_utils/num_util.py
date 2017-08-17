@@ -18,15 +18,15 @@ class NumUtil(object):
         return res
 
     @staticmethod
-    def comma_str(n, decimal_spaces=0):
+    def comma_str(n, precision=0):
         """
         :param n: 수치 (문자열 또는 수치형)
-        :param decimal_spaces: 소수점 자리수
+        :param precision: 소수점 자리수
         """
         try:
             if n is None:
                 return None
-            if decimal_spaces > 0:
+            if precision > 0:
                 n = float(n)
             else:
                 n = int(float(n))
@@ -34,7 +34,7 @@ class NumUtil(object):
             if isinstance(n, int):
                 return r'{:,d}'.format(n)
             elif isinstance(n, float):
-                rule = r'{:,.%df}' % decimal_spaces
+                rule = r'{:,.%df}' % precision
                 return rule.format(n)
             else:
                 return n
