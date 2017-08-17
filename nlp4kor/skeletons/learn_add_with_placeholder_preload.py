@@ -116,10 +116,10 @@ def create_graph(scope_name, input_len=2, output_len=1, verbose=False):
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate, name='optimizer').minimize(cost, name='train_step')
 
     with tf.variable_scope(scope_name, reuse=None) as scope:
-        _W1 = tf.summary.histogram(values=W1, name='_W1')
-        _b1 = tf.summary.histogram(values=b1, name='_b1')
-        _cost = tf.summary.scalar(tensor=cost, name='_cost')
-        summary = tf.summary.merge([_W1, _b1, _cost])
+        W1_ = tf.summary.histogram(values=W1, name='W1_')
+        b1_ = tf.summary.histogram(values=b1, name='b1_')
+        cost_ = tf.summary.scalar(tensor=cost, name='cost_')
+        summary = tf.summary.merge([W1_, b1_, cost_])
 
     if verbose:
         log.info('')
