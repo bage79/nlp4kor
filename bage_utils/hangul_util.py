@@ -601,6 +601,8 @@ class HangulUtil(object):
             lines = text.split(sentence_delim)
             for i, s in enumerate(lines):
                 s = StringUtil.merge_to_one_line(s)
+                if remove_markdown and '|' in s:
+                    continue
                 if remove_only_one_word and s.count(' ') == 0:  # only one word in a sentence
                     continue
                 if has_hangul and not HangulUtil.has_hangul(s):
