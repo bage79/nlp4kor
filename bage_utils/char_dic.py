@@ -10,9 +10,9 @@ class CharDic(object):
         chars = list(set(list(chars) + [' ']))
         chars.sort()
         self.__chars = chars
-        self.__char2index = {char: idx for idx, char in enumerate(self.__chars, 0)}
-        self.__index2char = {idx: char for idx, char in enumerate(self.__chars, 0)}
-        self.dic_size = len(self.__char2index)
+        self.__char2cid = {char: cid for cid, char in enumerate(self.__chars, 0)}
+        self.__cid2char = {cid: char for cid, char in enumerate(self.__chars, 0)}
+        self.dic_size = len(self.__char2cid)
 
     def __repr__(self):
         return '%s(len:%s)' % (self.__class__.__name__, self.__len__())
@@ -20,19 +20,23 @@ class CharDic(object):
     def __len__(self):
         return self.dic_size
 
+    @property
+    def chars(self):
+        return self.__chars
+
     def char2index(self, char):
-        return self.__char2index.get(char, -1)
+        return self.__char2cid.get(char, -1)
 
-    def indices2chars(self, indices):
-        return ''.join([self.__index2char.get(index, ' ') for index in indices])
+    def indices2chars(self, wids):
+        return ''.join([self.__cid2char.get(cid, ' ') for cid in wids])
 
-    def chars2indices(self, chars):
+    def chars2cids(self, chars):
         """
 
         :param chars: "가나다라마바사"
         :return:
         """
-        return [self.__char2index.get(char, -1) for char in chars]
+        return [self.__char2cid.get(char, -1) for char in chars]
 
     def sentence2indices(self, sentence: str, window_size: int):
         """
@@ -41,11 +45,11 @@ class CharDic(object):
         :param window_size:
         :return:
         """
-        indices = []
-        sentence_indices = self.chars2indices(sentence)
-        for start in range(0, len(sentence_indices) - window_size + 1):
-            indices.append(sentence_indices[start:start + window_size])
-        return indices
+        cids = []
+        cids_in_sentence = self.chars2cids(sentence)
+        for start in range(0, len(cids_in_sentence) - window_size + 1):
+            cids.append(cids_in_sentence[start:start + window_size])
+        return cids
 
     @staticmethod
     def from_chars(sentences: list):
@@ -76,7 +80,7 @@ if __name__ == '__main__':
     max_sentence_len = 100
     sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
     v = CharDic.from_chars(sentence_list)
-    print(v.dic_size, v.__char2index)
+    print(v.dic_size, v.chars)
 
 
     def create_graph(window_size):  # TODO: create graph
