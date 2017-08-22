@@ -26,7 +26,8 @@ class ListUtil(object):
             if remove_incomplete_item and len(item) < chunk_size:
                 continue
             li2.append(item)
-        return Chunks(li2)
+        return li2
+        # return Chunks(li2)
 
     @staticmethod
     def chunks_with_splits(li, max_split=1, remove_incomplete_item=True):
