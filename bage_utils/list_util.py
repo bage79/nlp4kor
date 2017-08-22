@@ -7,13 +7,14 @@ class ListUtil(object):
         return [line for line in li if len(line) > 0]
 
     @staticmethod
-    def chunks_with_size(li, chunk_size=0):
+    def chunks_with_size(li, chunk_size=0, remove_incomplete_item=True):
         """
         list를 각 chunk가 chunk_size크기가 되도록 나눈다.
         모두 chunk_size 크기를 갖고, 마지막에만 가장 작은 배열이 남는다.
-        :param li: 
+        :param li:
         :param chunk_size: 0=나누지 않음.
-        :return: 
+        :param remove_incomplete_item:
+        :return:
         """
         if len(li) < 1 or chunk_size < 1:
             return [li]
@@ -21,23 +22,27 @@ class ListUtil(object):
 
         li2 = []
         for i in range(0, len(li), chunk_size):
-            li2.append(li[i: i + chunk_size])
+            item = li[i: i + chunk_size]
+            if remove_incomplete_item and len(item) < chunk_size:
+                continue
+            li2.append(item)
         return Chunks(li2)
 
     @staticmethod
-    def chunks_with_splits(li, max_split=1):
+    def chunks_with_splits(li, max_split=1, remove_incomplete_item=True):
         """
         list를 chunk의 총 개수가 max_split 개수가 되도록 나눈다.
         모두 똑같은 길이를 갖고, 마지막에만 가장 작은 배열이 남는다.
-        :param li: 
+        :param li:
         :param max_split: 1=나누지 않음.
-        :return: 
+        :param remove_incomplete_item:
+        :return:
         """
         if max_split <= 1:
             return [li]
 
         min_chunk_size = len(li) // max_split
-        return ListUtil.chunks_with_size(li, min_chunk_size)
+        return ListUtil.chunks_with_size(li, min_chunk_size, remove_incomplete_item=remove_incomplete_item)
 
     @staticmethod
     def chunks_banlanced(li, max_split=2):
@@ -67,12 +72,12 @@ class ListUtil(object):
 
 
 if __name__ == '__main__':
-    li = list(range(1, 50))
+    li = list(range(1, 51))
     print('li: %s' % li)
     # chunks = ListUtil.chunks(li, 4)
 
     # print(ListUtil.chunks(li, chunk_size=4))
     # for i, chunks in enumerate(ListUtil.chunks(li, chunk_size=4)):
-    for i, chunks in enumerate(ListUtil.chunks_with_splits(li, max_split=1)):
+    for i, chunks in enumerate(ListUtil.chunks_with_splits(li, max_split=6)):
         # for i, chunks in enumerate(ListUtil.chunks_banlanced(li, max_split=13)):
         print('[%04d] %s' % (i, chunks))
