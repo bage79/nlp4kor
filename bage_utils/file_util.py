@@ -65,6 +65,8 @@ class FileUtil(object):
 
     @staticmethod
     def count_lines(fname, gzip_format=False):
+        if fname.endswith('.gz'):
+            gzip_format = True
         if gzip_format:
             p = subprocess.Popen('gzip -cd %s | wc -l' % fname, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:

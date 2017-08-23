@@ -53,15 +53,24 @@ KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wiki
 KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.characters')
 
 # text (with string)
-KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.sentences.gz')
-KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.train.sentences.gz')
-KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.valid.sentences.gz')
-KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.test.sentences.gz')
+KO_WIKIPEDIA_ORG_DATA_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data')
+if not os.path.exists(KO_WIKIPEDIA_ORG_DATA_DIR):
+    os.mkdir(KO_WIKIPEDIA_ORG_DATA_DIR)
+
+KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.sentences.gz')
+KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.train.sentences.gz')
+KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.valid.sentences.gz')
+KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.test.sentences.gz')
 
 # csv (with character)
-KO_WIKIPEDIA_ORG_TRAIN_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.train.sentences.cid.gz')
-KO_WIKIPEDIA_ORG_VALID_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.valid.sentences.cid.gz')
-KO_WIKIPEDIA_ORG_TEST_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.test.sentences.cid.gz')
+KO_WIKIPEDIA_ORG_TRAIN_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.train.sentences.cid.gz')
+KO_WIKIPEDIA_ORG_VALID_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.valid.sentences.cid.gz')
+KO_WIKIPEDIA_ORG_TEST_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.test.sentences.cid.gz')
+
+# csv (with character) for training
+KO_WIKIPEDIA_ORG_DATASET_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'dataset')
+if not os.path.exists(KO_WIKIPEDIA_ORG_DATASET_DIR):
+    os.mkdir(KO_WIKIPEDIA_ORG_DATASET_DIR)
 
 KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
 KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'spelling_error_correction')
