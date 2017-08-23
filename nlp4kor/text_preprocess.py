@@ -8,7 +8,7 @@ from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
 from nlp4kor.config import log, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_URLS_FILE, \
     KO_WIKIPEDIA_ORG_CHARACTERS_FILE, KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, \
-    KO_WIKIPEDIA_ORG_INFO_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_CID_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_CID_FILE, KO_WIKIPEDIA_ORG_TEST_SENTENCES_CID_FILE
+    KO_WIKIPEDIA_ORG_INFO_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TRAIN_CID_FILE, KO_WIKIPEDIA_ORG_VALID_CID_FILE, KO_WIKIPEDIA_ORG_TEST_CID_FILE
 
 
 class TextPreprocess(object):
@@ -182,9 +182,9 @@ if __name__ == '__main__':
                                        train_sentences_file=KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE,
                                        valid_sentences_file=KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE,
                                        test_sentences_file=KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE,
-                                       train_sentences_cid_file=KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_CID_FILE,
-                                       valid_sentences_cid_file=KO_WIKIPEDIA_ORG_VALID_SENTENCES_CID_FILE,
-                                       test_sentences_cid_file=KO_WIKIPEDIA_ORG_TEST_SENTENCES_CID_FILE,
+                                       train_sentences_cid_file=KO_WIKIPEDIA_ORG_TRAIN_CID_FILE,
+                                       valid_sentences_cid_file=KO_WIKIPEDIA_ORG_VALID_CID_FILE,
+                                       test_sentences_cid_file=KO_WIKIPEDIA_ORG_TEST_CID_FILE,
                                        mongo_query={},
                                        limit=None
                                        )  # mongodb -> text file(corpus)
