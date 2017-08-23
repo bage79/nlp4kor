@@ -154,6 +154,7 @@ if __name__ == '__main__':
                         checkpoint = tf.train.get_checkpoint_state(model_dir)
                         is_training = True if training_mode or not checkpoint else False  # learning or testing
 
+                        # three graphs in one
                         _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
                             scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
                         _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
