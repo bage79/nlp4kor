@@ -9,7 +9,7 @@ from bage_utils.date_util import DateUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
+from nlp4kor.config import SAMPLE_DATA_DIR, TENSORBOARD_LOG_DIR, log, SAMPLE_MODELS_DIR
 
 
 def input_pipeline(filenames, batch_size=1, delim='\t', splits=2, shuffle=False):
@@ -102,9 +102,9 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
     tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
 
-    train_file = os.path.join(DATA_DIR, 'add.train.tsv')
-    valid_file = os.path.join(DATA_DIR, 'add.valid.tsv')
-    test_file = os.path.join(DATA_DIR, 'add.test.tsv')
+    train_file = os.path.join(SAMPLE_DATA_DIR, 'add.train.tsv')
+    valid_file = os.path.join(SAMPLE_DATA_DIR, 'add.valid.tsv')
+    test_file = os.path.join(SAMPLE_DATA_DIR, 'add.test.tsv')
 
     total_train_time = 5
     valid_check_interval = 0.5
@@ -129,7 +129,7 @@ if __name__ == '__main__':
             log.info('training_mode: %s, batch_size: %s, total_train_time: %s secs' % (training_mode, batch_size, total_train_time))
 
             model_name = os.path.basename(__file__).replace('.py', '')
-            model_file = os.path.join(MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
+            model_file = os.path.join(SAMPLE_MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
             model_dir = os.path.dirname(model_file)
             log.info('model_name: %s' % model_name)
             log.info('model_file: %s' % model_file)

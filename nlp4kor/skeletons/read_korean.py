@@ -3,7 +3,7 @@ import traceback
 
 import tensorflow as tf
 
-from nlp4kor.config import log, DATA_DIR
+from nlp4kor.config import log, SAMPLE_DATA_DIR
 
 
 def input_pipeline(filenames, batch_size=100, shuffle=True, delim='\t', tokens=2):
@@ -26,7 +26,7 @@ def input_pipeline(filenames, batch_size=100, shuffle=True, delim='\t', tokens=2
 if __name__ == '__main__':
     shuffle = False
     batch_size = 5
-    data_file = os.path.join(DATA_DIR, 'en2kor.tsv')
+    data_file = os.path.join(SAMPLE_DATA_DIR, 'en2kor.tsv')
 
     if not os.path.exists(data_file):
         log.error('file not exists. %s' % data_file)

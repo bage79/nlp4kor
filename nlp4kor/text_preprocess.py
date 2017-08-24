@@ -6,9 +6,9 @@ from bage_utils.char_dic import CharDic
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
-from nlp4kor.config import log, MONGO_URL, KO_WIKIPEDIA_ORG_SENTENCES_FILE, KO_WIKIPEDIA_ORG_URLS_FILE, \
-    KO_WIKIPEDIA_ORG_CHARACTERS_FILE, KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, \
-    KO_WIKIPEDIA_ORG_INFO_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TRAIN_CID_FILE, KO_WIKIPEDIA_ORG_VALID_CID_FILE, KO_WIKIPEDIA_ORG_TEST_CID_FILE
+from nlp4kor.config import log, MONGO_URL, WIKIPEDIA_SENTENCES_FILE, WIKIPEDIA_URLS_FILE, \
+    WIKIPEDIA_CHARACTERS_FILE, WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, \
+    WIKIPEDIA_INFO_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, WIKIPEDIA_TRAIN_FILE, WIKIPEDIA_VALID_FILE, WIKIPEDIA_TEST_FILE
 
 
 class TextPreprocess(object):
@@ -163,10 +163,10 @@ class TextPreprocess(object):
 
 
 if __name__ == '__main__':
-    info_file = KO_WIKIPEDIA_ORG_INFO_FILE
-    urls_file = KO_WIKIPEDIA_ORG_URLS_FILE
-    sentences_file = KO_WIKIPEDIA_ORG_SENTENCES_FILE
-    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+    info_file = WIKIPEDIA_INFO_FILE
+    urls_file = WIKIPEDIA_URLS_FILE
+    sentences_file = WIKIPEDIA_SENTENCES_FILE
+    characters_file = WIKIPEDIA_CHARACTERS_FILE
     log.info('info_file: %s' % info_file)
     log.info('urls_file: %s' % urls_file)
     log.info('sentences_file: %s' % sentences_file)
@@ -179,12 +179,12 @@ if __name__ == '__main__':
             TextPreprocess.dump_corpus(MONGO_URL, db_name='parsed', collection_name='ko.wikipedia.org', sentences_file=sentences_file,
                                        characters_file=characters_file,
                                        info_file=info_file, urls_file=urls_file,
-                                       train_sentences_file=KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE,
-                                       valid_sentences_file=KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE,
-                                       test_sentences_file=KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE,
-                                       train_sentences_cid_file=KO_WIKIPEDIA_ORG_TRAIN_CID_FILE,
-                                       valid_sentences_cid_file=KO_WIKIPEDIA_ORG_VALID_CID_FILE,
-                                       test_sentences_cid_file=KO_WIKIPEDIA_ORG_TEST_CID_FILE,
+                                       train_sentences_file=WIKIPEDIA_TRAIN_SENTENCES_FILE,
+                                       valid_sentences_file=WIKIPEDIA_VALID_SENTENCES_FILE,
+                                       test_sentences_file=WIKIPEDIA_TEST_SENTENCES_FILE,
+                                       train_sentences_cid_file=WIKIPEDIA_TRAIN_FILE,
+                                       valid_sentences_cid_file=WIKIPEDIA_VALID_FILE,
+                                       test_sentences_cid_file=WIKIPEDIA_TEST_FILE,
                                        mongo_query={},
                                        limit=None
                                        )  # mongodb -> text file(corpus)

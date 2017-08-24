@@ -14,9 +14,9 @@ from bage_utils.num_util import NumUtil
 from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, KO_WIKIPEDIA_ORG_DIR, KO_WIKIPEDIA_ORG_CHARACTERS_FILE, \
-    KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR, KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, \
-    KO_WIKIPEDIA_ORG_SENTENCES_FILE
+from nlp4kor.config import log, WIKIPEDIA_DIR, WIKIPEDIA_CHARACTERS_FILE, \
+    WORD_SPACING_MODEL_DIR, WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, \
+    WIKIPEDIA_SENTENCES_FILE
 
 
 class WordSpacing(object):
@@ -33,11 +33,11 @@ class WordSpacing(object):
         log.info('load characters list OK. len: %s\n' % NumUtil.comma_str(len(features_vector)))
         watch = WatchUtil()
 
-        train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'word_spacing',
+        train_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
                                   'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.train.gz' % (n_train, left_gram, right_gram))
-        valid_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'word_spacing',
+        valid_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
                                   'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.test.gz' % (n_valid, left_gram, right_gram))
-        test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'word_spacing',
+        test_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
                                  'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.valid.gz' % (n_test, left_gram, right_gram))
 
         log.info('train_file: %s' % train_file)
@@ -51,9 +51,9 @@ class WordSpacing(object):
             watch.start('create dataset')
             log.info('create dataset...')
 
-            data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),
-                          ('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, n_valid, valid_file, False),
-                          ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
+            data_files = (('train', WIKIPEDIA_TRAIN_SENTENCES_FILE, n_train, train_file, False),
+                          ('valid', WIKIPEDIA_VALID_SENTENCES_FILE, n_valid, valid_file, False),
+                          ('test', WIKIPEDIA_TEST_SENTENCES_FILE, n_test, test_file, False))
 
             for name, data_file, total, dataset_file, to_one_hot_vector in data_files:
                 check_interval = 10000
@@ -258,14 +258,14 @@ class WordSpacing(object):
 
 
 if __name__ == '__main__':
-    train_sentences_file = KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE
-    valid_sentences_file = KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE
-    test_sentences_file = KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE
+    train_sentences_file = WIKIPEDIA_TRAIN_SENTENCES_FILE
+    valid_sentences_file = WIKIPEDIA_VALID_SENTENCES_FILE
+    test_sentences_file = WIKIPEDIA_TEST_SENTENCES_FILE
     log.info('train_sentences_file: %s' % train_sentences_file)
     log.info('valid_sentences_file: %s' % valid_sentences_file)
     log.info('test_sentences_file: %s' % test_sentences_file)
 
-    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+    characters_file = WIKIPEDIA_CHARACTERS_FILE
     log.info('characters_file: %s' % characters_file)
     try:
         if len(sys.argv) == 4:
@@ -289,8 +289,8 @@ if __name__ == '__main__':
         log.info('left_gram: %s, right_gram: %s' % (left_gram, right_gram))
         log.info('ngram: %s' % ngram)
 
-        total_sentences = FileUtil.count_lines(KO_WIKIPEDIA_ORG_SENTENCES_FILE)
-        model_file = os.path.join(KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR,
+        total_sentences = FileUtil.count_lines(WIKIPEDIA_SENTENCES_FILE)
+        model_file = os.path.join(WORD_SPACING_MODEL_DIR,
                                   'word_spacing_model.sentences=%s.left_gram=%s.right_gram=%s/model' % (
                                       n_train, left_gram, right_gram))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)

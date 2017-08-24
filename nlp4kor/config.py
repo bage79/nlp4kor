@@ -24,53 +24,81 @@ MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_P
 
 PROJECT_DIR = os.path.join(os.getenv("HOME"), 'workspace/nlp4kor')
 
-DATA_DIR = os.path.join(PROJECT_DIR, 'data')
-if not os.path.exists(DATA_DIR):
-    os.mkdir(DATA_DIR)
-
-MODELS_DIR = os.path.join(PROJECT_DIR, 'models')
-if not os.path.exists(MODELS_DIR):
-    os.mkdir(MODELS_DIR)
-
 TENSORBOARD_LOG_DIR = os.path.join(os.getenv("HOME"), 'tensorboard_log')
 # log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
 if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
 
-# dataset repositories
+#################################################
+# sample
+#################################################
+SAMPLE_DATA_DIR = os.path.join(PROJECT_DIR, 'data')
+if not os.path.exists(SAMPLE_DATA_DIR):
+    os.mkdir(SAMPLE_DATA_DIR)
+
+SAMPLE_MODELS_DIR = os.path.join(PROJECT_DIR, 'models')
+if not os.path.exists(SAMPLE_MODELS_DIR):
+    os.mkdir(SAMPLE_MODELS_DIR)
+
+#################################################
+# mnist
+#################################################
 MNIST_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-mnist')
 MNIST_DATA_DIR = os.path.join(MNIST_DIR, 'data')
 MNIST_CNN_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'cnn')
 MNIST_DAE_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'dae')
 
-KO_WIKIPEDIA_ORG_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
+#################################################
+# ko.wikipedia.org
+#################################################
+WIKIPEDIA_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
 
 # info
-KO_WIKIPEDIA_ORG_INFO_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.info.txt')
-KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.urls.txt')
-
-# chracter dic
-KO_WIKIPEDIA_ORG_CHARACTERS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.characters')
+WIKIPEDIA_INFO_FILE = os.path.join(WIKIPEDIA_DIR, 'data', 'ko.wikipedia.org.info.txt')
+WIKIPEDIA_URLS_FILE = os.path.join(WIKIPEDIA_DIR, 'data', 'ko.wikipedia.org.urls.txt')
 
 # text (with string)
-KO_WIKIPEDIA_ORG_DATA_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data')
-if not os.path.exists(KO_WIKIPEDIA_ORG_DATA_DIR):
-    os.mkdir(KO_WIKIPEDIA_ORG_DATA_DIR)
+WIKIPEDIA_DATA_DIR = os.path.join(WIKIPEDIA_DIR, 'data')
+if not os.path.exists(WIKIPEDIA_DATA_DIR):
+    os.mkdir(WIKIPEDIA_DATA_DIR)
 
-KO_WIKIPEDIA_ORG_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.sentences.gz')
-KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.train.sentences.gz')
-KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.valid.sentences.gz')
-KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.test.sentences.gz')
+WIKIPEDIA_CHARACTERS_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.characters')
+WIKIPEDIA_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.gz')
+WIKIPEDIA_TRAIN_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.gz')
+WIKIPEDIA_VALID_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.gz')
+WIKIPEDIA_TEST_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.test.sentences.gz')
 
-# csv (with character)
-KO_WIKIPEDIA_ORG_TRAIN_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.train.sentences.cid.gz')
-KO_WIKIPEDIA_ORG_VALID_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.valid.sentences.cid.gz')
-KO_WIKIPEDIA_ORG_TEST_CID_FILE = os.path.join(KO_WIKIPEDIA_ORG_DATA_DIR, 'ko.wikipedia.org.test.sentences.cid.gz')
+# csv (with character id)
+WIKIPEDIA_TRAIN_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.cid.gz')  # TODO: csv.gz
+WIKIPEDIA_VALID_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.cid.gz')
+WIKIPEDIA_TEST_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.test.sentences.cid.gz')
 
-# csv (with character) for training
-KO_WIKIPEDIA_ORG_DATASET_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'dataset')
-if not os.path.exists(KO_WIKIPEDIA_ORG_DATASET_DIR):
-    os.mkdir(KO_WIKIPEDIA_ORG_DATASET_DIR)
+# csv (with character id) for specific purpose
+WIKIPEDIA_DATASET_DIR = os.path.join(WIKIPEDIA_DIR, 'dataset')
+if not os.path.exists(WIKIPEDIA_DATASET_DIR):
+    os.mkdir(WIKIPEDIA_DATASET_DIR)
 
-KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
-KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'spelling_error_correction')
+WIKIPEDIA_MODELS_DIR = os.path.join(WIKIPEDIA_DIR, 'models')
+if not os.path.exists(WIKIPEDIA_MODELS_DIR):
+    os.mkdir(WIKIPEDIA_MODELS_DIR)
+
+#################################################
+# word spacing
+#################################################
+WORD_SPACING_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'word_spacing')
+WORD_SPACING_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'word_spacing')
+
+#################################################
+# spelling error correction
+#################################################
+SPELLING_ERROR_CORRECTION_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'spelling_error_correction')
+if not os.path.exists(SPELLING_ERROR_CORRECTION_DATASET_DIR):
+    os.mkdir(SPELLING_ERROR_CORRECTION_DATASET_DIR)
+
+SPELLING_ERROR_CORRECTION_TRAIN_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.train.sentences.csv')
+SPELLING_ERROR_CORRECTION_VALID_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.valid.sentences.csv')
+SPELLING_ERROR_CORRECTION_TEST_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.test.sentences.csv')
+
+SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'spelling_error_correction')
+if not os.path.exists(SPELLING_ERROR_CORRECTION_MODEL_DIR):
+    os.mkdir(SPELLING_ERROR_CORRECTION_MODEL_DIR)
