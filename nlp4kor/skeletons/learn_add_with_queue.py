@@ -68,11 +68,11 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
-def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_size=1, verbose=True, reuse=None, n_threads=2):
+def create_graph(tensorboard_scope, mode_scope, input_file, input_len=2, output_len=1, batch_size=1, verbose=True, reuse=None, n_threads=2):
     """
     create or reuse graph
-    :param scope_name: variable scope name
-    :param mode: 'train', 'valid', 'test'
+    :param tensorboard_scope: variable scope name
+    :param mode_scope: 'train', 'valid', 'test'
     :param input_file: train or valid or test file path
     :param input_len: x1, x2
     :param output_len: y
@@ -83,7 +83,7 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
     :return: tensorflow graph nodes
     """
 
-    with tf.name_scope(mode):  # don't share
+    with tf.name_scope(mode_scope):  # don't share
         x, y = input_pipeline([input_file], batch_size=batch_size, delim='\t', splits=3, n_threads=n_threads)
         learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
 
@@ -96,7 +96,7 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
             cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
             train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
 
-    with tf.name_scope(scope_name):  # don't share
+    with tf.name_scope(tensorboard_scope):  # don't share
         _W1 = tf.summary.histogram(values=W1, name='_W1')
         _b1 = tf.summary.histogram(values=b1, name='_b1')
         _cost = tf.summary.scalar(tensor=cost, name='_cost')
@@ -104,6 +104,7 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
 
     if verbose:
         log.info('')
+        log.info('mode_scope: %s' % mode_scope)
         log.info(x)
         log.info(W1)
         log.info(b1)
