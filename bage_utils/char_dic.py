@@ -10,7 +10,7 @@ from nlp4kor.config import WIKIPEDIA_CHARACTERS_FILE
 
 class CharDic(object):
     def __init__(self, chars: list):
-        chars = list(set(list(chars) + [' ']))
+        chars = list(set(chars))
         chars.sort()
         self.__chars = chars
         self.__char2cid = {char: cid for cid, char in enumerate(self.__chars, 0)}
