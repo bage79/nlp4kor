@@ -9,7 +9,7 @@ from bage_utils.date_util import DateUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import DATA_DIR, TENSORBOARD_LOG_DIR, log, MODELS_DIR
+from nlp4kor.config import SAMPLE_DATA_DIR, TENSORBOARD_LOG_DIR, log, SAMPLE_MODELS_DIR
 
 
 def read_from_filename_queue(filename_queue, batch_size=1, delim='\t', splits=2):
@@ -82,31 +82,31 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
     :param n_threads: number of example enqueue threands (2 is enough)
     :return: tensorflow graph nodes
     """
-    with tf.variable_scope('common', reuse=reuse):  # for reusing graph
+    with tf.variable_scope('common', reuse=reuse):  # share W, b
         W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
         b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
-        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
 
-    with tf.variable_scope(mode, reuse=None):
+    with tf.variable_scope(mode, reuse=None):  # don't share
         x, y = input_pipeline([input_file], batch_size=batch_size, delim='\t', splits=3, n_threads=n_threads)
+        learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
         cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
 
-    with tf.variable_scope(scope_name, reuse=None):
+    with tf.name_scope(scope_name):  # don't share
         _W1 = tf.summary.histogram(values=W1, name='_W1')
         _b1 = tf.summary.histogram(values=b1, name='_b1')
         _cost = tf.summary.scalar(tensor=cost, name='_cost')
-        summary = tf.summary.merge([_W1, _b1, _cost], name='summary')  # merge_all()
-        if verbose:
-            log.info('')
-            log.info(x)
-            log.info(W1)
-            log.info(b1)
-            log.info('')
-            log.info(y)
-            log.info(y_hat)
-            log.info(cost)
+        summary = tf.summary.merge([_W1, _b1, _cost], name='summary')  # tf.summary.merge_all()
+    if verbose:
+        log.info('')
+        log.info(x)
+        log.info(W1)
+        log.info(b1)
+        log.info('')
+        log.info(y)
+        log.info(y_hat)
+        log.info(cost)
     return x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary
 
 
@@ -114,9 +114,9 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
     tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
 
-    train_file = os.path.join(DATA_DIR, 'add.train.tsv')
-    valid_file = os.path.join(DATA_DIR, 'add.valid.tsv')
-    test_file = os.path.join(DATA_DIR, 'add.test.tsv')
+    train_file = os.path.join(SAMPLE_DATA_DIR, 'add.train.tsv')
+    valid_file = os.path.join(SAMPLE_DATA_DIR, 'add.valid.tsv')
+    test_file = os.path.join(SAMPLE_DATA_DIR, 'add.test.tsv')
 
     total_train_time = 5
     valid_check_interval = 0.5
@@ -140,7 +140,7 @@ if __name__ == '__main__':
             log.info('training_mode: %s, batch_size: %s, total_train_time: %s secs' % (training_mode, batch_size, total_train_time))
 
             model_name = os.path.basename(__file__).replace('.py', '')
-            model_file = os.path.join(MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
+            model_file = os.path.join(SAMPLE_MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
             model_dir = os.path.dirname(model_file)
             log.info('model_name: %s' % model_name)
             log.info('model_file: %s' % model_file)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
                         checkpoint = tf.train.get_checkpoint_state(model_dir)
                         is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                        # three graphs in one
+                        # three graphs shares W, b
                         _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
                             scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
                         _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
