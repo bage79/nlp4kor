@@ -1,9 +1,11 @@
+import gzip
 import os
 
 import tensorflow as tf
 
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.list_util import ListUtil
+from nlp4kor.config import WIKIPEDIA_CHARACTERS_FILE
 
 
 class CharDic(object):
@@ -99,6 +101,15 @@ if __name__ == '__main__':
     # print(v.char2index)
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
+
+    characters_file = WIKIPEDIA_CHARACTERS_FILE
+    char_dic = CharDic.from_file(characters_file)
+    with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences.csv', 'rt') as f:
+        for no, line in enumerate(f, 1):
+            cids = [int(cid) for cid in line.split(',')][:10]
+            print(no, char_dic.cids2chars(cids))
+
+    exit()
 
     batch_size = 2
     window_size = 5
