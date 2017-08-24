@@ -82,31 +82,35 @@ def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_
     :param n_threads: number of example enqueue threands (2 is enough)
     :return: tensorflow graph nodes
     """
-    with tf.variable_scope('common', reuse=reuse):  # share W, b
-        W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
-        b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
 
-    with tf.variable_scope(mode, reuse=None):  # don't share
+    with tf.name_scope(mode):  # don't share
         x, y = input_pipeline([input_file], batch_size=batch_size, delim='\t', splits=3, n_threads=n_threads)
         learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
+
+        with tf.variable_scope('layers%d' % 1, reuse=reuse):  # share W, b
+            W1 = tf.get_variable(dtype=tf.float32, shape=[input_len, output_len], initializer=tf.random_normal_initializer(), name='W1')
+            b1 = tf.get_variable(dtype=tf.float32, initializer=tf.constant(0.0, shape=[output_len]), name='b1')
+
         y_hat = tf.add(tf.matmul(x, W1), b1, name='y_hat')
-        cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
-        train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
+        with tf.variable_scope('cost', reuse=reuse):  # share W, b
+            cost = tf.reduce_mean(tf.square(y_hat - y), name='cost')
+            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost, name='train_step')
 
     with tf.name_scope(scope_name):  # don't share
         _W1 = tf.summary.histogram(values=W1, name='_W1')
         _b1 = tf.summary.histogram(values=b1, name='_b1')
         _cost = tf.summary.scalar(tensor=cost, name='_cost')
         summary = tf.summary.merge([_W1, _b1, _cost], name='summary')  # tf.summary.merge_all()
+
     if verbose:
         log.info('')
         log.info(x)
         log.info(W1)
         log.info(b1)
-        log.info('')
         log.info(y)
         log.info(y_hat)
         log.info(cost)
+        log.info(train_step.name)
     return x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary
 
 
@@ -133,39 +137,39 @@ if __name__ == '__main__':
     if not os.path.exists(test_file):
         create_data4add(test_file, n_test, digit_max=99)
 
-    for training_mode in [True, False]:  # training & testing
-        for batch_size in [1, 10, 100]:
-            tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
-            log.info('')
-            log.info('training_mode: %s, batch_size: %s, total_train_time: %s secs' % (training_mode, batch_size, total_train_time))
+    for batch_size in [1, 10, 100]:
+        tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
+        log.info('')
+        log.info('batch_size: %s, total_train_time: %s secs' % (batch_size, total_train_time))
 
-            model_name = os.path.basename(__file__).replace('.py', '')
-            model_file = os.path.join(SAMPLE_MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
-            model_dir = os.path.dirname(model_file)
-            log.info('model_name: %s' % model_name)
-            log.info('model_file: %s' % model_file)
+        model_name = os.path.basename(__file__).replace('.py', '')
+        model_file = os.path.join(SAMPLE_MODELS_DIR, '%s.n_train_%s.batch_size_%s.total_train_time_%s/model' % (model_name, n_train, batch_size, total_train_time))
+        model_dir = os.path.dirname(model_file)
+        log.info('model_name: %s' % model_name)
+        log.info('model_file: %s' % model_file)
 
-            scope_name = '%s.%s.batch_size_%s.total_train_time_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_train_time)
-            log.info('scope_name: %s' % scope_name)
+        scope_name = '%s.%s.batch_size_%s.total_train_time_%s' % (model_name, DateUtil.current_yyyymmdd_hhmm(), batch_size, total_train_time)
+        log.info('scope_name: %s' % scope_name)
 
-            for _learning_rate in [0.01]:
-                with tf.device('/gpu:0'):
-                    with tf.Graph().as_default():  # for reusing graph
-                        checkpoint = tf.train.get_checkpoint_state(model_dir)
-                        is_training = True if training_mode or not checkpoint else False  # learning or testing
+        for _learning_rate in [0.01]:
+            with tf.device('/gpu:0'):
+                with tf.Graph().as_default():  # for reusing graph
+                    checkpoint = tf.train.get_checkpoint_state(model_dir)
 
-                        # three graphs shares W, b
-                        _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
-                            scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
-                        _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
-                            scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
-                        test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
-                            scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
+                    # three graphs shares W, b
+                    _, _, train_learning_rate, _, _, _, train_cost, train_step, train_summary = create_graph(
+                        scope_name, 'train', input_file=train_file, input_len=input_len, output_len=output_len, batch_size=batch_size, reuse=None)
+                    _, _, valid_learning_rate, _, _, _, valid_cost, _, valid_summary = create_graph(
+                        scope_name, 'valid', input_file=valid_file, input_len=input_len, output_len=output_len, batch_size=n_valid, reuse=True)
+                    test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
+                        scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
 
-                        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    for training_mode in [True, False]:  # training & testing
                         with tf.Session(config=config) as sess:
                             sess.run(tf.global_variables_initializer())
                             saver = tf.train.Saver(max_to_keep=None)
+                            is_training = True if training_mode or not checkpoint else False  # learning or testing
 
                             if is_training:  # training
                                 train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
@@ -184,6 +188,7 @@ if __name__ == '__main__':
 
                                     nth_batch, min_valid_epoch, min_valid_cost = 0, 0, 1e10
                                     epoch, running = 0, True
+                                    log.info('')
                                     while running:
                                         epoch += 1
                                         for i in range(1, batch_count + 1):
