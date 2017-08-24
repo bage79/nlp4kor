@@ -68,7 +68,7 @@ def create_data4add(data_file, n_data, digit_max=99):
             f.write('%s\t%s\t%s\n' % (x1, x2, y))
 
 
-def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_size=1, verbose=False, reuse=None, n_threads=2):
+def create_graph(scope_name, mode, input_file, input_len=2, output_len=1, batch_size=1, verbose=True, reuse=None, n_threads=2):
     """
     create or reuse graph
     :param scope_name: variable scope name
