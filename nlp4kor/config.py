@@ -10,11 +10,11 @@ warnings.simplefilter(action='ignore', category=FutureWarning)  # ignore future 
 
 log = None
 if log is None:
-    if len(sys.argv) == 1:  # by Pycharm or console
-        if is_my_pc():  # my pc (pycharm client, mac)
+    if len(sys.argv) == 1:  # my pc or pycharm remote
+        if is_my_pc():  # my pc
             log = LogUtil.get_logger(None, level=logging.DEBUG, console_mode=True)  # global log
-        else:  # gpu pc (batch job, ubuntu)
-            log = LogUtil.get_logger(sys.argv[0], level=logging.DEBUG, console_mode=True)  # global log # console_mode=True for jupyter
+        else:  # pycharm remote
+            log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log # console_mode=True for jupyter
     else:  # by batch script
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
 
