@@ -4,8 +4,6 @@ import time
 
 from slackclient import SlackClient
 
-from bage_utils.base_util import is_linux_os
-
 lock = multiprocessing.Lock()
 
 
