@@ -1,7 +1,7 @@
-import gzip
 import os
 
 import tensorflow as tf
+import numpy as np
 
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.list_util import ListUtil
@@ -101,40 +101,48 @@ if __name__ == '__main__':
     # print(v.char2index)
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
-
+    window_size = 6
     characters_file = WIKIPEDIA_CHARACTERS_FILE
     char_dic = CharDic.from_file(characters_file)
-    with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences.csv', 'rt') as f:
-        for no, line in enumerate(f, 1):
-            cids = [int(cid) for cid in line.split(',')][:10]
-            print(no, char_dic.cids2chars(cids))
 
-    exit()
+    # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
+    #     for no, line in enumerate(f, 1):
+    #         x_cids = [int(cid) for cid in line.split(',')][:window_size]
+    #         y_cids = [int(cid) for cid in line.split(',')][window_size:]
+    #         print(no, char_dic.cids2chars(x_cids), '->', char_dic.cids2chars(y_cids))
 
     batch_size = 2
-    window_size = 5
     max_sentence_len = 100
     sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
     v = CharDic.from_chars(sentence_list)
-    print(v.dic_size, v.chars)
-    print(v.chars2csv(sentence_list[0]))
+
+    # print(v.dic_size, v.chars)
+    # original = v.chars2cids(sentence_list[0])
+    # noised = original.copy()
+    # noised[0] = -1
+    # print(v.cids2chars(original))
+    # print(v.cids2chars(noised))
+
+    embedding_size = 10
 
 
-    def create_graph(batch_size, window_size):
-        x = tf.placeholder(tf.float32, [batch_size, window_size])
-        # mask = tf.random_uniform(shape=(batch_size, 1), minval=0, maxval=window_size - 1, dtype=tf.int32)
-        # value = tf.zeros(shape=(1, 1))
-        # x_dropout = tf.scatter_update(x_v, mask, value)
-        # print(x)
-        # print(x_dropout)
-        dic_size = tf.placeholder(tf.int32)
-        x_one_hot = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
-        return x, dic_size, x_one_hot
+    def create_graph_one_hot(dic_size, batch_size, window_size):
+        x = tf.placeholder(tf.int32, [batch_size, window_size])
+        x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+        embeddings = None
+        return x, embeddings, x_vector
+
+    def create_graph_embedding(dic_size, batch_size, window_size):
+        x = tf.placeholder(tf.int32, [batch_size, window_size])
+        embeddings = tf.Variable(tf.random_uniform([dic_size, embedding_size], -1, 1))
+        x_vector = tf.nn.embedding_lookup(embeddings, x)
+        # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+        return x, embeddings, x_vector
 
 
     tf.reset_default_graph()
     tf.set_random_seed(7942)
-    x, dic_size, x_one_hot = create_graph(batch_size=batch_size, window_size=window_size)
+    x, embeddings, x_vector = create_graph_one_hot(dic_size=v.dic_size, batch_size=batch_size, window_size=window_size)
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
@@ -152,9 +160,10 @@ if __name__ == '__main__':
                 x_indices_noised.append(_x)
 
         for x_batch in ListUtil.chunks_with_size(x_indices_noised, chunk_size=batch_size):
-            _x, = sess.run([x], feed_dict={x: x_batch, dic_size: v.dic_size})
-            for a, b in zip(x_batch, _x):
+            x_vector_, = sess.run([x_vector], feed_dict={x: np.array(x_batch)})
+            for a, b in zip(x_batch, x_vector_):
                 print()
+                print(v.cids2chars(a))
                 print(a)
                 print(b)
                 # print(sentence, _x_one_hot_batch.shape)
