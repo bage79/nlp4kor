@@ -115,8 +115,7 @@ if __name__ == '__main__':
     max_sentence_len = 100
     sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
     v = CharDic.from_chars(sentence_list)
-
-    # print(v.dic_size, v.chars)
+    print(v.dic_size, v.chars)
     # original = v.chars2cids(sentence_list[0])
     # noised = original.copy()
     # noised[0] = -1
@@ -124,7 +123,6 @@ if __name__ == '__main__':
     # print(v.cids2chars(noised))
 
     embedding_size = 10
-
 
     def create_graph_one_hot(dic_size, batch_size, window_size):
         x = tf.placeholder(tf.int32, [batch_size, window_size])

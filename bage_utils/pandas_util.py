@@ -108,23 +108,30 @@ class PandasUtil(object):
 
 
 if __name__ == '__main__':
+    df = pd.Data(columns=["firstname", "lastname"])
+    df = df.append({
+        "firstname": "John",
+        "lastname": "Johny"
+    }, ignore_index=True)
+    print(df)
+
     # di = {'data': ['005930'], 'index': ['20170324'], 'columns': ['code']}
     # df = pd.read_json(json.dumps(di), orient='split', dtype=False)
     # # print(df)
     # df_empty = pd.DataFrame({'name': []}, index=[], columns=['name'])
     # # print(df_empty)
     # print(PandasUtil.merge(df, df_empty))
-    df1 = pd.DataFrame({'x': [1, 2, 3, 4, 5, 6], 'y': list('abdabd')},
-                       index=[10, 20, 30, 40, 50, 70])
-    df2 = pd.DataFrame({'xx': [1, 2, 3, 4, 5, 6], 'yy': list('abdabd')},
-                       index=[10, 20, 30, 40, 50, 60])
-    df3 = pd.DataFrame({'xxx': [1, 2, 3, 4, 5, 6], 'yyy': list('abdabd')},
-                       index=[10, 20, 30, 40, 50, 60])
-    df_list = [df1, df1, df2, df3, df1, df3]
-    s = pd.Series([1, 3, 5, np.nan, 6, 8])
-    s_json = PandasUtil.to_json(s)
-    s_ = PandasUtil.read_json(s_json)
-    print(s_)
+    # df1 = pd.DataFrame({'x': [1, 2, 3, 4, 5, 6], 'y': list('abdabd')},
+    #                    index=[10, 20, 30, 40, 50, 70])
+    # df2 = pd.DataFrame({'xx': [1, 2, 3, 4, 5, 6], 'yy': list('abdabd')},
+    #                    index=[10, 20, 30, 40, 50, 60])
+    # df3 = pd.DataFrame({'xxx': [1, 2, 3, 4, 5, 6], 'yyy': list('abdabd')},
+    #                    index=[10, 20, 30, 40, 50, 60])
+    # df_list = [df1, df1, df2, df3, df1, df3]
+    # s = pd.Series([1, 3, 5, np.nan, 6, 8])
+    # s_json = PandasUtil.to_json(s)
+    # s_ = PandasUtil.read_json(s_json)
+    # print(s_)
     # df_all = PandasUtil.merge_all(df_list)
     # print(PandasUtil.table(df_all))
     # print(df1.iloc[-1]['y'])
