@@ -1,32 +1,39 @@
+import math
+
 import numpy as np
 
 
-def cartesian_product(*arrays: np.ndarray):
-    la = len(arrays)
-    dtype = np.result_type(*arrays)
-    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
-    for i, a in enumerate(np.ix_(*arrays)):
-        arr[..., i] = a
-    return arr.reshape(-1, la)
+class NumpyUtil(object):
+    @staticmethod
+    def cartesian_product(*arrays: np.ndarray):
+        la = len(arrays)
+        dtype = np.result_type(*arrays)
+        arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+        for i, a in enumerate(np.ix_(*arrays)):
+            arr[..., i] = a
+        return arr.reshape(-1, la)
 
+    @staticmethod
+    def embeddings(dic_size, embeddings_size=10, min_val=-1., max_val=1., dtype=np.float32) -> np.ndarray:
+        """
 
-def embeddings(dic_size, nums_in_dim=10) -> np.ndarray:
-    """
-
-    :param dic_size:
-    :param nums_in_dim:
-    :return: array (dic_size, embedding_size)
-    """
-    embedding_size = int(np.ceil(np.log10(dic_size)))
-    # print(dic_size, '-> embedding_size: ', embedding_size)
-    dims = np.array([np.linspace(0, 0.9, nums_in_dim) for dim in range(embedding_size)])
-    W = cartesian_product(*dims)
-    return W[:dic_size]
+        :param dic_size: row size
+        :param embeddings_size: column size
+        :param max_val:
+        :param min_val:
+        :param dtype:
+        :return: array (dic_size, embedding_size)
+        """
+        nums_in_dim = int(np.ceil(math.log(dic_size, embeddings_size)))
+        print('dic_size: %s -> embedding_size: %s -> nums_in_dim: %s' % (dic_size, embeddings_size, nums_in_dim))
+        dims = np.array([np.linspace(min_val, max_val, nums_in_dim, dtype=dtype) for _ in range(embeddings_size)])
+        W = NumpyUtil.cartesian_product(*dims)
+        return W[:dic_size]
 
 
 if __name__ == '__main__':
     # dic_size = 16000
-    W = embeddings(dic_size=150, nums_in_dim=10)
+    W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=10)
     print(W)
     print(W.shape)
     # print(W.shape)
