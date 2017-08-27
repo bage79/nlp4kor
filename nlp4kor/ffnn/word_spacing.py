@@ -16,7 +16,7 @@ from bage_utils.slack_util import SlackUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import log, WIKIPEDIA_DIR, WIKIPEDIA_CHARACTERS_FILE, \
     WORD_SPACING_MODEL_DIR, WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, \
-    WIKIPEDIA_SENTENCES_FILE
+    WIKIPEDIA_SENTENCES_FILE, WORD_SPACING_DATASET_DIR
 
 
 class WordSpacing(object):
@@ -33,12 +33,9 @@ class WordSpacing(object):
         log.info('load characters list OK. len: %s\n' % NumUtil.comma_str(len(features_vector)))
         watch = WatchUtil()
 
-        train_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
-                                  'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.train.gz' % (n_train, left_gram, right_gram))
-        valid_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
-                                  'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.test.gz' % (n_valid, left_gram, right_gram))
-        test_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'word_spacing',
-                                 'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.valid.gz' % (n_test, left_gram, right_gram))
+        train_file = os.path.join(WORD_SPACING_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.train.gz' % (n_train, left_gram, right_gram))
+        valid_file = os.path.join(WORD_SPACING_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.test.gz' % (n_valid, left_gram, right_gram))
+        test_file = os.path.join(WORD_SPACING_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.left=%d.right=%d.valid.gz' % (n_test, left_gram, right_gram))
 
         log.info('train_file: %s' % train_file)
         log.info('valid_file: %s' % valid_file)
