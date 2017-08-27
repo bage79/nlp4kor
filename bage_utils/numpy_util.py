@@ -25,7 +25,9 @@ class NumpyUtil(object):
         :return: array (dic_size, embedding_size)
         """
         nums_in_dim = int(np.ceil(math.log(dic_size, embeddings_size)))
-        print('dic_size: %s -> embedding_size: %s -> nums_in_dim: %s' % (dic_size, embeddings_size, nums_in_dim))
+        if embeddings_size > 32:
+            embeddings_size = 32
+        # print('dic_size: %s -> embedding_size: %s -> nums_in_dim: %s -> W: (%s, %s)' % (dic_size, embeddings_size, nums_in_dim, dic_size, embeddings_size))
         dims = np.array([np.linspace(min_val, max_val, nums_in_dim, dtype=dtype) for _ in range(embeddings_size)])
         W = NumpyUtil.cartesian_product(*dims)
         return W[:dic_size]
