@@ -14,7 +14,7 @@ class NumpyUtil(object):
         return arr.reshape(-1, la)
 
     @staticmethod
-    def embeddings(dic_size, embeddings_size=10, min_val=-1., max_val=1., dtype=np.float32) -> np.ndarray:
+    def embeddings(dic_size, embeddings_size=10, min_val=-1., max_val=1., dtype=np.float32) -> np.ndarray:  # FIXME: memory error, embeddings_size > 10
         """
 
         :param dic_size: row size
@@ -24,10 +24,10 @@ class NumpyUtil(object):
         :param dtype:
         :return: array (dic_size, embedding_size)
         """
+        if embeddings_size > 30:
+            embeddings_size = 30
         nums_in_dim = int(np.ceil(math.log(dic_size, embeddings_size)))
-        if embeddings_size > 32:
-            embeddings_size = 32
-        # print('dic_size: %s -> embedding_size: %s -> nums_in_dim: %s -> W: (%s, %s)' % (dic_size, embeddings_size, nums_in_dim, dic_size, embeddings_size))
+        print('dic_size: %s -> embedding_size: %s -> nums_in_dim: %s -> W: (%s, %s)' % (dic_size, embeddings_size, nums_in_dim, dic_size, embeddings_size))
         dims = np.array([np.linspace(min_val, max_val, nums_in_dim, dtype=dtype) for _ in range(embeddings_size)])
         W = NumpyUtil.cartesian_product(*dims)
         return W[:dic_size]
@@ -35,7 +35,7 @@ class NumpyUtil(object):
 
 if __name__ == '__main__':
     # dic_size = 16000
-    W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=10)
+    W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=15)
     print(W)
     print(W.shape)
     # print(W.shape)
