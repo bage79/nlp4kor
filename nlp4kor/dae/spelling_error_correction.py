@@ -20,7 +20,7 @@ from bage_utils.string_util import StringUtil
 from bage_utils.watch_util import WatchUtil
 from nlp4kor.config import log, SPELLING_ERROR_CORRECTION_MODEL_DIR, \
     WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, WIKIPEDIA_CHARACTERS_FILE, \
-    WIKIPEDIA_DIR
+    WIKIPEDIA_DIR, SPELLING_ERROR_CORRECTION_DATASET_DIR
 
 
 class SpellingErrorCorrection(object):
@@ -37,12 +37,9 @@ class SpellingErrorCorrection(object):
         log.info('load characters list OK. len: %s' % NumUtil.comma_str(len(features_vector)))
         watch = WatchUtil()
 
-        train_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'spelling_error_correction',
-                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
-        valid_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'spelling_error_correction',
-                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_valid, window_size))
-        test_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'spelling_error_correction',
-                                 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_test, window_size))
+        train_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
+        valid_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_valid, window_size))
+        test_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_test, window_size))
         if is_my_pc() or is_my_gpu_pc() or not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
@@ -460,8 +457,7 @@ if __name__ == '__main__':
                 log.error('restore failed. model_file: %s' % model_file)
                 raise e
 
-            train_file = os.path.join(WIKIPEDIA_DIR, 'datasets', 'spelling_error_correction',
-                                      'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
+            train_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
             train = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector.convert_to_one_hot_vector()
