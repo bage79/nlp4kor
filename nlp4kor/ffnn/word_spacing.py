@@ -322,11 +322,10 @@ if __name__ == '__main__':
         log.info('sample testing OK.\n')
 
         if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
-            if n_train >= int('100,000'.replace(',', '')):
-                SlackUtil.send_message('%s start (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
+            # if n_train >= int('100,000'.replace(',', '')):
+            #     SlackUtil.send_message('%s start (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
             WordSpacing.learning(total_epoch, n_train, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector,
-                                 n_hidden1=n_hidden1,
-                                 learning_rate=learning_rate, early_stop_cost=early_stop_cost)
+                                 n_hidden1=n_hidden1, learning_rate=learning_rate, early_stop_cost=early_stop_cost)
             if n_train >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s end (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
 

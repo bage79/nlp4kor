@@ -4,7 +4,7 @@ PROJECT_DIR=${HOME}'/workspace/nlp4kor'
 
 if [ "$#" -ne 3 ]; then
     echo "[Usage] $0 n_train left_gram right_gram"
-    echo "[Usage] $0 1000000 2 2"
+    echo "[Usage] $0 1000000 3 3"
     exit
 fi
 
