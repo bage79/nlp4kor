@@ -315,14 +315,14 @@ if __name__ == '__main__':
         log.info('early_stop_cost: %s' % early_stop_cost)
         log.info('total_epoch: %s' % total_epoch)
 
-        # log.info('sample testing...')
-        # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-        # for s in test_set:
-        #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-        #     log.info('%s -> %s' % (features, labels))
-        #     log.info('in : "%s"' % s)
-        #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
-        # log.info('sample testing OK.\n')
+        log.info('sample testing...')
+        test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+        for s in test_set:
+            features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+            log.info('%s -> %s' % (features, labels))
+            log.info('in : "%s"' % s)
+            log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
+        log.info('sample testing OK.\n')
 
         if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
             if n_train >= int('100,000'.replace(',', '')):

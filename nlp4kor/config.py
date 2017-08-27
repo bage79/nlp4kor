@@ -16,7 +16,7 @@ if log is None:
         else:  # pycharm remote
             log = LogUtil.get_logger(sys.argv[0], level=logging.DEBUG, console_mode=True)  # global log # console_mode=True for jupyter
     else:  # by batch script
-        log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
+        log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log
 
 MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
     'root', os.getenv('MONGODB_PASSWD'), 'db-local', '27017', 'admin')
