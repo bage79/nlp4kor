@@ -24,7 +24,7 @@ class WordSpacing(object):
 
     @classmethod
     def learning(cls, total_epoch, n_train, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, n_hidden1=100,
-                 learning_rate=0.01, early_stop_cost=0.001):
+                 learning_rate=0.01, early_stop_cost=0.001, valid_interval=1):
         ngram = left_gram + right_gram
         n_features = len(features_vector) * ngram  # number of features = 17,380 * 4
         n_classes = len(labels_vector) if len(labels_vector) >= 3 else 1  # number of classes = 2 but len=1
@@ -104,42 +104,44 @@ class WordSpacing(object):
 
         train_step, X, Y, cost, predicted, accuracy = graph['train_step'], graph['X'], graph['Y'], graph['cost'], graph['predicted'], graph['accuracy']
 
-        with tf.Session() as sess:
+        saver = tf.train.Saver()
+        model_dir = os.path.dirname(model_file)
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+        with tf.Session(config=config) as sess:
             sess.run(tf.global_variables_initializer())
-            check_interval = 10  # max(1, min(1000, n_train // 10))
             nth_train, nth_input, total_input = 0, 0, total_epoch * train.size
 
             log.info('learn...')
             log.info('total: %s' % NumUtil.comma_str(train.size))
             watch.start('learn')
-            valid_cost = sys.float_info.max
+            best_valid_cost = sys.float_info.max
             for epoch in range(1, total_epoch + 1):
-                if valid_cost < early_stop_cost:
+                if best_valid_cost < early_stop_cost:
                     break
                 for step, (features_batch, labels_batch) in enumerate(train.next_batch(batch_size=batch_size), 1):
-                    if valid_cost < early_stop_cost:
-                        log.info('valid_cost: %s, early_stop_cost: %s, early stopped.' % (valid_cost, early_stop_cost))
-                        break
                     nth_train += 1
                     nth_input += features_batch.shape[0]
                     sess.run(train_step, feed_dict={X: features_batch, Y: labels_batch})
 
-                    # if step % check_interval == 1:
-                    percent = nth_input / total_input * 100
-                    valid_cost = sess.run(cost, feed_dict={X: valid.features, Y: valid.labels})
-                    log.info('[epoch=%s][%.1f%%] valid_cost: %.4f' % (epoch, percent, valid_cost))
+                    if step % valid_interval == 1:
+                        percent = nth_input / total_input * 100
+                        valid_cost = sess.run(cost, feed_dict={X: valid.features, Y: valid.labels})
+
+                        if valid_cost < best_valid_cost:
+                            best_valid_cost = valid_cost
+                            saver.save(sess, model_file)
+                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f model saved' % (epoch, percent, best_valid_cost))
+                        else:
+                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f' % (epoch, percent, best_valid_cost))
+
+                        if best_valid_cost < early_stop_cost:
+                            log.info('valid_cost: %s, early_stop_cost: %s, early stopped.' % (best_valid_cost, early_stop_cost))
+                            break
             watch.stop('learn')
             log.info('learn OK.\n')
-
-            log.info('model save... %s' % model_file)
-            watch.start('model save...')
-            model_dir = os.path.dirname(model_file)
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
-            saver = tf.train.Saver()
-            saver.save(sess, model_file)
-            watch.stop('model save...')
-            log.info('model save OK. %s' % model_file)
 
         log.info('\n')
         log.info('batch_size: %s' % batch_size)
@@ -185,49 +187,34 @@ class WordSpacing(object):
         return ''.join(left)
 
     @classmethod
-    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil()):  # TODO: 2 layers
+    def build_FFNN(cls, n_features, n_classes, n_hiddens1, learning_rate, watch=WatchUtil()):  # TODO: 2 layers
         log.info('\nbuild_FFNN')
+
         if len(cls.graph_nodes) == 0:
-            n_hidden3 = n_hidden2 = n_hidden1
             log.info('create tensorflow graph...')
             watch.start('create tensorflow graph')
             log.info('n_features: %s' % n_features)
             log.info('n_classes: %s' % n_classes)
             log.info('n_hidden1: %s' % n_hidden1)
-            log.info('n_hidden2: %s' % n_hidden2)
-            log.info('n_hidden3: %s' % n_hidden3)
 
-            tf.set_random_seed(777)  # for reproducibility
+            tf.set_random_seed(7942)  # for reproducibility
 
             X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
             Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
 
-            # W1 = tf.Variable(tf.truncated_normal([n_features, n_hidden1], mean=0.0, stddev=0.1), name='W1')
-            # b1 = tf.Variable(tf.constant(0.1, shape=[n_hidden1]), name='b1')
-            W1 = tf.Variable(tf.random_normal([n_features, n_hidden1]), name='W1')
-            b1 = tf.Variable(tf.random_normal([n_hidden1]), name='b1')
-            layer1 = tf.nn.relu(tf.matmul(X, W1) + b1, name='layer1')
+            W1 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_features, n_hiddens1], name='W1')
+            b1 = tf.get_variable(initializer=tf.constant(0., shape=[n_hiddens1]), name='b1')
+            layer1 = tf.nn.elu(tf.matmul(X, W1) + b1, name='layer1')
 
-            W2 = tf.Variable(tf.random_normal([n_hidden1, n_hidden2]), name='W2')
-            b2 = tf.Variable(tf.random_normal([n_hidden2]), name='b2')
-            layer2 = tf.nn.relu(tf.matmul(layer1, W2) + b2, name='layer2')
+            W2 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_hiddens1, n_classes], name='W2')
+            b2 = tf.get_variable(initializer=tf.constant(0., shape=[n_classes]), name='b2')
+            y_hat = tf.add(tf.matmul(layer1, W2), b2, name='y_hat')
 
-            W3 = tf.Variable(tf.random_normal([n_hidden2, n_hidden3]), name='W3')
-            b3 = tf.Variable(tf.random_normal([n_hidden3]), name='b3')
-            layer3 = tf.nn.relu(tf.matmul(layer2, W3) + b3, name='layer3')
-
-            W4 = tf.Variable(tf.random_normal([n_hidden3, n_classes]), name='W4')
-            b4 = tf.Variable(tf.random_normal([n_classes]), name='b4')
-            y_hat = tf.add(tf.matmul(layer3, W4), b4, name='y_hat')
-
-            # cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) * tf.log(1 - hypothesis), name='cost')  # cost/loss function
             cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=y_hat, labels=Y), name='cost')
 
-            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-                cost)  # Very Very good!! sentences=10000 + layer=4, 10분, accuracy 0.9294, cost: 0.1839
+            train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
             predicted = tf.cast(y_hat > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
-
             accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
 
             watch.stop('create tensorflow graph')
@@ -255,6 +242,9 @@ class WordSpacing(object):
 
 
 if __name__ == '__main__':
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
+    tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
+
     train_sentences_file = WIKIPEDIA_TRAIN_SENTENCES_FILE
     valid_sentences_file = WIKIPEDIA_VALID_SENTENCES_FILE
     test_sentences_file = WIKIPEDIA_TEST_SENTENCES_FILE
@@ -271,46 +261,46 @@ if __name__ == '__main__':
             right_gram = int(sys.argv[3])
         else:
             n_train, left_gram, right_gram = 1000000, 3, 3
+            n_train, left_gram, right_gram = 100, 3, 3  # FIXME: TEST
             # n_train, left_gram, right_gram = int('1,000,000'.replace(',', '')), 2, 2
-
-        if left_gram is None:
-            left_gram = 3
-        if right_gram is None:
-            right_gram = 3
 
         ngram = left_gram + right_gram
         n_valid, n_test = 100, 100
         log.info('n_train: %s' % NumUtil.comma_str(n_train))
         log.info('n_valid: %s' % NumUtil.comma_str(n_valid))
         log.info('n_test: %s' % NumUtil.comma_str(n_test))
-        log.info('left_gram: %s, right_gram: %s' % (left_gram, right_gram))
-        log.info('ngram: %s' % ngram)
+        log.info('ngram: %s = left_gram: %s + right_gram: %s' % (ngram, left_gram, right_gram))
 
         total_sentences = FileUtil.count_lines(WIKIPEDIA_SENTENCES_FILE)
-        model_file = os.path.join(WORD_SPACING_MODEL_DIR,
-                                  'word_spacing_model.sentences=%s.left_gram=%s.right_gram=%s/model' % (
-                                      n_train, left_gram, right_gram))  # .%s' % max_sentences
-        log.info('model_file: %s' % model_file)
 
-        batch_size = 1000  # mini batch size
-        log.info('batch_size: %s' % batch_size)
-
-        total_epoch = min(100, 1000000 // n_train)  # 1 ~ 100
         features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
         labels_vector = CharOneHotVector([0, 1])  # 붙여쓰기=0, 띄어쓰기=1
-        n_features = len(features_vector) * ngram  # number of features = 17,380 * 4
-        n_classes = len(labels_vector) if len(labels_vector) >= 3 else 1  # number of classes = 2 but len=1
-        n_hidden1 = 100
-        learning_rate = min(0.1, 0.001 * total_epoch)  # 0.1 ~ 0.001
-        early_stop_cost = 0.0001
         log.info('features_vector: %s' % features_vector)
         log.info('labels_vector: %s' % labels_vector)
+
+        n_features = len(features_vector) * ngram  # number of features
+        n_classes = 1  # 0 or 1
         log.info('n_features: %s' % n_features)
         log.info('n_classes: %s' % n_classes)
+
+        do_train = True
+        do_test = True
+        batch_size = 4000  # mini batch size
+        total_epoch = 5
+        n_hidden1 = 1000
+        learning_rate = 1e-2
+
+        early_stop_cost = 1e-2
+        valid_interval = 5
+        log.info('total_epoch: %s' % total_epoch)
+        log.info('batch_size: %s' % batch_size)
         log.info('n_hidden1: %s' % n_hidden1)
         log.info('learning_rate: %s' % learning_rate)
         log.info('early_stop_cost: %s' % early_stop_cost)
-        log.info('total_epoch: %s' % total_epoch)
+
+        model_file = os.path.join(WORD_SPACING_MODEL_DIR, 'word_spacing_model.sentences_%s.ngram_%s.total_epoch_%s.n_hiddens_%d.learning_rate_%.4f%%/model' % (
+            n_train, ngram, total_epoch, n_hidden1, learning_rate))  # .%s' % max_sentences
+        log.info('model_file: %s' % model_file)
 
         log.info('sample testing...')
         test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
@@ -321,72 +311,74 @@ if __name__ == '__main__':
             log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
         log.info('sample testing OK.\n')
 
-        if not os.path.exists(model_file + '.index') or not os.path.exists(model_file + '.meta'):
-            # if n_train >= int('100,000'.replace(',', '')):
-            #     SlackUtil.send_message('%s start (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
+        if do_train or not os.path.exists(model_file + '.index'):
             WordSpacing.learning(total_epoch, n_train, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector,
-                                 n_hidden1=n_hidden1, learning_rate=learning_rate, early_stop_cost=early_stop_cost)
+                                 n_hidden1=n_hidden1, learning_rate=learning_rate, early_stop_cost=early_stop_cost, valid_interval=valid_interval)
             if n_train >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s end (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train, left_gram, right_gram))
 
-        log.info('chek result...')
-        watch = WatchUtil()
-        watch.start('read sentences')
+        if do_test:
+            log.info('chek result...')
+            watch = WatchUtil()
+            watch.start('read sentences')
 
-        sentences = []  # '아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
-        max_test_sentences = 100
+            sentences = []  # '아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
+            max_test_sentences = 100
 
-        if n_train >= int('100,000'.replace(',', '')):
-            sentences_file = test_sentences_file
-        else:
-            sentences_file = train_sentences_file
+            if n_train >= int('100,000'.replace(',', '')):
+                sentences_file = test_sentences_file
+            else:
+                sentences_file = train_sentences_file
 
-        with gzip.open(sentences_file, 'rt') as f:
-            for i, line in enumerate(f, 1):
-                if len(sentences) >= max_test_sentences:
-                    break
+            with gzip.open(sentences_file, 'rt') as f:
+                for i, line in enumerate(f, 1):
+                    if len(sentences) >= max_test_sentences:
+                        break
 
-                s = line.strip()
-                if s.count(' ') > 0:  # sentence must have one or more space.
-                    sentences.append(s)
-        log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
-        watch.stop('read sentences')
+                    s = line.strip()
+                    if s.count(' ') > 0:  # sentence must have one or more space.
+                        sentences.append(s)
+            log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
+            watch.stop('read sentences')
 
-        watch.start('run tensorflow')
-        accuracies, sims = [], []
-        with tf.Session() as sess:
             graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate)
             X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
 
+            accuracies, sims = [], []
             saver = tf.train.Saver()
-            try:
-                restored = saver.restore(sess, model_file)
-            except:
-                log.error('restore failed. model_file: %s' % model_file)
-            try:
-                for i, s in enumerate(sentences):
-                    log.info('')
-                    log.info('[%s] in : "%s"' % (i, s))
-                    _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
-                    dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
-                    dataset.convert_to_one_hot_vector()
-                    if len(dataset) > 0:
-                        _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
 
-                        sentence_hat = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                        sim, correct, total = WordSpacing.sim_two_sentence(s, sentence_hat, left_gram=left_gram, right_gram=right_gram)
+            watch.start('run tensorflow')
+            config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+            with tf.Session(config=config) as sess:
+                try:
+                    sess.run(tf.global_variables_initializer())
+                    restored = saver.restore(sess, model_file)
+                except:
+                    log.error('restore failed. model_file: %s' % model_file)
+                try:
+                    for i, s in enumerate(sentences):
+                        log.info('')
+                        log.info('[%s] in : "%s"' % (i, s))
+                        _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
+                        dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
+                        dataset.convert_to_one_hot_vector()
+                        if len(dataset) > 0:
+                            _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
 
-                        accuracies.append(_accuracy)
-                        sims.append(sim)
+                            sentence_hat = WordSpacing.spacing(s.replace(' ', ''), _predicted)
+                            sim, correct, total = WordSpacing.sim_two_sentence(s, sentence_hat, left_gram=left_gram, right_gram=right_gram)
 
-                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
-            except:
-                log.error(traceback.format_exc())
+                            accuracies.append(_accuracy)
+                            sims.append(sim)
 
-        log.info('chek result OK.')
-        # noinspection PyStringFormat
-        log.info('mean(accuracy): %.2f%%, mean(sim): %.2f%%' % (np.mean(accuracies) * 100, np.mean(sims) * 100))
-        log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
-        log.info(watch.summary())
+                            log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
+                except:
+                    log.error(traceback.format_exc())
+
+            log.info('chek result OK.')
+            # noinspection PyStringFormat
+            log.info('mean(sim): %.2f%%' % (np.mean(sims) * 100))
+            log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
+            log.info(watch.summary())
     except:
         log.error(traceback.format_exc())
