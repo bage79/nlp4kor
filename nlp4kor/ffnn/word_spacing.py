@@ -89,7 +89,8 @@ class WordSpacing(object):
         if n_train >= int('100,000'.replace(',', '')):
             valid = DataSet.load(valid_file, gzip_format=True, verbose=True)
         else:
-            valid = DataSet.load(train_file, gzip_format=True, verbose=True)
+            valid = DataSet.load(train_file, gzip_format=True, max_len=n_valid * 10, verbose=True)  # test mode
+
         log.info('valid.convert_to_one_hot_vector()...')
         valid = valid.convert_to_one_hot_vector(verbose=True)
         log.info('valid.convert_to_one_hot_vector() OK.')
