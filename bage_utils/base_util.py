@@ -55,13 +55,13 @@ def is_my_pc():
 
 
 def is_my_gpu_pc():
-    """ GPU 장착된 원격 PC (pycahrm remote, jupyter notebook) """
-    return hostname() == 'db-local'
+    """ GPU 장착된 PC """
+    return hostname() == 'db-local' or hostname() == 'office'
 
 
 def is_server():
-    """ full batch 용 서버 """
-    return not is_my_pc() and not is_my_gpu_pc()
+    """ batch script 실행중인지 """
+    return not is_my_pc() and not is_pycharm_remote()
 
 
 def hostname():
