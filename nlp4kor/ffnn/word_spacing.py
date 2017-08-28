@@ -7,14 +7,14 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
+from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.dataset import DataSet
 from bage_utils.file_util import FileUtil
 from bage_utils.num_util import NumUtil
-from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, WIKIPEDIA_DIR, WIKIPEDIA_CHARACTERS_FILE, \
+from nlp4kor.config import log, WIKIPEDIA_CHARACTERS_FILE, \
     WORD_SPACING_MODEL_DIR, WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, \
     WIKIPEDIA_SENTENCES_FILE, WORD_SPACING_DATASET_DIR
 
@@ -127,7 +127,7 @@ class WordSpacing(object):
                     # if step % check_interval == 1:
                     percent = nth_input / total_input * 100
                     valid_cost = sess.run(cost, feed_dict={X: valid.features, Y: valid.labels})
-                    log.info('[epoch=%s][%.1f%%] %s cost: %.4f' % (epoch, percent, valid.name, valid_cost))
+                    log.info('[epoch=%s][%.1f%%] valid_cost: %.4f' % (epoch, percent, valid_cost))
             watch.stop('learn')
             log.info('learn OK.\n')
 
