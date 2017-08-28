@@ -91,9 +91,12 @@ class CharOneHotVector(object):
 
 if __name__ == '__main__':
     # chars = ['0', '1', '2']
-    # chars = [1, 0]
     chars = ['ㄷ', 'ㄱ', 'ㄴ', 'ㄹ']
+    chars = [0, 1]
     ohv = CharOneHotVector(chars)
+    print(ohv.to_vectors([0, 1]))
+    exit()
+
     _input = 'ㄱㄴㄷㄹㅎ'
     feature_v = ohv.to_vectors(_input)
     print(_input)
