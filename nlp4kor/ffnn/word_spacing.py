@@ -1,10 +1,10 @@
 import gzip
+import math
 import os
 import sys
 import time
 import traceback
 
-import math
 import numpy as np
 import tensorflow as tf
 
@@ -304,7 +304,7 @@ if __name__ == '__main__':
         do_train = True
         do_test = True
         batch_size = 8000  # mini batch size
-        total_epoch = max(2, math.ceil(10 / math.log10(n_train_sentences)))
+        total_epochs = max(2, math.ceil(10 / math.log10(n_train_sentences)))
 
         activation = tf.tanh
         n_hidden1 = 200
@@ -317,7 +317,7 @@ if __name__ == '__main__':
 
         valid_interval = 1
         log.info('')
-        log.info('total_epoch: %s' % total_epoch)
+        log.info('total_epoch: %s' % total_epochs)
         log.info('batch_size: %s' % batch_size)
         log.info('')
         log.info('activation: %s' % activation)
@@ -328,7 +328,7 @@ if __name__ == '__main__':
         log.info('early_stop_cost: %s' % early_stop_cost)
 
         model_file = os.path.join(WORD_SPACING_MODEL_DIR, 'word_spacing_model.sentences_%s.ngram_%s.total_epoch_%s.n_hiddens_%d.learning_rate_%.4f%%/model' % (
-            n_train_sentences, ngram, total_epoch, n_hidden1, learning_rate))  # .%s' % max_sentences
+            n_train_sentences, ngram, total_epochs, n_hidden1, learning_rate))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
         # log.info('sample testing...')
@@ -345,7 +345,8 @@ if __name__ == '__main__':
         decay_steps = decay_epochs * batches_in_epoch
 
         if do_train or not os.path.exists(model_file + '.index'):
-            WordSpacing.learning(total_epoch, train_dataset, valid_dataset, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, activation, n_hidden1, learning_rate, decay_steps, decay_rate, early_stop_cost,
+            WordSpacing.learning(total_epochs, train_dataset, valid_dataset, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, activation, n_hidden1, learning_rate,
+                                 decay_steps, decay_rate, early_stop_cost,
                                  valid_interval)
             if n_train_sentences >= int('100,000'.replace(',', '')):
                 SlackUtil.send_message('%s end (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train_sentences, left_gram, right_gram))
@@ -404,8 +405,7 @@ if __name__ == '__main__':
                             accuracies.append(_accuracy)
                             sims.append(sim)
 
-                            log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s) activation=%s, n_hidden:%d' % (
-                                i, sentence_hat, _accuracy * 100, sim * 100, correct, total, activation.__name__, n_hidden1))
+                            log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
                 except:
                     log.error(traceback.format_exc())
 
@@ -413,7 +413,9 @@ if __name__ == '__main__':
             # noinspection PyStringFormat
             log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
             log.info('')
-            log.info('mean(sim): %.2f%%' % np.mean(sims) * 100)
+            # noinspection PyStringFormat
+            log.info('test_sim: %.2f%%, total_epochs: %d, batch_size: %s, activation=%s, n_hidden:%d, learning_rate: %.6f, decay_epochs: %d, decay_rate: %.2f, early_stop_cost: %.8f' % (
+                np.mean(sims) * 100, total_epochs, NumUtil.comma_str(batch_size), activation.__name__, n_hidden1, learning_rate, decay_epochs, decay_rate, early_stop_cost))
             log.info(watch.summary())
 
     except:
