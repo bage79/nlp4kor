@@ -267,6 +267,75 @@ class WordSpacing(object):
             sim = correct / total_spaces
         return sim, correct, total_spaces
 
+    @classmethod
+    def test(cls, test_sentences_file, n_features, n_classes, activation, n_hidden1, n_layers, learning_rate, decay_steps, decay_rate, watch):
+        log.info('chek result...')
+        watch.start('read sentences')
+
+        sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
+        if same_train_valid_data:
+            test_sentences_file = train_sentences_file
+        # else: # TODO:
+        #     test_sentences_file = valid_sentences_file
+
+        log.info('test_sentences_file: %s' % test_sentences_file)
+        with gzip.open(test_sentences_file, 'rt') as f:
+            for i, line in enumerate(f, 1):
+                if len(sentences) >= n_test_sentences:
+                    break
+
+                s = line.strip()
+                if s.count(' ') > 0:  # sentence must have one or more space.
+                    sentences.append(s)
+        log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
+        watch.stop('read sentences')
+
+        graph = WordSpacing.build_FFNN(n_features, n_classes, activation, n_hidden1, n_layers, learning_rate, decay_steps, decay_rate)
+        X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
+
+        accuracies, sims = [], []
+        saver = tf.train.Saver()
+
+        watch.start('run tensorflow')
+        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+        with tf.Session(config=config) as sess:
+            try:
+                try:
+                    sess.run(tf.global_variables_initializer())
+                    saver.restore(sess, model_file)
+                except:
+                    log.error('restore failed. model_file: %s' % model_file)
+
+                for i, s in enumerate(sentences):
+                    log.info('')
+                    log.info('[%s] in : "%s"' % (i, s))
+                    _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
+                    dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
+                    dataset.convert_to_one_hot_vector()
+                    if len(dataset) > 0:
+                        _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
+
+                        sentence_hat = WordSpacing.spacing(s.replace(' ', ''), _predicted)
+                        sim, correct, total = WordSpacing.sim_two_sentence(s, sentence_hat, left_gram=left_gram, right_gram=right_gram)
+
+                        accuracies.append(_accuracy)
+                        sims.append(sim)
+
+                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
+            except:
+                log.error(traceback.format_exc())
+
+        log.info('chek result OK.')
+        log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
+        log.info('')
+        # noinspection PyStringFormat
+        log.info('same_train_valid_data: %s, test_sim: %d%%, n_train_sentences: %s, elapsed: %s, total_epochs: %d, batch_size: %s, '
+                 'activation: %s, n_hidden1 * layers: %d * %d: , learning_rate: %.6f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
+                     same_train_valid_data, np.mean(sims) * 100, NumUtil.comma_str(n_train_sentences), watch.elapsed_string(), total_epochs, NumUtil.comma_str(batch_size),
+                     activation.__name__, n_hidden1, n_layers, learning_rate, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate, early_stop_cost))
+        log.info(watch.summary())
+        pass
+
 
 if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
@@ -288,14 +357,13 @@ if __name__ == '__main__':
     try:
         if len(sys.argv) == 4:
             n_train_sentences = int(sys.argv[1])
-            left_gram = int(sys.argv[2])
-            right_gram = int(sys.argv[3])
+            ngram = int(sys.argv[2])
         else:
-            # n_train_sentences, left_gram, right_gram = 1000000, 3, 3
-            n_train_sentences, left_gram, right_gram = 1000, 3, 3  # FIXME: TEST
-            # n_train, left_gram, right_gram = int('1,000,000'.replace(',', '')), 2, 2
+            # n_train_sentences, ngram = 1000000, 4
+            n_train_sentences, ngram = 1000, 4  # FIXME: TEST
 
-        ngram = left_gram + right_gram
+        left_gram = right_gram = math.ceil(ngram / 2)
+
         n_valid_sentences, n_test_sentences = 100, 100
         log.info('n_train_sentences: %s' % NumUtil.comma_str(n_train_sentences))
         log.info('n_valid_sentences: %s' % NumUtil.comma_str(n_valid_sentences))
@@ -333,7 +401,7 @@ if __name__ == '__main__':
         # same_train_valid_data: True, test_sim: 81%, n_train_sentences: 10,000, total_epochs: 3, activation: tf.tanh, n_hidden1: 200 * 4 layers, learning_rate: 1e-3, decay_epochs: 1, decay_rate: 0.99, early_stop_cost: 1e-2
 
         # same_train_valid_data: False, test_sim: 62%, n_train_sentences: 1,000, elapsed: 00:13:36, total_epochs: 7, batch_size: 8,000, activation: elu, n_hidden1 * layers: 200 * 2: , learning_rate: 0.010000, batches_in_epoch: 7, decay_steps: 7, decay_rate: 0.99, early_stop_cost: 0.01000000
-
+        # same_train_valid_data: False, test_sim: 67%, n_train_sentences: 10,000, elapsed: 01:34:59, total_epochs: 5, batch_size: 8,000, activation: elu, n_hidden1 * layers: 200 * 2: , learning_rate: 0.010000, batches_in_epoch: 64, decay_steps: 64, decay_rate: 0.99, early_stop_cost: 0.01000000
 
         valid_interval = 1
         log.info('')
@@ -351,14 +419,15 @@ if __name__ == '__main__':
             n_train_sentences, ngram, total_epochs, activation.__name__, n_hidden1, n_layers, learning_rate))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        # log.info('sample testing...')
-        # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-        # for s in test_set:
-        #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-        #     log.info('%s -> %s' % (features, labels))
-        #     log.info('in : "%s"' % s)
-        #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
-        # log.info('sample testing OK.\n')
+        if n_test_sentences > 100:
+            log.info('sample testing...')
+            test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+            for s in test_set:
+                features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+                log.info('%s -> %s' % (features, labels))
+                log.info('in : "%s"' % s)
+                log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
+            log.info('sample testing OK.\n')
 
         train_dataset, valid_dataset = WordSpacing.load_datasets(train_sentences_file, valid_sentences_file, n_train_sentences, n_valid_sentences, left_gram, right_gram, features_vector,
                                                                  labels_vector, same_train_valid_data=same_train_valid_data)
@@ -370,75 +439,10 @@ if __name__ == '__main__':
             WordSpacing.learning(total_epochs, train_dataset, valid_dataset, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector, activation, n_hidden1, n_layers,
                                  learning_rate,
                                  decay_steps, decay_rate, early_stop_cost, valid_interval)
-            if n_train_sentences >= int('100,000'.replace(',', '')):
+            if n_train_sentences > 100:
                 SlackUtil.send_message('%s end (max_sentences=%s, left_gram=%s, right_gram=%.1f)' % (sys.argv[0], n_train_sentences, left_gram, right_gram))
 
         if do_test:
-            log.info('chek result...')
-
-            watch.start('read sentences')
-
-            sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
-
-            if same_train_valid_data:
-                test_sentences_file = train_sentences_file
-            # else: # TODO:
-            #     test_sentences_file = valid_sentences_file
-
-            log.info('test_sentences_file: %s' % test_sentences_file)
-            with gzip.open(test_sentences_file, 'rt') as f:
-                for i, line in enumerate(f, 1):
-                    if len(sentences) >= n_test_sentences:
-                        break
-
-                    s = line.strip()
-                    if s.count(' ') > 0:  # sentence must have one or more space.
-                        sentences.append(s)
-            log.info('len(sentences): %s' % NumUtil.comma_str(len(sentences)))
-            watch.stop('read sentences')
-
-            graph = WordSpacing.build_FFNN(n_features, n_classes, activation, n_hidden1, n_layers, learning_rate, decay_steps, decay_rate)
-            X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
-
-            accuracies, sims = [], []
-            saver = tf.train.Saver()
-
-            watch.start('run tensorflow')
-            config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
-            with tf.Session(config=config) as sess:
-                try:
-                    sess.run(tf.global_variables_initializer())
-                    restored = saver.restore(sess, model_file)
-                except:
-                    log.error('restore failed. model_file: %s' % model_file)
-                try:
-                    for i, s in enumerate(sentences):
-                        log.info('')
-                        log.info('[%s] in : "%s"' % (i, s))
-                        _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
-                        dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
-                        dataset.convert_to_one_hot_vector()
-                        if len(dataset) > 0:
-                            _predicted, _accuracy = sess.run([predicted, accuracy], feed_dict={X: dataset.features, Y: dataset.labels})  # Accuracy report
-
-                            sentence_hat = WordSpacing.spacing(s.replace(' ', ''), _predicted)
-                            sim, correct, total = WordSpacing.sim_two_sentence(s, sentence_hat, left_gram=left_gram, right_gram=right_gram)
-
-                            accuracies.append(_accuracy)
-                            sims.append(sim)
-
-                            log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, sim * 100, correct, total))
-                except:
-                    log.error(traceback.format_exc())
-
-            log.info('chek result OK.')
-            log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
-            log.info('')
-            # noinspection PyStringFormat
-            log.info('same_train_valid_data: %s, test_sim: %d%%, n_train_sentences: %s, elapsed: %s, total_epochs: %d, batch_size: %s, '
-                     'activation: %s, n_hidden1 * layers: %d * %d: , learning_rate: %.6f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
-                         same_train_valid_data, np.mean(sims) * 100, NumUtil.comma_str(n_train_sentences), watch.elapsed_string(), total_epochs, NumUtil.comma_str(batch_size),
-                         activation.__name__, n_hidden1, n_layers, learning_rate, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate, early_stop_cost))
-            log.info(watch.summary())
+            WordSpacing.test(test_sentences_file, n_features, n_classes, activation, n_hidden1, n_layers, learning_rate, decay_steps, decay_rate, watch)
     except:
         log.error(traceback.format_exc())
