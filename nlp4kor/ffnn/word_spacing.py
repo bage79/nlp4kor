@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 
+import math
 import numpy as np
 import tensorflow as tf
 
@@ -134,13 +135,14 @@ class WordSpacing(object):
                         if valid_cost < best_valid_cost:
                             best_valid_cost = valid_cost
                             saver.save(sess, model_file)
-                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f model saved' % (epoch, percent, best_valid_cost))
+                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f model saved' % (epoch, percent, valid_cost))
+                            if best_valid_cost < early_stop_cost:
+                                log.info('valid_cost: %s, early_stop_cost: %s, early stopped.' % (valid_cost, early_stop_cost))
+                                break
                         else:
-                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f' % (epoch, percent, best_valid_cost))
+                            log.info('[epoch=%s][%.1f%%] valid_cost: %.8f' % (epoch, percent, valid_cost))
 
-                        if best_valid_cost < early_stop_cost:
-                            log.info('valid_cost: %s, early_stop_cost: %s, early stopped.' % (best_valid_cost, early_stop_cost))
-                            break
+
             watch.stop('learn')
             log.info('learn OK.\n')
 
@@ -197,30 +199,39 @@ class WordSpacing(object):
             log.info('n_features: %s' % n_features)
             log.info('n_classes: %s' % n_classes)
             log.info('n_hidden1: %s' % n_hidden1)
+            n_hiddens2 = n_hiddens3 = n_hidden1
 
             tf.set_random_seed(7942)  # for reproducibility
 
-            X = tf.placeholder(tf.float32, [None, n_features], name='X')  # two characters
-            Y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
+            x = tf.placeholder(tf.float32, [None, n_features], name='x')  # two characters
+            y = tf.placeholder(tf.float32, [None, n_classes], name='Y')
 
-            W1 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_features, n_hiddens1], name='W1')
+            w1 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_features, n_hiddens1], name='w1')
             b1 = tf.get_variable(initializer=tf.constant(0., shape=[n_hiddens1]), name='b1')
-            layer1 = tf.nn.elu(tf.matmul(X, W1) + b1, name='layer1')
+            layer1 = tf.tanh(tf.matmul(x, w1) + b1, name='layer1')
 
-            W2 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_hiddens1, n_classes], name='W2')
-            b2 = tf.get_variable(initializer=tf.constant(0., shape=[n_classes]), name='b2')
-            y_hat = tf.add(tf.matmul(layer1, W2), b2, name='y_hat')
+            w2 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_hidden1, n_hiddens2], name='w2')
+            b2 = tf.get_variable(initializer=tf.constant(0., shape=[n_hiddens2]), name='b2')
+            layer2 = tf.tanh(tf.matmul(layer1, w2) + b2, name='layer2')
 
-            cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=y_hat, labels=Y), name='cost')
+            w3 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_hiddens2, n_hiddens3], name='w3')
+            b3 = tf.get_variable(initializer=tf.constant(0., shape=[n_hiddens3]), name='b3')
+            layer3 = tf.tanh(tf.matmul(layer2, w3) + b3, name='layer3')
+
+            w4 = tf.get_variable(initializer=tf.contrib.layers.xavier_initializer(), shape=[n_hiddens3, n_classes], name='w4')
+            b4 = tf.get_variable(initializer=tf.constant(0., shape=[n_classes]), name='b4')
+            y_hat = tf.add(tf.matmul(layer3, w4), b4, name='y_hat')
+
+            cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=y_hat, labels=y), name='cost')
 
             train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
             predicted = tf.cast(y_hat > 0.5, dtype=tf.float32, name='predicted')  # 0 <= hypothesis <= 1
-            accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, Y), dtype=tf.float32), name='accuracy')
+            accuracy = tf.reduce_mean(tf.cast(tf.equal(predicted, y), dtype=tf.float32), name='accuracy')
 
             watch.stop('create tensorflow graph')
             log.info('create tensorflow graph OK.\n')
-            cls.graph_nodes = {'predicted': predicted, 'accuracy': accuracy, 'X': X, 'Y': Y, 'train_step': train_step, 'cost': cost}
+            cls.graph_nodes = {'predicted': predicted, 'accuracy': accuracy, 'X': x, 'Y': y, 'train_step': train_step, 'cost': cost}
         return cls.graph_nodes
 
     @classmethod
@@ -287,8 +298,8 @@ if __name__ == '__main__':
         do_train = True
         do_test = True
         batch_size = 4000  # mini batch size
-        total_epoch = 5
-        n_hidden1 = 1000
+        total_epoch = max(2, math.ceil(10 / math.log10(n_train)))
+        n_hidden1 = 200
         learning_rate = 1e-2
 
         early_stop_cost = 1e-2
@@ -303,14 +314,14 @@ if __name__ == '__main__':
             n_train, ngram, total_epoch, n_hidden1, learning_rate))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        log.info('sample testing...')
-        test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
-        for s in test_set:
-            features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
-            log.info('%s -> %s' % (features, labels))
-            log.info('in : "%s"' % s)
-            log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
-        log.info('sample testing OK.\n')
+        # log.info('sample testing...')
+        # test_set = ['예쁜 운동화', '즐거운 동화', '삼풍동 화재']
+        # for s in test_set:
+        #     features, labels = WordSpacing.sentence2features_labels(s, left_gram=left_gram, right_gram=right_gram)
+        #     log.info('%s -> %s' % (features, labels))
+        #     log.info('in : "%s"' % s)
+        #     log.info('out: "%s"' % WordSpacing.spacing(s.replace(' ', ''), labels))
+        # log.info('sample testing OK.\n')
 
         if do_train or not os.path.exists(model_file + '.index'):
             WordSpacing.learning(total_epoch, n_train, n_valid, n_test, batch_size, left_gram, right_gram, model_file, features_vector, labels_vector,
