@@ -106,9 +106,9 @@ class DataSet(object):
     def load(cls, filepath: str, gzip_format=False, max_len=0, verbose=False):
         filename = os.path.basename(filepath)
         if gzip_format:
-            f = gzip.open(filepath, 'rt')
+            f = gzip.open(filepath, 'rb')
         else:
-            f = open(filepath, 'rt')
+            f = open(filepath, 'rb')
 
         with f:
             d = DataSet()
@@ -135,9 +135,9 @@ class DataSet(object):
     def save(self, filepath: str, gzip_format=False, verbose=False):
         filename = os.path.basename(filepath)
         if gzip_format:
-            f = gzip.open(filepath, 'wt')
+            f = gzip.open(filepath, 'wb')
         else:
-            f = open(filepath, 'wt')
+            f = open(filepath, 'wb')
 
         with f:
             for o in [self.name, self.size, self.features_vector, self.labels_vector]:
