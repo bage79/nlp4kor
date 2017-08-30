@@ -24,12 +24,10 @@ class LogUtil(object):
     format = '[%(asctime)s][%(levelname)5s] %(message)s'  # '[%(asctime)s] %(message)s'
 
     @classmethod
-    def get_logger(cls, source_filepath=None, level=logging.DEBUG, format=format, datefmt=datefmt, console_mode=False,
-                   delete_old_files=False, multiprocess=False):
+    def get_logger(cls, source_filepath=None, level=logging.DEBUG, format=format, datefmt=datefmt, console_mode=False, multiprocess=False):
         """
         get global logging object with multiprocessing-safe.
         :param multiprocess: 
-        :param delete_old_files: 
         :param source_filepath:
         :param console_mode: default: False
         :param datefmt:
@@ -71,6 +69,7 @@ class LogUtil(object):
             cls.__log = LogUtil.__create_logger(log_path, error_log_path, level, console_mode=console_mode,
                                                 format=format, datefmt=datefmt, multiprocess=multiprocess)
             cls.__log.setLevel(level)
+            cls.__log.info('log level: %s' % logging.getLevelName(level))
 
             LogUtil.basigConfig(level, format=format, datefmt=datefmt)
             logging.getLogger("gensim").setLevel(logging.DEBUG)
