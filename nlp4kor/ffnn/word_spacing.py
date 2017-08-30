@@ -373,12 +373,12 @@ if __name__ == '__main__':
     # ngram_list = [6]
 
     learning_rate_list = [1e-3, 1e-4]
-    n_hiddens_list = [[100, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 100]]
-    dropout_keep_prob_list = [1.0, 0.8]
+    n_hiddens_list = [[200, 200], [200, 1000, 200], [100, 1000, 1000, 1000, 100], ]
+    dropout_keep_prob_list = [1.0, 0.5]
     decay_epochs_list = [1]
     decay_rate_list = [0.99]
     n_train_sentences_list = [1000]
-    ngram_list = [4]
+    ngram_list = [4, 6]
     if len(sys.argv) == 3:
         n_train_sentences_list = [int(sys.argv[1])]
         ngram_list = [int(sys.argv[2])]
@@ -478,7 +478,6 @@ if __name__ == '__main__':
 
                                     except Exception as e:
                                         log.error(traceback.format_exc())
-                                        raise e
     except:
         log.error(traceback.format_exc())
     finally:
