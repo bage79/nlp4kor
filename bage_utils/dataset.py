@@ -11,7 +11,7 @@ from nlp4kor.config import log
 
 class DataSet(object):
     def __init__(self, features: np.ndarray = None, labels: np.ndarray = None, features_vector: CharOneHotVector = None,
-                 labels_vector: CharOneHotVector = None, size=0, name: str = ''):
+                 labels_vector: CharOneHotVector = None, size=0, name: str = '', shuffle=True):
         """
         
         :param features: list of data
@@ -39,6 +39,11 @@ class DataSet(object):
                 self.size = 0
                 self.features = np.array([])
                 self.labels = np.array([])
+
+        if shuffle:
+            shuffle_indices = np.random.permutation(np.arange(self.size))
+            self.features = self.features[shuffle_indices]
+            self.labels = self.labels[shuffle_indices]
 
     def next_batch(self, batch_size=50, to_one_hot_vector=True, verbose=False):
         if len(self.features) <= batch_size:
