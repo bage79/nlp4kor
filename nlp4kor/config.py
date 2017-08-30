@@ -18,6 +18,8 @@ if log is None:
     else:  # by batch script
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=True)  # global log
 
+log.info('is_server(): %s' % is_server())
+
 MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
     'root', os.getenv('MONGODB_PASSWD'), 'db-local', '27017', 'admin')
 MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_PASSWD'), 'db': 'kr_nlp'}
