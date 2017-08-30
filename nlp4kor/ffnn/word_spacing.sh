@@ -2,12 +2,16 @@
 PROGRAM="word_spacing.py"
 PROJECT_DIR=${HOME}'/workspace/nlp4kor'
 
-if [ "$#" -ne 2 ]; then
-    echo "[Usage] $0 n_train ngram"
-    echo "[Usage] $0 10000 6"
-    echo "[Usage] $0 10000 4"
-    exit
-fi
+echo "[Usage] $0 n_train ngram"
+echo "[Usage] $0 10000 6"
+echo "[Usage] $0 10000 4"
+
+#if [ "$#" -ne 2 ]; then
+#    echo "[Usage] $0 n_train ngram"
+#    echo "[Usage] $0 10000 6"
+#    echo "[Usage] $0 10000 4"
+#    exit
+#fi
 
 n_train=$1
 ngram=$2
@@ -19,9 +23,6 @@ pkill -f ${PROGRAM}
 
 echo "rm -f logs/${PROGRAM}.$1.$2.*"
 rm -f logs/${PROGRAM}.$1.$2.*
-
-#echo "rm -f logs/${PROGRAM}.*"
-#rm -f logs/${PROGRAM}.*
 
 echo "python3 ./${PROGRAM} $n_train $ngram >/dev/null 2>&1 &"
 nohup python3 ./${PROGRAM} ${n_train} ${ngram} >/dev/null 2>&1 &
