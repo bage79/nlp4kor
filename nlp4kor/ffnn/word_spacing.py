@@ -260,9 +260,8 @@ class WordSpacing(object):
         return sim, correct, total_spaces
 
     @classmethod
-    def evaluate(cls, test_sentences_file, n_features, n_classes, activation, n_hiddens, dropout_keep_prob, learning_rate, decay_steps, decay_rate):
+    def evaluate(cls, test_sentences_file, n_features, n_classes, activation, n_hiddens, dropout_keep_prob, learning_rate, decay_steps, decay_rate, train_time_string):
         log.info('evaluate...')
-        watch = WatchUtil()
         watch.start('read sentences')
 
         sentences = ['아버지가 방에 들어 가신다.', '가는 말이 고와야 오는 말이 곱다.']
@@ -296,8 +295,8 @@ class WordSpacing(object):
                     log.error('restore failed. model_file: %s' % model_file)
 
                 for i, s in enumerate(sentences):
-                    log.info('')
-                    log.info('[%s] in : "%s"' % (i, s))
+                    log.debug('')
+                    log.debug('[%s] in : "%s"' % (i, s))
                     _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
                     dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
                     dataset.convert_to_one_hot_vector()
@@ -312,27 +311,25 @@ class WordSpacing(object):
                         sims.append(_sim)
                         costs.append(_cost)
 
-                        log.info('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, _sim * 100, correct, total))
+                        log.debug('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, _sim * 100, correct, total))
             except:
                 log.error(traceback.format_exc())
 
         log.info('evaluate OK.')
-        log.info('secs/sentence: %.4f' % (watch.elapsed('run tensorflow') / len(sentences)))
         log.info('')
-        # noinspection PyStringFormat
-        log.info('test_sim: %d%%, same_train_valid_data: %s, ngram: %s, n_train_sentences: %s, elapsed: %s, total_epochs: %d, batch_size: %s, '
-                 'activation: %s, n_layers: %s, n_hiddens: %s, learning_rate: %.6f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
-                     np.mean(sims) * 100, same_train_valid_data, ngram, NumUtil.comma_str(n_train_sentences), watch.elapsed_string(), total_epochs, NumUtil.comma_str(batch_size),
-                     activation.__name__, n_layers, n_hiddens, learning_rate, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate, early_stop_cost))
         log.info(watch.summary())
+
+        # noinspection PyStringFormat
+        log.info('test_sim: %d%%, same_train_valid_data: %s, ngram: %s, n_train_sentences: %s, train_time: %s, total_epochs: %d, batch_size: %s, '
+                 'activation: %s, n_layers: %s, n_hiddens: %s, learning_rate: %.6f, dropout_keep_prob: %.2f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
+                     np.mean(sims) * 100, same_train_valid_data, ngram, NumUtil.comma_str(n_train_sentences), train_time_string, total_epochs, NumUtil.comma_str(batch_size),
+                     activation.__name__, n_layers, n_hiddens, learning_rate, dropout_keep_prob, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate, early_stop_cost))
+
 
 
 if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
     tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
-
-    watch = WatchUtil()
-    watch.start()
 
     train_sentences_file = WIKIPEDIA_TRAIN_SENTENCES_FILE
     valid_sentences_file = WIKIPEDIA_VALID_SENTENCES_FILE
@@ -364,7 +361,7 @@ if __name__ == '__main__':
     activation = tf.nn.elu
 
     learning_rate_list = [1e-2, 1e-3]
-    n_hiddens_list = [[200], [200, 200, 200], [200, 1000, 200]]
+    n_hiddens_list = [[200, 1000, 200]]
     decay_epochs_list = [1]
     decay_rate_list = [0.99]
     dropout_keep_prob_list = [1.0, 0.5]
@@ -451,6 +448,8 @@ if __name__ == '__main__':
                                     tf.set_random_seed(7942)
                                     with tf.device('/gpu:0'):
                                         with tf.Graph().as_default():  # for reusing graph
+                                            watch = WatchUtil()
+                                            watch.start()
                                             if do_train or not os.path.exists(model_file):
                                                 WordSpacing.learning(total_epochs=total_epochs, train_dataset=train_dataset, valid_dataset=valid_dataset, batch_size=batch_size, left_gram=left_gram,
                                                                      right_gram=right_gram, model_file=model_file,
@@ -467,7 +466,8 @@ if __name__ == '__main__':
                                                     test_sentences_file = valid_sentences_file
 
                                                 WordSpacing.evaluate(test_sentences_file=test_sentences_file, n_features=n_features, n_classes=n_classes, activation=activation, n_hiddens=n_hiddens,
-                                                                     dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate)
+                                                                     dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
+                                                                     train_time_string=watch.elapsed())
 
                                 except:
                                     log.error(traceback.format_exc())
