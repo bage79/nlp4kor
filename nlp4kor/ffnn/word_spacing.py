@@ -97,6 +97,9 @@ class WordSpacing(object):
 
     @classmethod
     def build_FFNN(cls, n_features, n_classes, activation, n_hiddens, dropout_keep_prob, learning_rate, decay_steps, decay_rate, reuse=None):
+        tf.reset_default_graph()
+        tf.set_random_seed(7942)
+
         log.info('\nbuild_FFNN')
 
         nodes = [n_features]
@@ -260,7 +263,7 @@ class WordSpacing(object):
         return sim, correct, total_spaces
 
     @classmethod
-    def evaluate(cls, test_sentences_file, n_features, n_classes, activation, n_hiddens, dropout_keep_prob, learning_rate, decay_steps, decay_rate, train_time_string):
+    def evaluate(cls, test_sentences_file, n_features, n_classes, activation, n_hiddens, dropout_keep_prob, learning_rate, decay_steps, decay_rate, train_time_string, do_demo):
         log.info('evaluate...')
         watch.start('read sentences')
 
@@ -279,7 +282,7 @@ class WordSpacing(object):
 
         graph = WordSpacing.build_FFNN(
             n_features=n_features, n_classes=n_classes, activation=activation, n_hiddens=n_hiddens, dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps,
-            decay_rate=decay_rate, reuse=True)
+            decay_rate=decay_rate)
 
         accuracies, sims, costs = [], [], []
         saver = tf.train.Saver()
@@ -291,12 +294,14 @@ class WordSpacing(object):
                 try:
                     sess.run(tf.global_variables_initializer())
                     saver.restore(sess, model_file)
-                except:
+                except Exception as e:
                     log.error('restore failed. model_file: %s' % model_file)
+                    raise e
 
                 for i, s in enumerate(sentences):
-                    log.debug('')
-                    log.debug('[%s] in : "%s"' % (i, s))
+                    if do_demo:
+                        log.debug('')
+                        log.debug('[%s] in : "%s"' % (i, s))
                     _features, _labels = WordSpacing.sentence2features_labels(s, left_gram, right_gram)
                     dataset = DataSet(features=_features, labels=_labels, features_vector=features_vector, labels_vector=labels_vector)
                     dataset.convert_to_one_hot_vector()
@@ -311,20 +316,19 @@ class WordSpacing(object):
                         sims.append(_sim)
                         costs.append(_cost)
 
-                        log.debug('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, _sim * 100, correct, total))
+                        if do_demo:
+                            log.debug('[%s] out: "%s" (accuracy: %.1f%%, sim: %.1f%%=%s/%s)' % (i, sentence_hat, _accuracy * 100, _sim * 100, correct, total))
+                log.info('evaluate OK.')
+                log.info('')
+                log.info(watch.summary())
+                # noinspection PyStringFormat
+                log.info('test_sim: %d%%, same_train_valid_data: %s, ngram: %s, n_train_sentences: %s, train_time: %s, total_epochs: %d, batch_size: %s, '
+                         'activation: %s, n_layers: %s, n_hiddens: %s, learning_rate: %.6f, dropout_keep_prob: %.2f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
+                             np.mean(sims) * 100, same_train_valid_data, ngram, NumUtil.comma_str(n_train_sentences), train_time_string, total_epochs, NumUtil.comma_str(batch_size),
+                             activation.__name__, n_layers, n_hiddens, learning_rate, dropout_keep_prob, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate,
+                             early_stop_cost))
             except:
                 log.error(traceback.format_exc())
-
-        log.info('evaluate OK.')
-        log.info('')
-        log.info(watch.summary())
-
-        # noinspection PyStringFormat
-        log.info('test_sim: %d%%, same_train_valid_data: %s, ngram: %s, n_train_sentences: %s, train_time: %s, total_epochs: %d, batch_size: %s, '
-                 'activation: %s, n_layers: %s, n_hiddens: %s, learning_rate: %.6f, dropout_keep_prob: %.2f, batches_in_epoch: %s, decay_steps: %s, decay_rate: %.2f, early_stop_cost: %.8f' % (
-                     np.mean(sims) * 100, same_train_valid_data, ngram, NumUtil.comma_str(n_train_sentences), train_time_string, total_epochs, NumUtil.comma_str(batch_size),
-                     activation.__name__, n_layers, n_hiddens, learning_rate, dropout_keep_prob, NumUtil.comma_str(batches_in_epoch), NumUtil.comma_str(decay_steps), decay_rate, early_stop_cost))
-
 
 
 if __name__ == '__main__':
@@ -360,16 +364,16 @@ if __name__ == '__main__':
     valid_interval = 1
     activation = tf.nn.elu
 
-    learning_rate_list = [1e-2, 1e-3]
-    n_hiddens_list = [[200, 1000, 200]]
+    learning_rate_list = [1e-3, 1e-4]
+    n_hiddens_list = [[200, 1000, 200], [100, 1000, 1000, 1000, 100]]
+    dropout_keep_prob_list = [0.8, 0.5]
     decay_epochs_list = [1]
-    decay_rate_list = [0.99]
-    dropout_keep_prob_list = [1.0, 0.5]
+    decay_rate_list = [0.99, 0.90]
     if len(sys.argv) == 3:
         n_train_sentences_list = [int(sys.argv[1])]
         ngram_list = [int(sys.argv[2])]
     else:
-        n_train_sentences_list = [100, 1000]
+        n_train_sentences_list = [100]  # FIXME: TEST
         ngram_list = [4, 6]
 
     for n_train_sentences in n_train_sentences_list:
@@ -422,20 +426,24 @@ if __name__ == '__main__':
                                 try:
                                     log.info('')
                                     log.info('same_train_valid_data: %s' % same_train_valid_data)
+                                    log.info('n_train_sentences: %s' % n_train_sentences)
                                     log.info('total_epoch: %s' % total_epochs)
                                     log.info('batch_size: %s' % batch_size)
                                     log.info('')
                                     log.info('n_layers: %s' % n_layers)
                                     log.info('n_hidden: %s' % n_hiddens)
-                                    log.info('')
                                     log.info('activation: %s' % activation.__name__)
+                                    log.info('dropout_keep_prob: %s' % dropout_keep_prob)
                                     log.info('learning_rate: %s' % learning_rate)
+                                    log.info('')
+                                    log.info('decay_epochs: %s' % decay_epochs)
                                     log.info('decay_rate: %.2f' % decay_rate)
+                                    log.info('')
                                     log.info('early_stop_cost: %s' % early_stop_cost)
 
                                     model_file = os.path.join(WORD_SPACING_MODEL_DIR,
                                                               'word_spacing_model.sentences_%s.ngram_%s.total_epoch_%s.activation_%s.n_hiddens_%s.n_layers_%d.learning_rate_%.4f/model' % (
-                                                                  n_train_sentences, ngram, total_epochs, activation.__name__, '+'.join([str(n) for n in n_hiddens]), n_layers,
+                                                                  n_train_sentences, ngram, total_epochs, activation.__name__, '_'.join([str(n) for n in n_hiddens]), n_layers,
                                                                   learning_rate))  # .%s' %
                                     # max_sentences
                                     log.info('model_file: %s' % model_file)
@@ -444,30 +452,29 @@ if __name__ == '__main__':
                                     decay_steps = decay_epochs * batches_in_epoch
                                     log.info('decay_steps: %s' % decay_steps)
 
-                                    tf.reset_default_graph()
-                                    tf.set_random_seed(7942)
                                     with tf.device('/gpu:0'):
-                                        with tf.Graph().as_default():  # for reusing graph
-                                            watch = WatchUtil()
-                                            watch.start()
-                                            if do_train or not os.path.exists(model_file):
-                                                WordSpacing.learning(total_epochs=total_epochs, train_dataset=train_dataset, valid_dataset=valid_dataset, batch_size=batch_size, left_gram=left_gram,
-                                                                     right_gram=right_gram, model_file=model_file,
-                                                                     features_vector=features_vector, labels_vector=labels_vector, activation=activation, n_hiddens=n_hiddens,
-                                                                     dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
-                                                                     early_stop_cost=early_stop_cost, valid_interval=valid_interval)
-                                                if n_train_sentences > 100:
-                                                    SlackUtil.send_message('%s end (max_sentences=%s, left_gram=%s, right_gram=%s)' % (sys.argv[0], n_train_sentences, left_gram, right_gram))
+                                        watch = WatchUtil()
+                                        watch.start()
+                                        if do_train or not os.path.exists(model_file):
+                                            WordSpacing.learning(total_epochs=total_epochs, train_dataset=train_dataset, valid_dataset=valid_dataset, batch_size=batch_size, left_gram=left_gram,
+                                                                 right_gram=right_gram, model_file=model_file,
+                                                                 features_vector=features_vector, labels_vector=labels_vector, activation=activation, n_hiddens=n_hiddens,
+                                                                 dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
+                                                                 early_stop_cost=early_stop_cost, valid_interval=valid_interval)
 
-                                            if do_test and os.path.exists(model_file + '.index'):
-                                                if same_train_valid_data:
-                                                    test_sentences_file = train_sentences_file
-                                                else:
-                                                    test_sentences_file = valid_sentences_file
+                                        if do_test and os.path.exists(model_file + '.index'):
+                                            if same_train_valid_data:
+                                                test_sentences_file = train_sentences_file
+                                            else:
+                                                test_sentences_file = valid_sentences_file
 
-                                                WordSpacing.evaluate(test_sentences_file=test_sentences_file, n_features=n_features, n_classes=n_classes, activation=activation, n_hiddens=n_hiddens,
-                                                                     dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
-                                                                     train_time_string=watch.elapsed_string())
+                                            WordSpacing.evaluate(test_sentences_file=test_sentences_file, n_features=n_features, n_classes=n_classes, activation=activation, n_hiddens=n_hiddens,
+                                                                 dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
+                                                                 train_time_string=watch.elapsed_string(), do_demo=do_demo)
 
                                 except:
                                     log.error(traceback.format_exc())
+                                    exit()
+
+    if not do_demo:
+        SlackUtil.send_message('%s OK.' % os.path.basename(__file__))
