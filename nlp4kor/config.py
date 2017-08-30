@@ -85,19 +85,31 @@ if not os.path.exists(WIKIPEDIA_MODELS_DIR):
 #################################################
 # word spacing
 #################################################
-WORD_SPACING_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'word_spacing')
 WORD_SPACING_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'word_spacing')
+WORD_SPACING_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'word_spacing')
 
 #################################################
 # spelling error correction
 #################################################
+SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'spelling_error_correction')
+if not os.path.exists(SPELLING_ERROR_CORRECTION_MODEL_DIR):
+    os.mkdir(SPELLING_ERROR_CORRECTION_MODEL_DIR)
+
 SPELLING_ERROR_CORRECTION_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'spelling_error_correction')
 if not os.path.exists(SPELLING_ERROR_CORRECTION_DATASET_DIR):
     os.mkdir(SPELLING_ERROR_CORRECTION_DATASET_DIR)
+SPELLING_ERROR_CORRECTION_TEST_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.test.sentences.csv')
 
 SPELLING_ERROR_CORRECTION_TRAIN_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.train.sentences.csv')
 SPELLING_ERROR_CORRECTION_VALID_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.valid.sentences.csv')
-SPELLING_ERROR_CORRECTION_TEST_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.test.sentences.csv')
+
+
+#################################################
+# NER
+#################################################
+CNN4NER_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'spelling_error_correction')
+if not os.path.exists(CNN4NER_MODEL_DIR):
+    os.mkdir(CNN4NER_MODEL_DIR)
 
 CNN4NER_DATASET_DIR = os.path.join(WIKIPEDIA_DATASET_DIR, 'cnn4ner')
 if not os.path.exists(CNN4NER_DATASET_DIR):
@@ -107,6 +119,3 @@ CNN4NER_TRAIN_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR,
 CNN4NER_VALID_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.valid.sentences.csv')
 CNN4NER_TEST_DATASET_FILE = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.test.sentences.csv')
 
-SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(WIKIPEDIA_MODELS_DIR, 'spelling_error_correction')
-if not os.path.exists(SPELLING_ERROR_CORRECTION_MODEL_DIR):
-    os.mkdir(SPELLING_ERROR_CORRECTION_MODEL_DIR)
