@@ -467,7 +467,7 @@ if __name__ == '__main__':
 
                                                 WordSpacing.evaluate(test_sentences_file=test_sentences_file, n_features=n_features, n_classes=n_classes, activation=activation, n_hiddens=n_hiddens,
                                                                      dropout_keep_prob=dropout_keep_prob, learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=decay_rate,
-                                                                     train_time_string=watch.elapsed())
+                                                                     train_time_string=watch.elapsed_string())
 
                                 except:
                                     log.error(traceback.format_exc())
