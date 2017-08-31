@@ -32,7 +32,7 @@ class DataSet(object):
         else:
             self.labels = labels if type(labels) is np.ndarray else np.array(labels)
 
-        if features and labels:
+        if features is not None and labels is not None:
             if len(features) == len(labels):
                 self.size = len(features)
             else:  # invalid data size
