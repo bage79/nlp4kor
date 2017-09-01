@@ -94,8 +94,6 @@ ENV/
 .ropeproject
 
 **/logs/
-
-**/_*/
 **/datasets/
 
 .idea/
