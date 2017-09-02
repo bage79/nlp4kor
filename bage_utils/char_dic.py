@@ -1,7 +1,7 @@
 import os
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.list_util import ListUtil
@@ -39,21 +39,31 @@ class CharDic(object):
         """
         return self.__char2cid.get(char, -1)
 
-    def cids2chars(self, cids) -> '':
+    def cids2chars(self, cids, pad_size=0) -> '':
         """
 
         :param cids:
+        :param pad_size:
         :return: string
         """
-        return ''.join([self.__cid2char.get(cid, ' ') for cid in cids])
+        if pad_size > 0:
+            return ''.join([self.__cid2char.get(cid, ' ') for cid in cids]).rstrip(' ') # TODO: TEST
+        else:
+            return ''.join([self.__cid2char.get(cid, ' ') for cid in cids])
 
-    def chars2cids(self, chars) -> []:
+    def chars2cids(self, chars, pad_size=0, pad_value=-1) -> []:
         """
 
         :param chars: "가나다라마바사"
+        :param pad_size:
+        :param pad_value:
         :return: 1d array
         """
-        return [self.__char2cid.get(char, -1) for char in chars]
+        cids = [self.__char2cid.get(char, -1) for char in chars]
+        if pad_size > 0:
+            return cids + [pad_value] * (pad_size - len(cids))
+        else:
+            return cids
 
     def sentence2cids(self, sentence: str, window_size: int) -> [[0, ], ]:
         """
@@ -124,11 +134,13 @@ if __name__ == '__main__':
 
     embedding_size = 10
 
+
     def create_graph_one_hot(dic_size, batch_size, window_size):
         x = tf.placeholder(tf.int32, [batch_size, window_size])
         x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
         embeddings = None
         return x, embeddings, x_vector
+
 
     def create_graph_embedding(dic_size, batch_size, window_size):
         x = tf.placeholder(tf.int32, [batch_size, window_size])
