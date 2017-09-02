@@ -20,9 +20,13 @@ class TimerUtil(object):
         else:
             return False
 
+    def __repr__(self):
+        return 'TimerUtil(interval_secs: %s)' % self.interval_secs
+
 
 if __name__ == '__main__':
     timer = TimerUtil(interval_secs=2).start()
+    print(timer)
     for i in range(100):
         time.sleep(1)
         print(timer.is_over())
