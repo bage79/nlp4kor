@@ -123,8 +123,8 @@ class SpellingErrorCorrection(object):
         log.info('')
         watch.stop('dataset load')
 
-        X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
-                                                                                                       learning_rate, watch)
+        X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_graph(n_features, window_size, noise_rate, n_hidden1,
+                                                                                                         learning_rate, watch)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -176,7 +176,7 @@ class SpellingErrorCorrection(object):
         log.info('')
 
     @classmethod
-    def build_DAE(cls, n_features, window_size, noise_rate, n_hidden1, learning_rate, watch=WatchUtil()):
+    def build_graph(cls, n_features, window_size, noise_rate, n_hidden1, learning_rate, watch=WatchUtil()):
         if len(cls.graph) == 0:
             log.info('')
             log.info('create tensorflow graph...')
@@ -447,8 +447,8 @@ if __name__ == '__main__':
         watch.start('run tensorflow')
 
         with tf.Session() as sess:
-            X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
-                                                                                                           learning_rate, watch)
+            X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_graph(n_features, window_size, noise_rate, n_hidden1,
+                                                                                                             learning_rate, watch)
 
             saver = tf.train.Saver()
             try:

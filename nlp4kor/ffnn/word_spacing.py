@@ -59,7 +59,7 @@ class WordSpacing(object):
         return ''.join(left)
 
     @classmethod
-    def build_FFNN(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=4):
+    def build_graph(cls, n_features, n_classes, n_hidden1, learning_rate, watch=WatchUtil(), layers=4):
         log.info('\nbuild_FFNN(layers=%s)' % layers)
         if layers == 2:
             return cls.__build_FFNN_layers2(n_features, n_classes, n_hidden1, learning_rate, watch=watch)
@@ -231,7 +231,7 @@ class WordSpacing(object):
                 log.info('[%s] %s -> %s, %s (len=%s) %s (len=%s)' % (i, chars, has_space, feature, len(feature), label, len(label)))
         log.info('check samples OK.\n')
 
-        graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, watch, layers=layers)
+        graph = WordSpacing.build_graph(n_features, n_classes, n_hidden1, learning_rate, watch, layers=layers)
 
         train_step, X, Y, cost, hypothesis, predicted, accuracy = graph['train_step'], graph['X'], graph['Y'], graph['cost'], graph['hypothesis'], graph[
             'predicted'], graph['accuracy']
@@ -376,7 +376,7 @@ if __name__ == '__main__':
 
     accuracies, sims = [], []
     with tf.Session() as sess:
-        graph = WordSpacing.build_FFNN(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
+        graph = WordSpacing.build_graph(n_features, n_classes, n_hidden1, learning_rate, layers=layers)
         X, Y, predicted, accuracy = graph['X'], graph['Y'], graph['predicted'], graph['accuracy']
 
         saver = tf.train.Saver()
