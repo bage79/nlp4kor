@@ -140,7 +140,7 @@ if __name__ == '__main__':
                     checkpoint = tf.train.get_checkpoint_state(model_dir)
                     is_training = True if training_mode or not checkpoint else False  # learning or testing
 
-                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
                     with tf.Session(config=config) as sess:
                         train_pipeline = input_pipeline([train_file], batch_size=batch_size, shuffle=True, delim='\t', splits=3)
                         valid_pipeline = input_pipeline([valid_file], batch_size=n_valid, shuffle=True, delim='\t', splits=3)

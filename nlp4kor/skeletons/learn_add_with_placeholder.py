@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
                     x, y, learning_rate, W1, b1, y_hat, cost, train_step, summary = create_graph(scope_name, input_len=input_len, output_len=output_len, verbose=False)
 
-                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
                     with tf.Session(config=config) as sess:
                         sess.run(tf.global_variables_initializer())
                         saver = tf.train.Saver(max_to_keep=None)

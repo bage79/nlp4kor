@@ -165,7 +165,7 @@ if __name__ == '__main__':
                     test_x, test_y, test_learning_rate, W1, b1, test_y_hat, test_cost, _, _ = create_graph(
                         scope_name, 'test', input_file=test_file, input_len=input_len, output_len=output_len, batch_size=n_test, reuse=True)
 
-                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
                     for training_mode in [True, False]:  # training & testing
                         with tf.Session(config=config) as sess:
                             sess.run(tf.global_variables_initializer())

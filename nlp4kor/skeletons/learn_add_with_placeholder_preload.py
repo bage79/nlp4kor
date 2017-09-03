@@ -185,7 +185,7 @@ if __name__ == '__main__':
                     preload_batches('valid', [valid_file], data_size=n_valid, batch_size=n_valid, delim='\t', splits=3, shuffle=False)
                     preload_batches('test', [test_file], data_size=n_test, batch_size=n_test, delim='\t', splits=3, shuffle=False)
 
-                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, visible_device_list='0'))
+                    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
                     with tf.Session(config=config) as sess:
                         sess.run(tf.global_variables_initializer())
                         saver = tf.train.Saver(max_to_keep=None)
