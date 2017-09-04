@@ -101,6 +101,11 @@ class FileUtil(object):
 
 
 if __name__ == '__main__':
+    name_max = subprocess.check_output("getconf NAME_MAX /", shell=True)
+    path_max = subprocess.check_output("getconf PATH_MAX /", shell=True)
+    print('name_max:', name_max)  # 255
+    print('path_max:', path_max)  # 4096
+
     with open('output/file_test.txt', 'w') as file:
         FileUtil.print_n_write(file, 'aaa')
         FileUtil.print_n_write(file, ('a', 'b', 'c'))
