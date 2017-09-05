@@ -8,6 +8,10 @@ class StringUtil(object):
     REGEX_TOKEN = r''' |=|\(|\)|\[|\]|<|>'''
 
     @staticmethod
+    def rreplace(s, src, dest, cnt=1):
+        return dest.join(s.rsplit(src, cnt))
+
+    @staticmethod
     def mask_passwd_in_url(url):
         """
         e.g. mongodb://root:passwd@db-local:27017/... -> mongodb://root:******@db-local:27017/...
@@ -122,7 +126,6 @@ class StringUtil(object):
                 lines.append(line)
         return ' '.join(lines)
 
-
     @staticmethod
     def replace_with_index(s, newstring, index, nofail=False):
         if not nofail and index not in range(len(s)):
@@ -136,6 +139,7 @@ class StringUtil(object):
 
         # insert the new string between "slices" of the original
         return s[:index] + newstring + s[index + 1:]
+
 
 if __name__ == '__main__':
     print(StringUtil.replace_with_index('01234567890', 'ab', 4))
