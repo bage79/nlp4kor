@@ -15,13 +15,13 @@ class CharVocab(object):
         self.__chars = chars
         self.__char2cid = {char: cid for cid, char in enumerate(self.__chars, 0)}
         self.__cid2char = {cid: char for cid, char in enumerate(self.__chars, 0)}
-        self.dic_size = len(self.__char2cid)
+        self.size = len(self.__char2cid)
 
     def __repr__(self):
         return '%s(len:%s)' % (self.__class__.__name__, self.__len__())
 
     def __len__(self):
-        return self.dic_size
+        return self.size
 
     @property
     def chars(self):
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     max_sentence_len = 100
     sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
     v = CharVocab.from_chars(sentence_list)
-    print(v.dic_size, v.chars)
+    print(v.size, v.chars)
     # original = v.chars2cids(sentence_list[0])
     # noised = original.copy()
     # noised[0] = -1
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
     tf.reset_default_graph()
     tf.set_random_seed(7942)
-    x, embeddings, x_vector = create_graph_one_hot(dic_size=v.dic_size, batch_size=batch_size, window_size=window_size)
+    x, embeddings, x_vector = create_graph_one_hot(dic_size=v.size, batch_size=batch_size, window_size=window_size)
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
