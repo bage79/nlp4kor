@@ -8,7 +8,7 @@ from bage_utils.list_util import ListUtil
 from nlp4kor.config import WIKIPEDIA_CHARACTERS_FILE
 
 
-class CharDic(object):
+class CharVocab(object):
     def __init__(self, chars: list):
         chars = list(set(chars))
         chars.sort()
@@ -84,12 +84,12 @@ class CharDic(object):
         for s in sentences:
             for c in s:
                 chars.add(c)
-        return CharDic(chars)
+        return CharVocab(chars)
 
     @staticmethod
     def from_file(characters_file):
         chars = DataFileUtil.read_list(characters_file)
-        return CharDic(chars)
+        return CharVocab(chars)
 
     def save(self, characters_file):
         with open(characters_file, 'wt') as f:
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # exit()
     window_size = 6
     characters_file = WIKIPEDIA_CHARACTERS_FILE
-    char_dic = CharDic.from_file(characters_file)
+    char_dic = CharVocab.from_file(characters_file)
 
     # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
     #     for no, line in enumerate(f, 1):
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     batch_size = 2
     max_sentence_len = 100
     sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
-    v = CharDic.from_chars(sentence_list)
+    v = CharVocab.from_chars(sentence_list)
     print(v.dic_size, v.chars)
     # original = v.chars2cids(sentence_list[0])
     # noised = original.copy()

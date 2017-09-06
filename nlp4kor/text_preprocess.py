@@ -2,7 +2,7 @@ import gzip
 import os
 import traceback
 
-from bage_utils.char_dic import CharDic
+from bage_utils.char_dic import CharVocab
 from bage_utils.hangul_util import HangulUtil
 from bage_utils.mongodb_util import MongodbUtil
 from bage_utils.num_util import NumUtil
@@ -126,7 +126,7 @@ class TextPreprocess(object):
                         train_f.write(s)
                         train_f.write('\n')
 
-            char_dic = CharDic(char_set)
+            char_dic = CharVocab(char_set)
             log.info('writed to %s...' % characters_file)
             char_dic.save(characters_file)
             log.info('writed to %s OK.' % characters_file)
