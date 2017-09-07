@@ -18,9 +18,9 @@ from bage_utils.char_one_hot_vector import CharOneHotVector
 from bage_utils.slack_util import SlackUtil
 from bage_utils.string_util import StringUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, SPELLING_ERROR_CORRECTION_MODEL_DIR, \
-    WIKIPEDIA_TRAIN_SENTENCES_FILE, WIKIPEDIA_VALID_SENTENCES_FILE, WIKIPEDIA_TEST_SENTENCES_FILE, WIKIPEDIA_CHARACTERS_FILE, \
-    WIKIPEDIA_DIR, SPELLING_ERROR_CORRECTION_DATASET_DIR
+from nlp4kor.config import log, KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR, \
+    KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, KO_WIKIPEDIA_ORG_CHARACTERS_FILE, \
+    KO_WIKIPEDIA_ORG_DIR
 
 
 class SpellingErrorCorrection(object):
@@ -37,9 +37,12 @@ class SpellingErrorCorrection(object):
         log.info('load characters list OK. len: %s' % NumUtil.comma_str(len(features_vector)))
         watch = WatchUtil()
 
-        train_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
-        valid_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_valid, window_size))
-        test_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_test, window_size))
+        train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
+                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
+        valid_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
+                                  'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_valid, window_size))
+        test_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
+                                 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_test, window_size))
         if is_my_pc() or is_my_gpu_pc() or not os.path.exists(train_file) or not os.path.exists(valid_file) or not os.path.exists(test_file):
             dataset_dir = os.path.dirname(train_file)
             if not os.path.exists(dataset_dir):
@@ -49,11 +52,11 @@ class SpellingErrorCorrection(object):
             log.info('create dataset...')
 
             if is_server():
-                data_files = (('train', WIKIPEDIA_TRAIN_SENTENCES_FILE, n_train, train_file, False),
-                              ('valid', WIKIPEDIA_VALID_SENTENCES_FILE, n_valid, valid_file, False),
-                              ('test', WIKIPEDIA_TEST_SENTENCES_FILE, n_test, test_file, False))
+                data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),
+                              ('valid', KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE, n_valid, valid_file, False),
+                              ('test', KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE, n_test, test_file, False))
             else:
-                data_files = (('train', WIKIPEDIA_TRAIN_SENTENCES_FILE, n_train, train_file, False),)
+                data_files = (('train', KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE, n_train, train_file, False),)
 
             for (name, data_file, total, dataset_file, to_one_hot_vector) in (data_files):
                 check_interval = max(1, min(10000, batch_size // 10))
@@ -123,8 +126,8 @@ class SpellingErrorCorrection(object):
         log.info('')
         watch.stop('dataset load')
 
-        X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_graph(n_features, window_size, noise_rate, n_hidden1,
-                                                                                                         learning_rate, watch)
+        X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
+                                                                                                       learning_rate, watch)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -176,7 +179,7 @@ class SpellingErrorCorrection(object):
         log.info('')
 
     @classmethod
-    def build_graph(cls, n_features, window_size, noise_rate, n_hidden1, learning_rate, watch=WatchUtil()):
+    def build_DAE(cls, n_features, window_size, noise_rate, n_hidden1, learning_rate, watch=WatchUtil()):
         if len(cls.graph) == 0:
             log.info('')
             log.info('create tensorflow graph...')
@@ -322,15 +325,15 @@ class SpellingErrorCorrection(object):
 
 
 if __name__ == '__main__':
-    train_sentences_file = WIKIPEDIA_TRAIN_SENTENCES_FILE
-    valid_sentences_file = WIKIPEDIA_VALID_SENTENCES_FILE
-    test_sentences_file = WIKIPEDIA_TEST_SENTENCES_FILE
+    train_sentences_file = KO_WIKIPEDIA_ORG_TRAIN_SENTENCES_FILE
+    valid_sentences_file = KO_WIKIPEDIA_ORG_VALID_SENTENCES_FILE
+    test_sentences_file = KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE
     log.info('train_sentences_file: %s' % train_sentences_file)
     log.info('valid_sentences_file: %s' % valid_sentences_file)
     log.info('test_sentences_file: %s' % test_sentences_file)
     log.info('')
 
-    characters_file = WIKIPEDIA_CHARACTERS_FILE
+    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
     log.info('characters_file: %s' % characters_file)
     try:
         if len(sys.argv) == 4:
@@ -379,13 +382,13 @@ if __name__ == '__main__':
         log.info('total_epoch: %s' % total_epoch)
         log.info('batch_size: %s' % batch_size)
 
-        model_file = os.path.join(SPELLING_ERROR_CORRECTION_MODEL_DIR,
+        model_file = os.path.join(KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR,
                                   'spelling_error_correction_model.sentences=%s.window_size=%s.noise_rate=%.1f.n_hidden=%s/model' % (
                                       n_train, window_size, noise_rate, n_hidden1))  # .%s' % max_sentences
         log.info('model_file: %s' % model_file)
 
-        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
-        labels_vector = CharOneHotVector(DataFileUtil.read_list(characters_file), added=[' '])
+        features_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
+        labels_vector = CharOneHotVector(DataFileUtil.read_list(characters_file))
         n_features = len(features_vector) * window_size  # number of features = 17,450 * 10
         n_classes = len(labels_vector) * window_size  # number of features = 17,450 * 10
         log.info('')
@@ -447,8 +450,8 @@ if __name__ == '__main__':
         watch.start('run tensorflow')
 
         with tf.Session() as sess:
-            X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_graph(n_features, window_size, noise_rate, n_hidden1,
-                                                                                                             learning_rate, watch)
+            X, Y, dropout_keep_prob, train_step, cost, y_hat, accuracy = SpellingErrorCorrection.build_DAE(n_features, window_size, noise_rate, n_hidden1,
+                                                                                                           learning_rate, watch)
 
             saver = tf.train.Saver()
             try:
@@ -457,7 +460,8 @@ if __name__ == '__main__':
                 log.error('restore failed. model_file: %s' % model_file)
                 raise e
 
-            train_file = os.path.join(SPELLING_ERROR_CORRECTION_DATASET_DIR, 'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
+            train_file = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'datasets', 'spelling_error_correction',
+                                      'ko.wikipedia.org.dataset.sentences=%s.window_size=%d.train.gz' % (n_train, window_size))
             train = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector = DataSet.load(train_file, gzip_format=True, verbose=True)
             train_vector.convert_to_one_hot_vector()
