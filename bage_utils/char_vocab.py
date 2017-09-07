@@ -5,7 +5,6 @@ import tensorflow as tf
 
 from bage_utils.datafile_util import DataFileUtil
 from bage_utils.list_util import ListUtil
-from nlp4kor.config import WIKIPEDIA_CHARACTERS_FILE
 
 
 class CharVocab(object):
@@ -101,6 +100,7 @@ class CharVocab(object):
         return ','.join([str(cid) for cid in self.chars2cids(chars)])
 
 
+# noinspection PyUnresolvedReferences
 if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
     tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
@@ -111,8 +111,9 @@ if __name__ == '__main__':
     # print(v.char2index)
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
+    from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE
     window_size = 6
-    characters_file = WIKIPEDIA_CHARACTERS_FILE
+    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
     char_dic = CharVocab.from_file(characters_file)
 
     # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
