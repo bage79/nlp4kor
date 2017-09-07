@@ -2,6 +2,7 @@ import math
 import os
 import time
 import traceback
+import sys
 
 import numpy as np
 import tensorflow as tf
@@ -10,7 +11,7 @@ from bage_utils.date_util import DateUtil
 from bage_utils.num_util import NumUtil
 from bage_utils.timer_util import TimerUtil
 from bage_utils.watch_util import WatchUtil
-from nlp4kor.config import log, TENSORBOARD_LOG_DIR
+from nlp4kor.config import log, TENSORBOARD_LOG_DIR, MODELS_DIR
 
 
 def add(x_data):
@@ -95,14 +96,14 @@ if __name__ == '__main__':
     # weights_initializer = ?
     # n_hiddens = ?
     # learning_rate = ?
-    # train_time = ?
+    train_time = 10 * 60
 
     log.info('%s -> %s -> %s -> %s -> %s' % (x_train.shape[1], n_hiddens, activation.__name__, n_hiddens, 1))
     log.info('weights_initializer: %s' % weights_initializer.__name__)
     log.info('learning_rate: %.4f' % learning_rate)
     log.info('train_time: %s' % train_time)
 
-    how_many_trains = 3 if train_time <= 1 else 1  # 1초 실행하는 경우, 3번 실험 그 외에는 1번 실험.
+    how_many_trains = 3 if train_time <= 1 else 1  # 1초 실행하는 경우 3번 실험, 그 외에는 1번 실험.
     log.info('how_many_trains: %s' % how_many_trains)
     for _ in range(how_many_trains):
         time.sleep(1)
@@ -116,11 +117,11 @@ if __name__ == '__main__':
             watch = WatchUtil()
 
             model_file_saved = False
-            model_file = os.path.join('%s/workspace/nlp4kor-bage/models/%s_%s/model' % (os.getenv('HOME'), os.path.basename(__file__.replace('.py', '')), func.__name__))
+            model_file = os.path.join(MODELS_DIR, '%s_%s/model' % (os.path.basename(__file__.replace('.py', '')), func.__name__))
             model_dir = os.path.dirname(model_file)
-            # log.info('model_file: %s' % model_file)
+            log.info('model_file: %s' % model_file)
             if not os.path.exists(model_dir):
-                # log.info('model_dir: %s' % model_dir)
+                log.info('model_dir: %s' % model_dir)
                 os.makedirs(model_dir)
 
             config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
@@ -131,8 +132,8 @@ if __name__ == '__main__':
                 train_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/train', sess.graph)
                 valid_writer = tf.summary.FileWriter(TENSORBOARD_LOG_DIR + '/valid', sess.graph)
 
-                max_cost = 1e10
-                best_epoch, best_cost = 0, 1e10
+                max_cost = sys.float_info.max
+                best_epoch, best_cost = 0, sys.float_info.max
                 watch.start('train')
 
                 running, epoch = True, 0
@@ -168,8 +169,7 @@ if __name__ == '__main__':
                             break
                 watch.stop('train')
 
-            if model_file_saved and os.path.exists(model_file + '.index'):
-                with tf.Session() as sess:
+                if model_file_saved and os.path.exists(model_file + '.index'):
                     restored = saver.restore(sess, model_file)
 
                     log.info('')
@@ -183,8 +183,8 @@ if __name__ == '__main__':
 
                     for i in range(min(5, _y_hat.shape[0])):  # 최대 5개까지만 출력해서 확인
                         log.info('%s\t->\t%.1f\t(label: %d)' % (x_test[i], _y_hat[i], y_test[i]))
-                    log.info('--------TEST----------')
                     watch.stop('test')
+                    log.info('--------TEST----------')
             log.info(watch.summary())
         except:
             traceback.print_exc()
