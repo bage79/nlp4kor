@@ -6,7 +6,7 @@ class TimerUtil(object):
     def __init__(self, interval_secs=1):
         self.interval_secs = interval_secs
         self.count = 0
-        self.next_time = 0
+        self.next_time = datetime.datetime.now() + datetime.timedelta(seconds=self.interval_secs)
 
     def start(self):
         self.next_time = datetime.datetime.now() + datetime.timedelta(seconds=self.interval_secs)
