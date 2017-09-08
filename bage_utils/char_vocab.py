@@ -15,6 +15,7 @@ class CharVocab(object):
         self.__char2cid = {char: cid for cid, char in enumerate(self.__chars, 0)}
         self.__cid2char = {cid: char for cid, char in enumerate(self.__chars, 0)}
         self.size = len(self.__char2cid)
+        self.random_cids_without_blank = np.arange(1, self.size)
 
     def __repr__(self):
         return '%s(len:%s)' % (self.__class__.__name__, self.__len__())
@@ -99,6 +100,9 @@ class CharVocab(object):
     def chars2csv(self, chars):
         return ','.join([str(cid) for cid in self.chars2cids(chars)])
 
+    def random_mask(self, word, ner):
+        random_cids = np.random.choice(self.random_cids_without_blank, size=len(word), replace=True)
+        return word.replace(ner, self.cids2chars(random_cids))
 
 # noinspection PyUnresolvedReferences
 if __name__ == '__main__':
