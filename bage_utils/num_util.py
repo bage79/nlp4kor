@@ -95,6 +95,14 @@ class NumUtil(object):
         except ValueError:
             return False
 
+    @staticmethod
+    def is_int(string):
+        try:
+            int(string)
+            return True
+        except ValueError:
+            return False
+
 
 if __name__ == '__main__':
     # print(NumUtil.to_digit('-7,097,985.0원'))
