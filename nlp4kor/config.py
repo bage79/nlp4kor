@@ -69,3 +69,30 @@ KO_WIKIPEDIA_ORG_TEST_SENTENCES_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data'
 
 KO_WIKIPEDIA_ORG_WORD_SPACING_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'word_spacing')
 KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'models', 'spelling_error_correction')
+
+#################################################
+# ko.wikipedia.org
+#################################################
+WIKIPEDIA_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
+
+# text (with string)
+WIKIPEDIA_DATA_DIR = os.path.join(WIKIPEDIA_DIR, 'data')
+if not os.path.exists(WIKIPEDIA_DATA_DIR):
+    os.mkdir(WIKIPEDIA_DATA_DIR)
+
+# info
+WIKIPEDIA_INFO_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.info.txt')
+WIKIPEDIA_URLS_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.urls.txt')
+
+WIKIPEDIA_CHARACTERS_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.characters')
+WIKIPEDIA_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.gz')
+WIKIPEDIA_SENTENCES_NE_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.ne.gz')
+
+WIKIPEDIA_TRAIN_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.gz')
+WIKIPEDIA_VALID_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.gz')
+WIKIPEDIA_TEST_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.test.sentences.gz')
+
+# csv (with character id)
+WIKIPEDIA_TRAIN_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.cid.gz')
+WIKIPEDIA_VALID_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.cid.gz')
+WIKIPEDIA_TEST_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.test.sentences.cid.gz')
