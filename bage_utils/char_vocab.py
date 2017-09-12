@@ -47,7 +47,7 @@ class CharVocab(object):
         :return: string
         """
         if pad_size > 0:
-            return ''.join([self.__cid2char.get(cid, ' ') for cid in cids]).rstrip(' ') # TODO: TEST
+            return ''.join([self.__cid2char.get(cid, ' ') for cid in cids]).rstrip(' ')  # TODO: TEST
         else:
             return ''.join([self.__cid2char.get(cid, ' ') for cid in cids])
 
@@ -100,9 +100,10 @@ class CharVocab(object):
     def chars2csv(self, chars):
         return ','.join([str(cid) for cid in self.chars2cids(chars)])
 
-    def random_mask(self, word, ner):
+    def random_mask(self, word):
         random_cids = np.random.choice(self.random_cids_without_blank, size=len(word), replace=True)
-        return word.replace(ner, self.cids2chars(random_cids))
+        return self.cids2chars(random_cids)
+
 
 # noinspection PyUnresolvedReferences
 if __name__ == '__main__':
@@ -116,6 +117,7 @@ if __name__ == '__main__':
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
     from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+
     window_size = 6
     characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
     char_dic = CharVocab.from_file(characters_file)
