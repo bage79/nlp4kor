@@ -107,8 +107,16 @@ class CharVocab(object):
 
 # noinspection PyUnresolvedReferences
 if __name__ == '__main__':
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
-    tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
+    from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+
+    window_size = 6
+    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
+    char_dic = CharVocab.from_file(characters_file)
+
+    print(CharVocab.from_file(characters_file).random_mask('박혜웅'))
+    exit()
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
+    # tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
 
     # chars = '가나다라'
     # v = CharOneHot(chars)
@@ -116,11 +124,7 @@ if __name__ == '__main__':
     # print(v.char2index)
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
-    from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE
 
-    window_size = 6
-    characters_file = KO_WIKIPEDIA_ORG_CHARACTERS_FILE
-    char_dic = CharVocab.from_file(characters_file)
 
     # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
     #     for no, line in enumerate(f, 1):

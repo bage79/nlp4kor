@@ -95,3 +95,5 @@ WIKIPEDIA_TEST_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.o
 WIKIPEDIA_TRAIN_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.cid.gz')
 WIKIPEDIA_VALID_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.cid.gz')
 WIKIPEDIA_TEST_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.test.sentences.cid.gz')
+
+WIKIPEDIA_NE_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.ne.gz')
