@@ -86,7 +86,6 @@ WIKIPEDIA_URLS_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.urls.tx
 
 WIKIPEDIA_CHARACTERS_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.characters')
 WIKIPEDIA_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.gz')
-WIKIPEDIA_SENTENCES_NE_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.sentences.ne.gz')
 
 WIKIPEDIA_TRAIN_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.train.sentences.gz')
 WIKIPEDIA_VALID_SENTENCES_FILE = os.path.join(WIKIPEDIA_DATA_DIR, 'ko.wikipedia.org.valid.sentences.gz')
