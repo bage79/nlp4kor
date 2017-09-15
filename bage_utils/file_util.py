@@ -64,21 +64,29 @@ class FileUtil(object):
                     f.write(data)
 
     @staticmethod
-    def count_lines(fname):
-        if fname.endswith('.gz') or fname.endswith('.zip'):
-            gzip_format = True
+    def count_lines(filename_or_list):
+        lines = 0
+        if isinstance(filename_or_list, str):
+            filename_list = [filename_or_list]
         else:
-            gzip_format = False
+            filename_list = filename_or_list
 
-        if gzip_format:
-            p = subprocess.Popen('gzip -cd %s | wc -l' % fname, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        else:
-            p = subprocess.Popen(['wc', '-l', fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for filename in filename_list:
+            if filename.endswith('.gz') or filename.endswith('.zip'):
+                gzip_format = True
+            else:
+                gzip_format = False
 
-        result, err = p.communicate()
-        if p.returncode != 0:
-            raise IOError(err)
-        return int(result.strip().split()[0])
+            if gzip_format:
+                p = subprocess.Popen('gzip -cd %s | wc -l' % filename, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            else:
+                p = subprocess.Popen(['wc', '-l', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            result, err = p.communicate()
+            if p.returncode != 0:
+                raise IOError(err)
+            lines += int(result.strip().split()[0])
+        return lines
 
     @staticmethod
     def print_n_write(file, s):
