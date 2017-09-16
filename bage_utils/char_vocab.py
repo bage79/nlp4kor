@@ -112,13 +112,13 @@ class CharVocab(object):
 
 # noinspection PyUnresolvedReferences
 if __name__ == '__main__':
-    from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE, WIKIPEDIA_CHARACTERS_FILE
-
-    char_vocab = CharVocab.from_file(characters_file=WIKIPEDIA_CHARACTERS_FILE)
-    print(char_vocab.chars2cids('가ဝ다ဝ'))
-    print(char_vocab.random_mask('박혜웅'))
-    print(char_vocab.unk_mask('박혜웅'))
-    exit()
+    # from nlp4kor.config import KO_WIKIPEDIA_ORG_CHARACTERS_FILE, WIKIPEDIA_CHARACTERS_FILE
+    #
+    # char_vocab = CharVocab.from_file(characters_file=WIKIPEDIA_CHARACTERS_FILE)
+    # print(char_vocab.chars2cids('가ဝ다ဝ'))
+    # print(char_vocab.random_mask('박혜웅'))
+    # print(char_vocab.unk_mask('박혜웅'))
+    # exit()
 
     # window_size = 6
     # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
@@ -135,20 +135,21 @@ if __name__ == '__main__':
     #         y_cids = [int(cid) for cid in line.split(',')][window_size:]
     #         print(no, char_dic.cids2chars(x_cids), '->', char_dic.cids2chars(y_cids))
     #
-    # batch_size = 2
-    # max_sentence_len = 100
-    # sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
-    # v = CharVocab.from_chars(sentence_list)
-    # print(v.size, v.chars)
-    # # original = v.chars2cids(sentence_list[0])
-    # # noised = original.copy()
-    # # noised[0] = -1
-    # # print(v.cids2chars(original))
-    # # print(v.cids2chars(noised))
-    #
-    # embedding_size = 10
-    #
-    #
+    batch_size = 1
+    max_sentence_len = 100
+    window_size = 3
+
+    sentence_list = ['아버지가 방에 들어가셨다.', '가는 말이 고와야 오는 말이 곱다.']
+    v = CharVocab.from_chars(sentence_list)
+    print(v.size, v.chars)
+    original = v.chars2cids(sentence_list[0])
+    noised = original.copy()
+    noised[0] = -1
+    print(v.cids2chars(original))
+    print(v.cids2chars(noised))
+    print(noised)
+    x_data = np.expand_dims(np.array(noised), axis=0)
+    embedding_size = 10
     # def create_graph_one_hot(dic_size, batch_size, window_size):
     #     x = tf.placeholder(tf.int32, [batch_size, window_size])
     #     x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
@@ -156,40 +157,41 @@ if __name__ == '__main__':
     #     return x, embeddings, x_vector
     #
     #
-    # def create_graph_embedding(dic_size, batch_size, window_size):
-    #     x = tf.placeholder(tf.int32, [batch_size, window_size])
-    #     embeddings = tf.Variable(tf.random_uniform([dic_size, embedding_size], -1, 1))
-    #     x_vector = tf.nn.embedding_lookup(embeddings, x)
-    #     # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
-    #     return x, embeddings, x_vector
-    #
-    #
-    # tf.reset_default_graph()
-    # tf.set_random_seed(7942)
-    # x, embeddings, x_vector = create_graph_one_hot(dic_size=v.size, batch_size=batch_size, window_size=window_size)
-    # with tf.Session() as sess:
-    #     sess.run(tf.global_variables_initializer())
-    #
-    #     x_indices_all = []
-    #     for sentence in sentence_list:
-    #         if len(sentence) > max_sentence_len:
-    #             continue
-    #         x_indices_all.extend(v.rolling_cids(sentence, window_size))
-    #
-    #     x_indices_noised = []
-    #     for x_indices in x_indices_all:
-    #         for loc in range(window_size):
-    #             _x = x_indices.copy()
-    #             _x[loc] = -1
-    #             x_indices_noised.append(_x)
-    #
-    #     for x_batch in ListUtil.chunks_with_size(x_indices_noised, chunk_size=batch_size):
-    #         x_vector_, = sess.run([x_vector], feed_dict={x: np.array(x_batch)})
-    #         for a, b in zip(x_batch, x_vector_):
-    #             print()
-    #             print(v.cids2chars(a))
-    #             print(a)
-    #             print(b)
-    #             # print(sentence, _x_one_hot_batch.shape)
-    #             # for _x_indices, _x_one_hot in zip(x_indices_batch, _x_one_hot_batch):
-    #             #     print(v.cids2chars(_x_indices), _x_one_hot)
+    def create_graph_embedding(dic_size, batch_size, window_size, embedding_size=100):
+        x = tf.placeholder(tf.int32, [batch_size, window_size])
+        embeddings = tf.Variable(tf.random_uniform([dic_size, embedding_size], -1, 1))
+        x_vector = tf.nn.embedding_lookup(embeddings, x)
+        # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+        return x, embeddings, x_vector
+
+    tf.reset_default_graph()
+    tf.set_random_seed(7942)
+    x, embeddings, x_vector = create_graph_embedding(dic_size=len(v), batch_size=batch_size, window_size=x_data.shape[1], embedding_size=embedding_size)
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+
+        print(sess.run([x, x_vector], feed_dict={x: x_data}))
+        #
+        #     x_indices_all = []
+        #     for sentence in sentence_list:
+        #         if len(sentence) > max_sentence_len:
+        #             continue
+        #         x_indices_all.extend(v.rolling_cids(sentence, window_size))
+        #
+        #     x_indices_noised = []
+        #     for x_indices in x_indices_all:
+        #         for loc in range(window_size):
+        #             _x = x_indices.copy()
+        #             _x[loc] = -1
+        #             x_indices_noised.append(_x)
+        #
+        #     for x_batch in ListUtil.chunks_with_size(x_indices_noised, chunk_size=batch_size):
+        #         x_vector_, = sess.run([x_vector], feed_dict={x: np.array(x_batch)})
+        #         for a, b in zip(x_batch, x_vector_):
+        #             print()
+        #             print(v.cids2chars(a))
+        #             print(a)
+        #             print(b)
+        #             # print(sentence, _x_one_hot_batch.shape)
+        #             # for _x_indices, _x_one_hot in zip(x_indices_batch, _x_one_hot_batch):
+        #             #     print(v.cids2chars(_x_indices), _x_one_hot)
