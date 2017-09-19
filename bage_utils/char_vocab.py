@@ -147,9 +147,11 @@ if __name__ == '__main__':
     noised[0] = -1
     print(v.cids2chars(original))
     print(v.cids2chars(noised))
-    print(noised)
+    print('noised:', noised)
     x_data = np.expand_dims(np.array(noised), axis=0)
     embedding_size = 10
+
+
     # def create_graph_one_hot(dic_size, batch_size, window_size):
     #     x = tf.placeholder(tf.int32, [batch_size, window_size])
     #     x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
@@ -157,12 +159,17 @@ if __name__ == '__main__':
     #     return x, embeddings, x_vector
     #
     #
-    def create_graph_embedding(dic_size, batch_size, window_size, embedding_size=100):
-        x = tf.placeholder(tf.int32, [batch_size, window_size])
-        embeddings = tf.Variable(tf.random_uniform([dic_size, embedding_size], -1, 1))
-        x_vector = tf.nn.embedding_lookup(embeddings, x)
-        # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
-        return x, embeddings, x_vector
+    def create_graph_embedding(dic_size, batch_size, window_size, embedding_size=500):
+        with tf.device('/gpu:0'):  # only GPU
+            x = tf.placeholder(tf.int32, [batch_size, window_size])
+            # embeddings = tf.Variable(tf.random_uniform([dic_size, embedding_size], -1, 1))
+            embeddings = tf.get_variable(initializer=tf.random_uniform([dic_size, embedding_size], -1, 1), name='embeddings', trainable=True)
+            x_vector = tf.nn.embedding_lookup(embeddings, x)
+            print(embeddings)
+            print(x)
+            # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+            return x, embeddings, x_vector
+
 
     tf.reset_default_graph()
     tf.set_random_seed(7942)
