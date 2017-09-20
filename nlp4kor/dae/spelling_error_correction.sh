@@ -17,9 +17,8 @@ noise_rate=$3
 echo "pkill -f ${PROGRAM}"
 pkill -f ${PROGRAM}
 
-echo "rm -f logs/${PROGRAM}.$1.$2.$3.log"
-rm -f logs/${PROGRAM}.$1.$2.$3.log
-rm -f logs/${PROGRAM}.$1.$2.$3.error.log
+echo "rm -f logs/${PROGRAM}.$1.$2.$3.*"
+rm -f logs/${PROGRAM}.$1.$2.$3.*
 
 #echo "rm -f logs/${PROGRAM}.*"
 #rm -f logs/${PROGRAM}.*
