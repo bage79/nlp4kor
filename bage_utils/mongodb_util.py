@@ -85,8 +85,7 @@ class MongodbUtil(object):
 
 
 if __name__ == '__main__':
-    MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
-        'root', os.getenv('MONGODB_PASSWD'), 'localhost', '27017', 'admin')
+    MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % ('root', os.getenv('MONGODB_PASSWD'), 'localhost', '27017', 'admin')
     mongo = MongodbUtil(MONGO_URL, 'root', 'test')
     mongo.create_index(['title', 'content'])
 
