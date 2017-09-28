@@ -16,8 +16,8 @@ class PandasUtil(object):
             "mysql+mysqldb://{user}:{passwd}@{host}/{db}?charset=utf8".format(**mysql_info),
             encoding='utf8', echo=False)
 
-    def read_sql(self, sql: str, index_col: str = 'date') -> pd.DataFrame:
-        df = pd.read_sql(sql=sql, con=self.mysql_engine.raw_connection(), index_col=index_col)
+    def read_sql(self, sql: str, index_col: str = 'date', columns: list = None) -> pd.DataFrame:
+        df = pd.read_sql(sql=sql, con=self.mysql_engine.raw_connection(), index_col=index_col, columns=columns)
         return df
 
     def to_sql(self, df: pd.DataFrame, table_name: str, index_label: str = None, dtype: dict = None) -> None:

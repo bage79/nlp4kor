@@ -1,7 +1,7 @@
 import os
 import time
 import traceback
-
+import numpy as np
 import pymysql
 
 
@@ -59,6 +59,27 @@ class MySQLUtil(object):
     @property
     def rowcount(self):
         return self.cursor.rowcount
+
+    @classmethod
+    def mysql_type2numpy_type(cls, mysql_type):
+        if mysql_type is not None:
+            mysql_type = mysql_type.lower()
+            if mysql_type.startswith('int') or mysql_type.startswith('bigint'):
+                return np.int64
+            elif mysql_type.startswith('float'):
+                return np.float64
+            else:
+                return np.unicode_
+        else:
+            return None
+
+    @classmethod
+    def columns2numpy_types(cls, mysql, table_name):
+        columns, types = [], []
+        for row in mysql.select('SHOW FIELDS FROM `%s`' % table_name):
+            columns.append(row['Field'])
+            types.append(cls.mysql_type2numpy_type(row['Type']))
+        return columns, types
 
     @staticmethod
     def addslashes(field):
