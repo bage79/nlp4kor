@@ -11,7 +11,7 @@ class MySQLUtil(object):
     - .bashrc 또는 .bashprofile 에 MYSQL_PASSWD 를 설정해야 함.
     """
 
-    def __init__(self, host, user, passwd, db, port=3306, charset='UTF8', auto_commit=True, auto_connect=True):
+    def __init__(self, host, user, passwd, db, port=3306, charset='UTF8', auto_connect=True):
         self.init_command = None
         self.host = host
         self.user = user
@@ -19,22 +19,18 @@ class MySQLUtil(object):
         self.db = db
         self.port = int(port)
         self.charset = charset.replace('-', '').upper()
-        self.auto_commit = auto_commit
         self.conn = None
         self.cursor = None
+        self.queries = []
         if auto_connect:
             self.connect()
 
     def connect(self):
         if not self.cursor or not self.cursor.connection:
-            # print('connect()...')
             self.init_command = 'SET NAMES %s' % self.charset
             self.conn = pymysql.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.db, port=self.port, charset=self.charset,
                                         init_command=self.init_command, autocommit=True)
-            # self.cursor = self.conn.cursor(pymysql.cursors.SSDictCursor)
             self.cursor = self.conn.cursor(pymysql.cursors.DictCursor)
-            # self.conn.autocommit(self.auto_commit)
-            # print('connect() OK.')
 
     def __repr__(self):
         return '%s@%s:%s/%s' % (self.user, self.host, self.port, self.db)
@@ -84,6 +80,13 @@ class MySQLUtil(object):
     @staticmethod
     def addslashes(field):
         return field.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"')
+
+    def bulk_execute(self, query, bulk_size=100):
+        self.queries.append(query)
+        # print(len(self.queries))
+        if len(self.queries) >= bulk_size:
+            self.execute(';'.join(self.queries))
+            self.queries = []
 
     def execute(self, query):
         if not self.cursor:
