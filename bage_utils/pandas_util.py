@@ -3,7 +3,9 @@ import pandas as pd
 from sqlalchemy import create_engine
 from tabulate import tabulate
 
-pd.set_option('display.max_columns', None)
+# pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 5000)
+pd.set_option('display.max_columns', 60)
 
 
 class PandasUtil(object):

@@ -264,7 +264,7 @@ if __name__ == '__main__':
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))  # evaluation
 
     iteration = 10000  # max iteration
-    check_accuracy_interval = min(1000, (iteration / 10))  # less than 1000
+    check_accuracy_interval = 10 # min(1000, (iteration / 10))  # less than 1000
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
