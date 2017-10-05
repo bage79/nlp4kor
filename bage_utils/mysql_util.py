@@ -85,7 +85,9 @@ class MySQLUtil(object):
         self.queries.append(query)
         # print(len(self.queries))
         if len(self.queries) >= bulk_size:
-            self.execute(';'.join(self.queries))
+            full_query = ';'.join(self.queries)
+            # print(full_query)
+            self.execute(full_query)
             self.queries = []
 
     def execute(self, query):
