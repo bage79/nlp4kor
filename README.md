@@ -14,8 +14,8 @@
 # 발표 영상
 - https://www.youtube.com/playlist?list=PLE_yleP-KQefhFSNh16hJKnq6stIG05fu
 
-# Season #1 2017.05 ~ 2017.07 (character based)
 
+# Season #1 2017.05 ~ 2017.07 (character based)
 ### 1. CNN for MNIST - 박혜웅, 2017.05.20
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/CNN_for_MNIST.ipynb
 
@@ -30,3 +30,8 @@
 
 ### 5. Real Tensorflow Coding - 박혜웅, 2017.07.29
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/real_tensorflow_coding.ipynb
+
+
+# Season #2 2017.10 ~ 2017.12 (embedding)
+### 6. Learn Math Functions - 박혜웅, 2017.10.08
+- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/nlp4kor/skeletons/learn_math_functions_demo.py
