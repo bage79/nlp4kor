@@ -33,5 +33,5 @@
 
 
 # Season #2 2017.10 ~ 2017.12 (embedding)
-### 6. Learn Math Functions - 박혜웅, 2017.10.08
+### 6. 수학 함수 학습 & hyper-parameters 최적화 - 박혜웅, 2017.10.08
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/nlp4kor/skeletons/learn_math_functions_demo.py
