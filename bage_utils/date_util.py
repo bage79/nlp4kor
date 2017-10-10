@@ -234,13 +234,14 @@ class DateUtil(object):
 
 
 if __name__ == '__main__':
+    print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
     # print(DateUtil.string_to_datetime('2017-03-16', time_format='%Y-%m-%d'))
     # time = datetime.datetime.time(datetime.datetime.now())
     # print('time:', time)
     # print(time < datetime.time(0, 30))
     # print(datetime.time(11, 30) < time)
-    date = datetime.datetime.now() + datetime.timedelta(days=1)
-    print(DateUtil.to_datetime_string(date))
+    # date = datetime.datetime.now() + datetime.timedelta(days=1)
+    # print(DateUtil.to_datetime_string(date))
     # print(DateUtil.to_datetime_string(datetime.now()))
     # print(DateUtil.current_datetime_string())
     # print('1970-01-01 23:59:59', DateUtil.is_valid_datetime_string('1970-01-01 23:59:59', datetime_start='1990-01-01 23:59:59'))
