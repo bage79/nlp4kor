@@ -21,6 +21,8 @@ class QueueUtil(object):
     def __repr__(self):
         return repr(self.li)
 
+    def __len__(self):
+        return len(self.li)
 
 if __name__ == '__main__':
     q = QueueUtil(range(10))
