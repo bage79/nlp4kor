@@ -1,6 +1,7 @@
 import datetime
 import re
 import time
+import calendar
 
 
 class DateUtil(object):
@@ -232,9 +233,28 @@ class DateUtil(object):
             WEEK_DAY = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
         return WEEK_DAY[date.weekday()]
 
+    @staticmethod
+    def nth_weekday(year: int, month: int, nth=2, weekday='목'):
+        """
+
+        :param year: 년
+        :param month: 월
+        :param nth: 몇번째인지 1 ~ 5
+        :param weekday: 월 화 수 목 금 토 일
+        :return:
+        """
+        c = calendar.Calendar(firstweekday=calendar.SUNDAY)
+        weekday_from_kor = {
+            '일': calendar.SUNDAY, '월': calendar.MONDAY, '화': calendar.TUESDAY, '수': calendar.WEDNESDAY, '목': calendar.THURSDAY, '금': calendar.FRIDAY, '토': calendar.SATURDAY
+        }
+        monthcal = c.monthdatescalendar(year=year, month=month)
+        return [day for week in monthcal for day in week \
+                if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
+
 
 if __name__ == '__main__':
-    print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
+    print(DateUtil.nth_weekday(2017, 10, nth=2, weekday='목'))
+    # print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
     # print(DateUtil.string_to_datetime('2017-03-16', time_format='%Y-%m-%d'))
     # time = datetime.datetime.time(datetime.datetime.now())
     # print('time:', time)
