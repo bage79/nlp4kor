@@ -34,7 +34,7 @@ if not os.path.exists(MODELS_DIR):
 # DB
 #################################################
 MONGO_URL = r'mongodb://%s:%s@%s:%s/%s?authMechanism=MONGODB-CR' % (
-    'root', os.getenv('MONGODB_PASSWD'), 'db-local', '27017', 'admin')
+    'root', os.getenv('MONGODB_PASSWD'), 'office', '27017', 'admin')
 MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_PASSWD'), 'db': 'kr_nlp'}
 
 #################################################
