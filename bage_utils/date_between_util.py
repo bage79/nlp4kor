@@ -52,12 +52,12 @@ class DateBetweenUtil(object):
 if __name__ == '__main__':
     # start_date, end_date = DateUtil.string_to_datetime('2015-11-29 00:00:00'), DateUtil.string_to_datetime('2016-01-01 00:00:00')
     start_date_index, end_date = DateUtil.string_to_date('2015-11-01'), DateUtil.string_to_date('2016-01-05')
-    between = DateBetweenUtil(start_date_index, end_date)
+    # between = DateBetweenUtil(start_date_index, end_date)
     # for a, b in between.date_split(from_start=True):
     #     print(a, b)
     # print()
-    for a, b in between.date_split(from_start=False):
-        print(a, b)
+    # for a, b in between.date_split(from_start=False):
+    #     print(a, b)
         # between = DateBetweenUtil(datetime.datetime(2013, 1, 31, 1), datetime.datetime(2013, 2, 2, 4))
         # print(between.days())
         # for d in between.date_list():
