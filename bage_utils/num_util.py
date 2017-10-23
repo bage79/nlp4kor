@@ -106,30 +106,34 @@ class NumUtil(object):
     @staticmethod
     def base_num(v: float):
         try:
-            v_str = str(v)
-            if v_str.endswith('.'):
-                v_str = v_str.rstrip('0')
-                v_str = v_str.replace('.', '')
-            # print()
-            # print(v_str)
-            try:
-                a, b = v_str.split('.')
-                # print('a:', a, 'b:', b)
-                if len(a) >= len(b):
-                    return 10 ** (len(a) - 1)
-                else:
-                    return 10 ** (-1 * len(b))
-            except:
-                return 10 ** (len(v_str) - 1)
+            v_str = str(float(v))
+            if v_str.startswith('0.'):
+                v_str = v_str.replace('0.', '')
+                return 10 ** (-len(v_str))
+            else:
+                v_str = v_str.replace('.0', '')
+                return 10 ** (v_str.count('0'))
+
+            # if v_str.endswith('.0'):
+            #     v_str = v_str.replace('.0', '')
+            # # print()
+            # # print(v_str)
+            # try:
+            #     a, b = v_str.split('.')
+            #     # print('a:', a, 'b:', b)
+            #     return 10 ** (-len(b))
+            # except:
+            #     return 10 ** (len(v_str)-1)
         except:
             return None
 
 
 if __name__ == '__main__':
+    print(NumUtil.base_num(0.5))
     print(NumUtil.base_num(0.001))
     print(NumUtil.base_num(0.018))
     print(NumUtil.base_num(0.00100))
-    print(NumUtil.base_num(1000.00))
+    print(NumUtil.base_num(2120.00))
     print(NumUtil.base_num(700))
     # print(NumUtil.to_digit('-7,097,985.0원'))
     # print(NumUtil.has_digit('-a22a'))
