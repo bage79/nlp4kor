@@ -107,11 +107,13 @@ class NumUtil(object):
     def base_num(v: float):
         try:
             v_str = str(float(v))
-            if v_str.startswith('0.'):
-                v_str = v_str.replace('0.', '')
+            if v_str.endswith('.0'):
+                v_str = v_str.replace('.0', '')
+
+            if v_str.count('.') > 0:
+                v_str = v_str.split('.')[1]
                 return 10 ** (-len(v_str))
             else:
-                v_str = v_str.replace('.0', '')
                 return 10 ** (v_str.count('0'))
 
             # if v_str.endswith('.0'):
@@ -129,7 +131,8 @@ class NumUtil(object):
 
 
 if __name__ == '__main__':
-    print(NumUtil.base_num(0.5))
+    print(NumUtil.base_num(3.5))
+    print(NumUtil.base_num(4))
     print(NumUtil.base_num(0.001))
     print(NumUtil.base_num(0.018))
     print(NumUtil.base_num(0.00100))
