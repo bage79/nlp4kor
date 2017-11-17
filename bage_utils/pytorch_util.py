@@ -20,7 +20,7 @@ class PytorchUtil(object):
         torch.cuda.manual_seed_all(random_seed)
 
     @staticmethod
-    def equal_distribution(df, indexes: pd.Series, test_rate=0.1, valid_rate=0.1, shuffle=True):
+    def equal_distribution(df, indexes: list, test_rate=0.1, valid_rate=0.1, shuffle=True):
         df_train, df_valid, df_test = None, None, None
         sums = [i.sum() for i in indexes]
         min_count = min(sums)
