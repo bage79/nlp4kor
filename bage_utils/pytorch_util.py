@@ -10,6 +10,7 @@ import numpy as np
 class PytorchUtil(object):
     random_seed = 7942
 
+    # noinspection PyDefaultArgument
     @staticmethod
     def random_networks(x_dims=3, y_dims=1, total_sample=3,
                         n_hiddens=[10, 50, 100, 1000], n_layers=[2, 3, 4],
@@ -49,7 +50,7 @@ class PytorchUtil(object):
                     a = np.random.choice(activations, 1)[0]
                     layers.insert(l, a())
 
-            networks.append(nn.Sequential(nn.ModuleList(layers)))
+            networks.append(nn.Sequential(*layers))
         return networks
 
     @classmethod
