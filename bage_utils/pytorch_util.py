@@ -12,46 +12,43 @@ class PytorchUtil(object):
 
     # noinspection PyDefaultArgument
     @staticmethod
-    def random_networks(x_dims=3, y_dims=1, total_sample=3,
-                        n_hiddens=[10, 50, 100, 1000], n_layers=[2, 3, 4],
-                        max_dropout_layers=0, p_dropouts=[0.1, 0.5],
-                        max_activation_layers=0, activations=[nn.ReLU, nn.ELU, nn.Tanh, nn.Sigmoid],
-                        ):  # TODO: more hyper parameters
-        networks = []
-        for i in range(total_sample):
-            layers = []
-            n_layer = np.random.choice(n_layers, 1)[0]  # 레이어 수
-            # print('n_layer:', n_layer)
-            hidden_in_layers = np.random.choice(n_hiddens, n_layer, replace=True).tolist()
-            hidden_in_layers = sorted(hidden_in_layers, reverse=True)
-            hidden_in_layers.insert(0, x_dims)
-            hidden_in_layers.append(y_dims)
-            # print(hidden_in_layers)
+    def random_network(x_dims=3, y_dims=1,
+                       n_hiddens=[10, 50, 100, 1000], n_layers=[2, 3, 4],
+                       max_dropout_layers=0, p_dropouts=[0.1, 0.5],
+                       max_activation_layers=0, activations=[nn.ReLU, nn.ELU, nn.Tanh, nn.Sigmoid],
+                       ):  # TODO: more hyper parameters
+        layers = []
+        n_layer = np.random.choice(n_layers, 1)[0]  # 레이어 수
+        # print('n_layer:', n_layer)
+        hidden_in_layers = np.random.choice(n_hiddens, n_layer, replace=True).tolist()
+        hidden_in_layers = sorted(hidden_in_layers, reverse=True)
+        hidden_in_layers.insert(0, x_dims)
+        hidden_in_layers.append(y_dims)
+        # print(hidden_in_layers)
 
-            hidden_in_layers_to = hidden_in_layers[1:]
-            hidden_in_layers_from = hidden_in_layers[:-1]
-            for hidden_from, hidden_to in zip(hidden_in_layers_from, hidden_in_layers_to):
-                # print(hidden_from, hidden_to)
-                layers.append(nn.Linear(hidden_from, hidden_to))
+        hidden_in_layers_to = hidden_in_layers[1:]
+        hidden_in_layers_from = hidden_in_layers[:-1]
+        for hidden_from, hidden_to in zip(hidden_in_layers_from, hidden_in_layers_to):
+            # print(hidden_from, hidden_to)
+            layers.append(nn.Linear(hidden_from, hidden_to))
 
-            if max_dropout_layers > 0 and len(layers) - 1 > 0:
-                n_dropout = min(len(layers) - 1, np.random.choice(max_dropout_layers + 1, 1)[0])
-                dropout_layer = np.random.choice(len(layers) - 1, n_dropout, replace=False).tolist()
-                dropout_layer = sorted(dropout_layer, reverse=True)
-                for l in dropout_layer:
-                    p = np.random.choice(p_dropouts, 1)[0]
-                    layers.insert(l, nn.Dropout(p=p))
+        if max_dropout_layers > 0 and len(layers) - 1 > 0:
+            n_dropout = min(len(layers) - 1, np.random.choice(max_dropout_layers + 1, 1)[0])
+            dropout_layer = np.random.choice(len(layers) - 1, n_dropout, replace=False).tolist()
+            dropout_layer = sorted(dropout_layer, reverse=True)
+            for l in dropout_layer:
+                p = np.random.choice(p_dropouts, 1)[0]
+                layers.insert(l, nn.Dropout(p=p))
 
-            if max_activation_layers > 0 and len(layers) - 1 > 0:
-                n_activation = min(len(layers) - 1, np.random.choice(max_activation_layers + 1, 1)[0])
-                activation_layer = np.random.choice(len(layers) - 1, n_activation, replace=False).tolist()
-                activation_layer = sorted(activation_layer, reverse=True)
-                for l in activation_layer:
-                    a = np.random.choice(activations, 1)[0]
-                    layers.insert(l, a())
+        if max_activation_layers > 0 and len(layers) - 1 > 0:
+            n_activation = min(len(layers) - 1, np.random.choice(max_activation_layers + 1, 1)[0])
+            activation_layer = np.random.choice(len(layers) - 1, n_activation, replace=False).tolist()
+            activation_layer = sorted(activation_layer, reverse=True)
+            for l in activation_layer:
+                a = np.random.choice(activations, 1)[0]
+                layers.insert(l, a())
 
-            networks.append(nn.Sequential(*layers))
-        return networks
+        return nn.Sequential(*layers)
 
     @classmethod
     def init_random_seed(cls, random_seed=None):
@@ -110,5 +107,4 @@ class PytorchUtil(object):
 
 
 if __name__ == '__main__':
-    for network in PytorchUtil.random_networks(total_sample=5):
-        print(network)
+    print(PytorchUtil.random_network())
