@@ -6,6 +6,8 @@ import torch.nn as nn
 # import pandas as pd
 import numpy as np
 
+from futures_kr.futures_kr_system import FuturesKrSystem
+
 
 class PytorchUtil(object):
     random_seed = 7942
@@ -16,6 +18,7 @@ class PytorchUtil(object):
                        n_hiddens=[10, 50, 100, 1000], n_layers=[2, 3, 4],
                        max_dropout_layers=0, p_dropouts=[0.1, 0.5],
                        max_activation_layers=0, activations=[nn.ReLU, nn.ELU, nn.Tanh, nn.Sigmoid],
+                       learning_rate_list=[1e-3, 1e-4, 1e-5, ]
                        ):  # TODO: more hyper parameters
         layers = []
         n_layer = np.random.choice(n_layers, 1)[0]  # 레이어 수
@@ -48,7 +51,8 @@ class PytorchUtil(object):
                 a = np.random.choice(activations, 1)[0]
                 layers.insert(l, a())
 
-        return nn.Sequential(*layers)
+        learning_rate = np.random.choice(learning_rate_list, 1)[0]
+        return FuturesKrSystem(layers=nn.Sequential(*layers), learning_rate=learning_rate)
 
     @classmethod
     def init_random_seed(cls, random_seed=None):
