@@ -1,4 +1,5 @@
 import torch
+import os
 # import torch.nn as nn
 # from torch.autograd import Variable
 # from torch.utils.data import DataLoader
@@ -9,6 +10,11 @@ import numpy as np
 
 class PytorchUtil(object):
     random_seed = 7942
+
+    @classmethod
+    def use_gpu(cls, device_no=0):
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
 
     @classmethod
     def init_random_seed(cls, random_seed=None):
@@ -64,7 +70,3 @@ class PytorchUtil(object):
                 param_group['lr'] = lr
 
         return optimizer
-
-
-if __name__ == '__main__':
-    print(PytorchUtil.random_network())
