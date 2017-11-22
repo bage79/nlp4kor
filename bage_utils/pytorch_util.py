@@ -17,6 +17,10 @@ class PytorchUtil(object):
         os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
 
     @classmethod
+    def get_gpus(cls):
+        return os.environ.get("CUDA_VISIBLE_DEVICES", [])
+
+    @classmethod
     def init_random_seed(cls, random_seed=None):
         if random_seed is None:
             random_seed = cls.random_seed
