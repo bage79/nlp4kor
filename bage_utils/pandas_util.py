@@ -22,7 +22,7 @@ class PandasUtil(object):
         df = pd.read_sql(sql=sql, con=self.mysql_engine.raw_connection(), index_col=index_col, columns=columns)
         return df
 
-    def to_sql(self, df: pd.DataFrame, table_name: str, index_label: str = None, dtype: dict = None) -> None:
+    def to_sql(self, df: pd.DataFrame, table_name: str, index_label: str or [] = None, dtype: dict = None) -> None:
         if dtype is None:
             dtype = {}
 
