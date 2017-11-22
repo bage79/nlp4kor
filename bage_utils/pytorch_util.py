@@ -29,39 +29,52 @@ class PytorchUtil(object):
         torch.manual_seed(random_seed)
         torch.cuda.manual_seed_all(random_seed)
 
+    # noinspection PyDefaultArgument
     @staticmethod
-    def equal_distribution(df, indexes: list, test_rate=0.1, valid_rate=0.1, shuffle=True):
+    def split_dataframe(df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True):
         df_train, df_valid, df_test = None, None, None
-        sums = [i.sum() for i in indexes]
-        min_count = min(sums)
-        # print('min: %s in %s' % (min_count, sums))
+        if len(indexes_by_label) > 0:
+            sums = [i.sum() for i in indexes_by_label]
+            min_count = min(sums)
+            # print('min: %s in %s' % (min_count, sums))
+            for index in indexes_by_label:  # same distribution by label
+                df_part = df[index]
+                df_part = df_part[:min_count]
+                if shuffle:
+                    df_part = df_part.sample(frac=1, random_state=7942)
 
-        for index in indexes:
-            df_part = df[index]
-            df_part = df_part[:min_count]
+                n_test = max(1, int(len(df_part) * test_rate))
+                n_valid = max(1, int(len(df_part) * valid_rate))
+                n_train = len(df_part) - n_test - n_valid
+                # print('n_train/n_valid/n_test:', n_train, n_valid, n_test)
+                if df_train is None:
+                    df_train = df_part[:n_train]
+                else:
+                    df_train = df_train.append(df_part[:n_train])
+
+                if df_valid is None:
+                    df_valid = df_part[n_train:n_train + n_valid]
+                else:
+                    df_valid = df_valid.append(df_part[n_train:n_train + n_valid])
+
+                if df_test is None:
+                    df_test = df_part[n_train + n_valid:]
+                else:
+                    df_test = df_test.append(df_part[n_train + n_valid:])
+
+            return df_train, df_valid, df_test
+        else:
             if shuffle:
-                df_part = df_part.sample(frac=1, random_state=7942)
+                df = df.sample(frac=1, random_state=7942)
 
-            n_test = max(1, int(len(df_part) * test_rate))
-            n_valid = max(1, int(len(df_part) * valid_rate))
-            n_train = len(df_part) - n_test - n_valid
-            # print('n_train/n_valid/n_test:', n_train, n_valid, n_test)
-            if df_train is None:
-                df_train = df_part[:n_train]
-            else:
-                df_train = df_train.append(df_part[:n_train])
+            n_test = int(len(df) * test_rate)
+            n_valid = int(len(df) * valid_rate)
+            n_train = len(df) - n_test - n_valid
 
-            if df_valid is None:
-                df_valid = df_part[n_train:n_train + n_valid]
-            else:
-                df_valid = df_valid.append(df_part[n_train:n_train + n_valid])
-
-            if df_test is None:
-                df_test = df_part[n_train + n_valid:]
-            else:
-                df_test = df_test.append(df_part[n_train + n_valid:])
-
-        return df_train, df_valid, df_test
+            df_train = df[:n_train]
+            df_valid = df[n_train:n_train + n_valid]
+            df_test = df[n_train + n_valid:]
+            return df_train, df_valid, df_test
 
     @staticmethod
     def exp_learing_rate_decay(optimizer, epoch, init_lr=0.001, lr_decay_epoch=1):
