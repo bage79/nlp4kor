@@ -18,7 +18,7 @@ class PytorchUtil(object):
         return os.environ.get("CUDA_VISIBLE_DEVICES", [])
 
     @classmethod
-    def init_random_seed(cls, random_seed=None, init_torch=True, init_numpy=True) -> int:
+    def init_random_seed(cls, random_seed=None, init_torch=True, init_numpy=False) -> int:
         if random_seed is None:
             random_seed = cls.random_seed
 
@@ -26,8 +26,9 @@ class PytorchUtil(object):
             np.random.seed(random_seed)
         if init_torch:
             torch.manual_seed(random_seed)
-            torch.cuda.manual_seed(random_seed)
-            torch.cuda.manual_seed_all(random_seed)
+            if torch.cuda.is_available():  # nn.Module.cuda() first
+                torch.cuda.manual_seed(random_seed)
+                torch.cuda.manual_seed_all(random_seed)
         return random_seed
 
     # noinspection PyDefaultArgument
