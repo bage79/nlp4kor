@@ -2,6 +2,7 @@ import torch
 import os
 import pandas as pd
 import numpy as np
+import time
 
 
 class PytorchUtil(object):
@@ -41,7 +42,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[:min_count]
                 if shuffle:
-                    df_part = df_part.sample(frac=1)[:]
+                    df_part = df_part.sample(frac=1, replace=False, random_state=int(time.time()))
 
                 n_test = max(1, int(len(df_part) * test_rate))
                 n_valid = max(1, int(len(df_part) * valid_rate))
@@ -71,7 +72,7 @@ class PytorchUtil(object):
             return df_train, df_valid, df_test
         else:
             if shuffle:
-                df = df.sample(frac=1)[:]
+                df = df.sample(frac=1, replace=False, random_state=int(time.time()))
 
             n_test = int(len(df) * test_rate)
             n_valid = int(len(df) * valid_rate)
