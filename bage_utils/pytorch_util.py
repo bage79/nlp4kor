@@ -1,10 +1,6 @@
 import torch
 import os
-# import torch.nn as nn
-# from torch.autograd import Variable
-# from torch.utils.data import DataLoader
-# from torchvision import datasets, transforms
-# import pandas as pd
+import pandas as pd
 import numpy as np
 
 
@@ -12,26 +8,30 @@ class PytorchUtil(object):
     random_seed = 7942
 
     @classmethod
-    def use_gpu(cls, device_no=0):
+    def use_gpu(cls, device_no=0) -> None:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
 
     @classmethod
-    def get_gpus(cls):
+    def get_gpus(cls) -> int:
         return os.environ.get("CUDA_VISIBLE_DEVICES", [])
 
     @classmethod
-    def init_random_seed(cls, random_seed=None):
+    def init_random_seed(cls, random_seed=None, init_torch=True, init_numpy=True) -> int:
         if random_seed is None:
             random_seed = cls.random_seed
 
-        np.random.seed(random_seed)
-        torch.manual_seed(random_seed)
-        torch.cuda.manual_seed_all(random_seed)
+        if init_numpy:
+            np.random.seed(random_seed)
+        if init_torch:
+            torch.manual_seed(random_seed)
+            torch.cuda.manual_seed(random_seed)
+            torch.cuda.manual_seed_all(random_seed)
+        return random_seed
 
     # noinspection PyDefaultArgument
     @classmethod
-    def split_dataframe(cls, df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True, full_test=False):
+    def split_dataframe(cls, df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True, full_test=False) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
         df_train, df_valid, df_test = None, None, None
         if len(indexes_by_label) > 0:
             sums = [i.sum() for i in indexes_by_label]
@@ -41,7 +41,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[:min_count]
                 if shuffle:
-                    df_part = df_part.sample(frac=1, random_state=cls.random_seed)
+                    df_part = df_part.sample(frac=1)[:]
 
                 n_test = max(1, int(len(df_part) * test_rate))
                 n_valid = max(1, int(len(df_part) * valid_rate))
@@ -71,7 +71,7 @@ class PytorchUtil(object):
             return df_train, df_valid, df_test
         else:
             if shuffle:
-                df = df.sample(frac=1, random_state=cls.random_seed)
+                df = df.sample(frac=1)[:]
 
             n_test = int(len(df) * test_rate)
             n_valid = int(len(df) * valid_rate)
@@ -86,7 +86,7 @@ class PytorchUtil(object):
             return df_train, df_valid, df_test
 
     @staticmethod
-    def exp_learing_rate_decay(optimizer, epoch, init_lr=0.001, lr_decay_epoch=1):
+    def exp_learing_rate_decay(optimizer, epoch, init_lr=0.001, lr_decay_epoch=1) -> torch.optim.Optimizer:
         """Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs."""
         lr = init_lr * (0.1 ** (epoch // lr_decay_epoch))
 
