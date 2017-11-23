@@ -30,8 +30,8 @@ class PytorchUtil(object):
         torch.cuda.manual_seed_all(random_seed)
 
     # noinspection PyDefaultArgument
-    @staticmethod
-    def split_dataframe(df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True):
+    @classmethod
+    def split_dataframe(cls, df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True, full_test=False):
         df_train, df_valid, df_test = None, None, None
         if len(indexes_by_label) > 0:
             sums = [i.sum() for i in indexes_by_label]
@@ -41,7 +41,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[:min_count]
                 if shuffle:
-                    df_part = df_part.sample(frac=1, random_state=7942)
+                    df_part = df_part.sample(frac=1, random_state=cls.random_seed)
 
                 n_test = max(1, int(len(df_part) * test_rate))
                 n_valid = max(1, int(len(df_part) * valid_rate))
@@ -58,14 +58,20 @@ class PytorchUtil(object):
                     df_valid = df_valid.append(df_part[n_train:n_train + n_valid])
 
                 if df_test is None:
-                    df_test = df_part[n_train + n_valid:]
+                    if full_test:
+                        df_test = df_part[:]
+                    else:
+                        df_test = df_part[n_train + n_valid:]
                 else:
-                    df_test = df_test.append(df_part[n_train + n_valid:])
+                    if full_test:
+                        df_test = df_test.append(df_part[:])
+                    else:
+                        df_test = df_test.append(df_part[n_train + n_valid:])
 
             return df_train, df_valid, df_test
         else:
             if shuffle:
-                df = df.sample(frac=1, random_state=7942)
+                df = df.sample(frac=1, random_state=cls.random_seed)
 
             n_test = int(len(df) * test_rate)
             n_valid = int(len(df) * valid_rate)
@@ -73,7 +79,10 @@ class PytorchUtil(object):
 
             df_train = df[:n_train]
             df_valid = df[n_train:n_train + n_valid]
-            df_test = df[n_train + n_valid:]
+            if full_test:
+                df_test = df[:]
+            else:
+                df_test = df[n_train + n_valid:]
             return df_train, df_valid, df_test
 
     @staticmethod
