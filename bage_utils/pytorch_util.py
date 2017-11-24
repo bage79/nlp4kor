@@ -31,9 +31,31 @@ class PytorchUtil(object):
                 torch.cuda.manual_seed_all(random_seed)
         return random_seed
 
+    @classmethod
+    def exp_learing_rate_decay(cls, optimizer, epoch, init_lr=0.001, lr_decay_epoch=1) -> torch.optim.Optimizer:
+        """Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs."""
+        lr = init_lr * (0.1 ** (epoch // lr_decay_epoch))
+
+        if epoch % lr_decay_epoch == 0:
+            # print('LR is set to {}'.format(lr))
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+
+        return optimizer
+
     # noinspection PyDefaultArgument
     @classmethod
-    def split_dataframe(cls, df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True, full_test=False) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    def random_datasets(cls, df, indexes_by_label: list = [], test_rate=0.1, valid_rate=0.1, shuffle=True, full_test=False) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+        """
+
+        :param df: pandas.DataFrame
+        :param indexes_by_label: [index_of_negative, index_of_positive]
+        :param test_rate: test data rate
+        :param valid_rate: valid data rate
+        :param shuffle: shuffle in each label
+        :param full_test: test data == full data (전체 데이터를 테스트 데이터로 쓸지 여부
+        :return:
+        """
         df_train, df_valid, df_test = None, None, None
         if len(indexes_by_label) > 0:
             sums = [i.sum() for i in indexes_by_label]
@@ -87,14 +109,82 @@ class PytorchUtil(object):
                 df_test = df[n_train + n_valid:]
             return df_train, df_valid, df_test
 
-    @staticmethod
-    def exp_learing_rate_decay(optimizer, epoch, init_lr=0.001, lr_decay_epoch=1) -> torch.optim.Optimizer:
-        """Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs."""
-        lr = init_lr * (0.1 ** (epoch // lr_decay_epoch))
+    # noinspection PyDefaultArgument
+    @classmethod
+    def cross_valid_datasets(cls, df, indexes_by_label: list = [], n_cross=10, pick_no=None) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+        """
 
-        if epoch % lr_decay_epoch == 0:
-            # print('LR is set to {}'.format(lr))
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr
+        :param df: pandas.DataFrame
+        :param indexes_by_label: [negative_index, positive_index]
+        :param n_cross: number of buckets
+        :param pick_no: nth data from splitted
+        :return:
+        """
+        if pick_no is None:
+            pick_no = int(np.random.choice(n_cross, 1)[0])
 
-        return optimizer
+        pick_no = 8
+
+        df_train, df_valid, df_test = None, None, None
+        if len(indexes_by_label) > 0:
+            sums = [i.sum() for i in indexes_by_label]
+            min_count = min(sums)
+            # print('min: %s in %s' % (min_count, sums))
+            for index in indexes_by_label:  # same distribution by label
+                df_part = df[index]
+                df_part = df_part[-min_count:]
+
+                _df_train, _df_valid, _df_test = cls.cross_valid_datasets(df_part, n_cross=n_cross, pick_no=pick_no)
+
+                if df_train is None:
+                    df_train = _df_train
+                else:
+                    df_train = df_train.append(_df_train)
+
+                if df_valid is None:
+                    df_valid = _df_valid
+                else:
+                    df_valid = df_valid.append(_df_valid)
+
+                if df_test is None:
+                    df_test = _df_test
+                else:
+                    df_test = df_test.append(_df_test)
+
+            return df_train, df_valid, df_test
+        else:
+            if len(df) < 3:
+                return None, None, None  # can't create dataaset
+            elif 3 <= len(df) < n_cross:
+                n_cross = 3
+
+            data_in_bucket = int(len(df) / n_cross) + 1  # with dummy
+            n_cross = int(len(df) / data_in_bucket)
+
+            test_no = pick_no % n_cross
+            valid_no = (pick_no + 1) % n_cross
+            for i in range(n_cross):
+                df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
+                if i == test_no:
+                    df_test = df_part
+                elif i == valid_no:
+                    df_valid = df_part
+                else:
+                    if df_train is None:
+                        df_train = df_part
+                    else:
+                        df_train = df_train.append(df_part)
+        return df_train, df_valid, df_test
+
+
+if __name__ == '__main__':
+    df = pd.DataFrame(data=np.arange(22), columns=['a'])
+    negative_index = df['a'] <= 10
+    positive_index = df['a'] > 10
+    # print(negative_index)
+    n_cross = 10
+    for pick_no in range(n_cross):
+        df_train, df_valid, df_test = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, pick_no=pick_no)
+        print('df_test:', df_test)
+        # print('df_train:', df_train)
+        # break
