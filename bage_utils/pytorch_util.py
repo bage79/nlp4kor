@@ -111,19 +111,19 @@ class PytorchUtil(object):
 
     # noinspection PyDefaultArgument
     @classmethod
-    def cross_valid_datasets(cls, df, indexes_by_label: list = [], n_cross=10, pick_no=None) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    def cross_valid_datasets(cls, df, indexes_by_label: list = [], n_cross=10, nth_data=None) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
         """
 
         :param df: pandas.DataFrame
         :param indexes_by_label: [negative_index, positive_index]
         :param n_cross: number of buckets
-        :param pick_no: nth data from splitted
+        :param nth_data: nth data from splitted
         :return:
         """
-        if pick_no is None:
-            pick_no = int(np.random.choice(n_cross, 1)[0])
+        if nth_data is None:
+            nth_data = int(np.random.choice(n_cross, 1)[0])
 
-        pick_no = 8
+        nth_data = 8
 
         df_train, df_valid, df_test = None, None, None
         if len(indexes_by_label) > 0:
@@ -134,7 +134,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[-min_count:]
 
-                _df_train, _df_valid, _df_test, _n_cross = cls.cross_valid_datasets(df_part, n_cross=n_cross, pick_no=pick_no)
+                _df_train, _df_valid, _df_test, _nth_data = cls.cross_valid_datasets(df_part, n_cross=n_cross, nth_data=nth_data)
 
                 if df_train is None:
                     df_train = _df_train
@@ -151,7 +151,7 @@ class PytorchUtil(object):
                 else:
                     df_test = df_test.append(_df_test)
 
-            return df_train, df_valid, df_test, _n_cross
+            return df_train, df_valid, df_test, _nth_data
         else:
             if len(df) < 3:
                 return None, None, None  # can't create dataaset
@@ -159,11 +159,11 @@ class PytorchUtil(object):
                 n_cross = 3
 
             data_in_bucket = int(len(df) / n_cross) + 1  # with dummy
-            _n_cross = int(len(df) / data_in_bucket)
+            _nth_data = int(len(df) / data_in_bucket)
 
-            test_no = pick_no % _n_cross
-            valid_no = (pick_no + 1) % _n_cross
-            for i in range(_n_cross):
+            test_no = nth_data % _nth_data
+            valid_no = (nth_data + 1) % _nth_data
+            for i in range(_nth_data):
                 df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
                 if i == test_no:
                     df_test = df_part
@@ -174,7 +174,7 @@ class PytorchUtil(object):
                         df_train = df_part
                     else:
                         df_train = df_train.append(df_part)
-        return df_train, df_valid, df_test, _n_cross
+        return df_train, df_valid, df_test, _nth_data
 
 
 if __name__ == '__main__':
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     # print(negative_index)
     n_cross = 10
     for pick_no in range(n_cross):
-        df_train, df_valid, df_test = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, pick_no=pick_no)
+        df_train, df_valid, df_test = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
         print('df_test:', df_test)
         # print('df_train:', df_train)
         # break
