@@ -134,7 +134,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[-min_count:]
 
-                _df_train, _df_valid, _df_test = cls.cross_valid_datasets(df_part, n_cross=n_cross, pick_no=pick_no)
+                _df_train, _df_valid, _df_test, _n_cross = cls.cross_valid_datasets(df_part, n_cross=n_cross, pick_no=pick_no)
 
                 if df_train is None:
                     df_train = _df_train
@@ -151,7 +151,7 @@ class PytorchUtil(object):
                 else:
                     df_test = df_test.append(_df_test)
 
-            return df_train, df_valid, df_test
+            return df_train, df_valid, df_test, _n_cross
         else:
             if len(df) < 3:
                 return None, None, None  # can't create dataaset
@@ -159,11 +159,11 @@ class PytorchUtil(object):
                 n_cross = 3
 
             data_in_bucket = int(len(df) / n_cross) + 1  # with dummy
-            n_cross = int(len(df) / data_in_bucket)
+            _n_cross = int(len(df) / data_in_bucket)
 
-            test_no = pick_no % n_cross
-            valid_no = (pick_no + 1) % n_cross
-            for i in range(n_cross):
+            test_no = pick_no % _n_cross
+            valid_no = (pick_no + 1) % _n_cross
+            for i in range(_n_cross):
                 df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
                 if i == test_no:
                     df_test = df_part
@@ -174,7 +174,7 @@ class PytorchUtil(object):
                         df_train = df_part
                     else:
                         df_train = df_train.append(df_part)
-        return df_train, df_valid, df_test
+        return df_train, df_valid, df_test, _n_cross
 
 
 if __name__ == '__main__':
