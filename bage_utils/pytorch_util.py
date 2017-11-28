@@ -123,8 +123,6 @@ class PytorchUtil(object):
         if nth_data is None:
             nth_data = int(np.random.choice(n_cross, 1)[0])
 
-        nth_data = 8
-
         df_train, df_valid, df_test = None, None, None
         if len(indexes_by_label) > 0:
             sums = [i.sum() for i in indexes_by_label]
