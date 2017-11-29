@@ -132,7 +132,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[-min_count:]
 
-                _df_train, _df_valid, _df_test, _nth_data = cls.cross_valid_datasets(df_part, n_cross=n_cross, nth_data=nth_data)
+                _df_train, _df_valid, _df_test, _n_cross = cls.cross_valid_datasets(df_part, n_cross=n_cross, nth_data=nth_data)
 
                 if df_train is None:
                     df_train = _df_train
@@ -149,19 +149,21 @@ class PytorchUtil(object):
                 else:
                     df_test = df_test.append(_df_test)
 
-            return df_train, df_valid, df_test, _nth_data
+            return df_train, df_valid, df_test, _n_cross
         else:
             if len(df) < 3:
                 return None, None, None  # can't create dataaset
             elif 3 <= len(df) < n_cross:
                 n_cross = 3
 
-            data_in_bucket = int(len(df) / n_cross) + 1  # with dummy
-            _nth_data = int(len(df) / data_in_bucket)
+            data_in_bucket = int(len(df) / n_cross)  # with dummy
+            if len(df) % n_cross > 0:
+                data_in_bucket += 1
+            _n_cross = int(len(df) / data_in_bucket)
 
-            test_no = nth_data % _nth_data
-            valid_no = (nth_data + 1) % _nth_data
-            for i in range(_nth_data):
+            test_no = nth_data % _n_cross
+            valid_no = (nth_data + 1) % _n_cross
+            for i in range(_n_cross):
                 df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
                 if i == test_no:
                     df_test = df_part
@@ -172,7 +174,7 @@ class PytorchUtil(object):
                         df_train = df_part
                     else:
                         df_train = df_train.append(df_part)
-        return df_train, df_valid, df_test, _nth_data
+        return df_train, df_valid, df_test, _n_cross
 
 
 if __name__ == '__main__':
@@ -181,8 +183,11 @@ if __name__ == '__main__':
     positive_index = df['a'] > 10
     # print(negative_index)
     n_cross = 10
-    for pick_no in range(n_cross):
-        df_train, df_valid, df_test = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
-        print('df_test:', df_test)
-        # print('df_train:', df_train)
-        # break
+    pick_no = 0
+
+    for i in range(3):
+        for pick_no in range(n_cross):
+            df_train, df_valid, df_test, nth_data = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
+            if pick_no == 0:
+                print('nth_data:', nth_data)
+                print(df_train)
