@@ -34,6 +34,10 @@ class WatchUtil(object):
             return False
 
     def start(self, name=DEFAULT_WATCH_NAME) -> StopWatch:
+        try:
+            self.__get(name).stop()
+        except:
+            pass
         self.__get(name).start()
         self.__cnt[name] += 1
         return self.__get(name)
