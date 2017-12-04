@@ -161,6 +161,9 @@ class DateUtil(object):
             return True
         except:
             return False
+    @staticmethod
+    def date_to_datetime(date):
+        return datetime.datetime(*date.timetuple()[:-4])
 
     @staticmethod
     def string_to_datetime(date_str, time_format='%Y-%m-%d %H:%M:%S'):
