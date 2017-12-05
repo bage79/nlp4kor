@@ -126,9 +126,6 @@ class PytorchUtil(object):
         :param full_test: return all data or one bucket
         :return:
         """
-        if nth_data is None:
-            nth_data = int(np.random.choice(max_cross_validation, 1)[0])
-
         df_train, df_valid, df_test, n_cross = None, None, None, max_cross_validation
         if indexes_by_label is not None and len(indexes_by_label) > 0:
             sums = [i.sum() for i in indexes_by_label]
@@ -169,6 +166,10 @@ class PytorchUtil(object):
             print('max_cross_validation:', max_cross_validation)
             print('data_in_bucket:', data_in_bucket)
             print('n_cross:', n_cross)
+
+            if nth_data is None:
+                nth_data = 0
+                # nth_data = int(np.random.choice(max_cross_validation, 1)[0])
 
             df = df[-n_cross * data_in_bucket:]
             test_no = nth_data % n_cross
