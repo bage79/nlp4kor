@@ -116,13 +116,14 @@ class PytorchUtil(object):
 
     # noinspection PyDefaultArgument
     @classmethod
-    def cross_valid_datasets(cls, df, max_cross_validation=10, nth_data=None, indexes_by_label: list = []) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, int):
+    def cross_valid_datasets(cls, df, max_cross_validation=10, nth_data=None, indexes_by_label: list = [], full_test: bool = False) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, int):
         """
 
         :param df: pandas.DataFrame
         :param indexes_by_label: [negative_index, positive_index]
         :param max_cross_validation: number of buckets
-        :param nth_data: nth data from splitted
+        :param nth_data: nth bucket data, bucket[nth]=test data, bucket[nth+1]=valid data
+        :param full_test: return all data or one bucket
         :return:
         """
         if nth_data is None:
@@ -137,7 +138,7 @@ class PytorchUtil(object):
                 df_part = df[index]
                 df_part = df_part[-min_count:]
 
-                _df_train, _df_valid, _df_test, n_cross = cls.cross_valid_datasets(df_part, max_cross_validation=max_cross_validation, nth_data=nth_data)
+                _df_train, _df_valid, _df_test, n_cross = cls.cross_valid_datasets(df_part, max_cross_validation=max_cross_validation, nth_data=nth_data, full_test=full_test)
 
                 if df_train is None:
                     df_train = _df_train
@@ -164,12 +165,21 @@ class PytorchUtil(object):
             n_cross = cls.cross_valid_buckets(len(df), max_cross_validation)
             data_in_bucket = int(len(df) / n_cross)
 
+            print('len(df):', len(df))
+            print('max_cross_validation:', max_cross_validation)
+            print('data_in_bucket:', data_in_bucket)
+            print('n_cross:', n_cross)
+
+            df = df[-n_cross * data_in_bucket:]
             test_no = nth_data % n_cross
             valid_no = (nth_data + 1) % n_cross
             for i in range(n_cross):
                 df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
                 if i == test_no:
-                    df_test = df_part
+                    if full_test:
+                        df_test = df[:]
+                    else:
+                        df_test = df_part
                 elif i == valid_no:
                     df_valid = df_part
                 else:
@@ -189,10 +199,17 @@ if __name__ == '__main__':
     max_cross_validation = 10
     pick_no = 0
 
+    # n_cross = PytorchUtil.cross_valid_buckets(len(df), max_cross_validation=max_cross_validation)
+    # print('n_cross:', n_cross)
+
     # for i in range(3):
     for pick_no in range(max_cross_validation):
         # df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
-        df_train, df_valid, df_test, n_cross = PytorchUtil.cross_valid_datasets(df, max_cross_validation=max_cross_validation, nth_data=pick_no)
+        df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, max_cross_validation=max_cross_validation, nth_data=pick_no, full_test=True)
         print()
-        print('%s -> %s' % (max_cross_validation, n_cross))
-        print(df_test)
+        print('%s -> %s' % (max_cross_validation, _n_cross))
+        print('df_test:', df_test)
+        print('df_valid:', df_valid)
+        print('df_train:', df_train)
+        if pick_no >= _n_cross - 1:
+            break
