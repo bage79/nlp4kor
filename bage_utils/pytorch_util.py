@@ -162,10 +162,10 @@ class PytorchUtil(object):
             n_cross = cls.cross_valid_buckets(len(df), max_cross_validation)
             data_in_bucket = int(len(df) / n_cross)
 
-            print('len(df):', len(df))
-            print('max_cross_validation:', max_cross_validation)
-            print('data_in_bucket:', data_in_bucket)
-            print('n_cross:', n_cross)
+            # print('len(df):', len(df))
+            # print('max_cross_validation:', max_cross_validation)
+            # print('data_in_bucket:', data_in_bucket)
+            # print('n_cross:', n_cross)
 
             if nth_data is None:
                 nth_data = 0
