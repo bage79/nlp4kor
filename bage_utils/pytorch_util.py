@@ -221,7 +221,7 @@ class PytorchUtil(object):
     # noinspection PyDefaultArgument
     @classmethod
     def random_layers(cls, x_dims=3, y_dims=1,
-                      n_layers=[1, 2, 3, 4], p_layers_inverse=True,
+                      n_layers=[1, 2, 3, 4], n_layers_prob_inverse=True,
                       n_hiddens=[10, 50, 100, 1000], n_hiddens_descending=True,
                       max_dropout_layers=0, p_dropouts=[0.1, 0.5], dropout_low_layers=True,
                       max_activation_layers=1, activations=[torch.nn.ReLU, torch.nn.ELU, torch.nn.Tanh, torch.nn.Sigmoid],
@@ -230,7 +230,7 @@ class PytorchUtil(object):
             layers = []
             first_dropout_layer = 1  # exclude data layer(=0)
             first_activation_layer = 1  # exclude data layer(=0)
-            if p_layers_inverse:
+            if n_layers_prob_inverse:
                 p = np.exp([1 / n for n in n_layers])
                 p /= p.sum()
                 n_layer = np.random.choice(n_layers, 1, p=p)[0]  # 레이어 수
@@ -280,13 +280,14 @@ class PytorchUtil(object):
 
 if __name__ == '__main__':
     layers_list = set()
-    for _ in range(10):
+    for _ in range(20):
         while True:
             layers = PytorchUtil.random_layers(x_dims=3, y_dims=1)
             if str(layers) not in layers_list:
                 layers_list.add(str(layers))
+                print(len(layers) - 1, str(layers))
                 break
-            print('retry...')
+            # print('retry...')
     print(len(layers_list))
     # for n in [2, 3, 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 31, 41, 51, 61, 71, 81, 100, 101, 111, ]:
     #     print(n, PytorchUtil.cross_valid_buckets(n))
