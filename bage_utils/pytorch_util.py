@@ -279,9 +279,15 @@ class PytorchUtil(object):
 
 
 if __name__ == '__main__':
+    layers_list = set()
     for _ in range(10):
-        layers = PytorchUtil.random_layers(x_dims=3, y_dims=1)
-        print(len(layers), layers)
+        while True:
+            layers = PytorchUtil.random_layers(x_dims=3, y_dims=1)
+            if str(layers) not in layers_list:
+                layers_list.add(str(layers))
+                break
+            print('retry...')
+    print(len(layers_list))
     # for n in [2, 3, 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 31, 41, 51, 61, 71, 81, 100, 101, 111, ]:
     #     print(n, PytorchUtil.cross_valid_buckets(n))
     # df = pd.DataFrame(data=np.arange(11), columns=['a'])
