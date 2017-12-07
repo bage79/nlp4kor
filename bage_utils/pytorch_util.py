@@ -1,3 +1,5 @@
+import traceback
+
 import torch
 import os
 import pandas as pd
@@ -18,6 +20,10 @@ class PytorchUtil(object):
         return os.environ.get("CUDA_VISIBLE_DEVICES", [])
 
     @classmethod
+    def create_random_seed(cls) -> int:
+        return int(time.time() * 10e7) % 2 ** 32
+    
+    @classmethod
     def init_random_seed(cls, random_seed=None, init_torch=True, init_numpy=True) -> int:
         if random_seed is None:
             random_seed = cls.random_seed
@@ -26,7 +32,7 @@ class PytorchUtil(object):
             np.random.seed(random_seed)
         if init_torch:
             torch.manual_seed(random_seed)
-            if torch.cuda.is_available():  # nn.Module.cuda() first
+            if torch.cuda.is_available():  # torch.nn.Module.cuda() first
                 torch.cuda.manual_seed(random_seed)
                 torch.cuda.manual_seed_all(random_seed)
         return random_seed
@@ -110,7 +116,16 @@ class PytorchUtil(object):
             return df_train, df_valid, df_test
 
     @classmethod
-    def cross_valid_buckets(cls, length, max_cross_validation):
+    def cross_valid_buckets(cls, length, max_cross_validation=10):
+        """
+        minimize the rest (which will be dropped).
+
+        if length >=10 and max_cross_validation == 10, buckets(return value) will be 5 ~ 10
+
+        :param length: total data length
+        :param max_cross_validation: initial bucket size
+        :return:
+        """
         data_in_bucket = int(length / max_cross_validation) if length % max_cross_validation == 0 else int(length / max_cross_validation) + 1
         return int(length / data_in_bucket)
 
@@ -203,27 +218,82 @@ class PytorchUtil(object):
                         df_train = df_train.append(df_part)
         return df_train, df_valid, df_test, n_cross
 
+    # noinspection PyDefaultArgument
+    @classmethod
+    def random_layers(cls, x_dims=3, y_dims=1,
+                      n_hiddens=[10, 50, 100, 1000], n_layers=[1, 2, 3, 4], hiddens_descending=True,
+                      max_dropout_layers=0, p_dropouts=[0.1, 0.5], dropout_low_layers=True,
+                      max_activation_layers=1, activations=[torch.nn.ReLU, torch.nn.ELU, torch.nn.Tanh, torch.nn.Sigmoid],
+                      batch_normal=False):
+        try:
+            layers = []
+            first_dropout_layer = 1  # exclude data layer(=0)
+            first_activation_layer = 1  # exclude data layer(=0)
+            n_layer = np.random.choice(n_layers, 1)[0]  # 레이어 수
+
+            hidden_in_layers = np.random.choice(n_hiddens, n_layer, replace=True).tolist()
+            if hiddens_descending:
+                hidden_in_layers = sorted(hidden_in_layers, reverse=True)
+            hidden_in_layers.insert(0, x_dims)
+            hidden_in_layers.append(y_dims)
+
+            hidden_in_layers_to = hidden_in_layers[1:]
+            hidden_in_layers_from = hidden_in_layers[:-1]
+            for hidden_from, hidden_to in zip(hidden_in_layers_from, hidden_in_layers_to):
+                layers.append(torch.nn.Linear(hidden_from, hidden_to))
+
+            if max_dropout_layers > 0 and len(layers) - 1 > 0:
+                n_dropout = min(len(layers) - 1, np.random.choice(max_dropout_layers + 1, 1)[0])
+                if dropout_low_layers:
+                    dropout_layer = np.random.choice([0, 1], n_dropout, replace=False).tolist()
+                else:
+                    dropout_layer = np.random.choice([i for i in range(first_dropout_layer, len(layers))], n_dropout, replace=False).tolist()
+                dropout_layer = sorted(dropout_layer, reverse=True)
+                for l in dropout_layer:
+                    p = np.random.choice(p_dropouts, 1)[0]
+                    layers.insert(l, torch.nn.Dropout(p=p))
+
+            if max_activation_layers > 0 and len(layers) - 1 > 0:
+                n_activation = min(len(layers) - 1, np.random.choice(max_activation_layers + 1, 1)[0])
+                activation_layer = np.random.choice([i for i in range(first_activation_layer, len(layers))], n_activation, replace=False).tolist()
+                activation_layer = sorted(activation_layer, reverse=True)
+                for l in activation_layer:
+                    a = np.random.choice(activations, 1)[0]
+                    layers.insert(l, a())
+
+            if batch_normal:
+                n_batch_normal = np.random.choice(2, 1)[0]  # 0 or 1
+                if n_batch_normal == 1:
+                    layers.insert(0, torch.nn.BatchNorm1d(x_dims))
+
+            return layers
+        except:
+            traceback.print_exc()
+            return None
+
 
 if __name__ == '__main__':
-    df = pd.DataFrame(data=np.arange(11), columns=['a'])
-    print(len(df), df)
-    negative_index = df['a'] <= 10
-    positive_index = df['a'] > 10
-    # print(negative_index)
-    max_cross_validation = 10
-    pick_no = 0
-
-    # n_cross = PytorchUtil.cross_valid_buckets(len(df), max_cross_validation=max_cross_validation)
-    # print('n_cross:', n_cross)
-
-    # for i in range(3):
-    for pick_no in range(max_cross_validation):
-        # df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
-        df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, max_cross=max_cross_validation, nth_data=pick_no, full_test=True)
-        print()
-        print('%s -> %s' % (max_cross_validation, _n_cross))
-        print('df_test:', df_test)
-        print('df_valid:', df_valid)
-        print('df_train:', df_train)
-        if pick_no >= _n_cross - 1:
-            break
+    for n in [2, 3, 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 31, 41, 51, 61, 71, 81, 100, 101, 111, ]:
+        print(n, PytorchUtil.cross_valid_buckets(n))
+    # df = pd.DataFrame(data=np.arange(11), columns=['a'])
+    # print(len(df), df)
+    # negative_index = df['a'] <= 10
+    # positive_index = df['a'] > 10
+    # # print(negative_index)
+    # max_cross_validation = 10
+    # pick_no = 0
+    #
+    # # n_cross = PytorchUtil.cross_valid_buckets(len(df), max_cross_validation=max_cross_validation)
+    # # print('n_cross:', n_cross)
+    #
+    # # for i in range(3):
+    # for pick_no in range(max_cross_validation):
+    #     # df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, indexes_by_label=[negative_index, positive_index], n_cross=n_cross, nth_data=pick_no)
+    #     df_train, df_valid, df_test, _n_cross = PytorchUtil.cross_valid_datasets(df, max_cross=max_cross_validation, nth_data=pick_no, full_test=True)
+    #     print()
+    #     print('%s -> %s' % (max_cross_validation, _n_cross))
+    #     print('df_test:', df_test)
+    #     print('df_valid:', df_valid)
+    #     print('df_train:', df_train)
+    #     if pick_no >= _n_cross - 1:
+    #         break
