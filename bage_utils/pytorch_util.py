@@ -221,7 +221,7 @@ class PytorchUtil(object):
     # noinspection PyDefaultArgument
     @classmethod
     def random_layers(cls, x_dims=3, y_dims=1,
-                      n_layers=[1, 2, 3, 4], n_layers_prob_inverse=True,
+                      n_layers=[1, 2, 3], n_layers_prob_inverse=True,
                       n_hiddens=[10, 50, 100, 1000], n_hiddens_descending=True,
                       max_dropout_layers=0, p_dropouts=[0.1, 0.5], dropout_low_layers=True,
                       max_activation_layers=1, activations=[torch.nn.ReLU, torch.nn.ELU, torch.nn.Tanh, torch.nn.Sigmoid],
@@ -268,8 +268,7 @@ class PytorchUtil(object):
                     layers.insert(l, a())
 
             if batch_normal:
-                n_batch_normal = np.random.choice(2, 1)[0]  # 0 or 1
-                if n_batch_normal == 1:
+                if np.random.choice(2, 1)[0] == 1:
                     layers.insert(0, torch.nn.BatchNorm1d(x_dims))
 
             return layers

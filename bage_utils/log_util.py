@@ -83,6 +83,7 @@ class LogUtil(object):
             logging.getLogger("py2neo.cypher").setLevel(logging.ERROR)
             logging.getLogger("httpstream").setLevel(logging.ERROR)
             logging.getLogger("sqlalchemy").setLevel(logging.ERROR)
+            logging.getLogger("paramiko").setLevel(logging.INFO)
             # print('craete logger (%s, id=%s, log_path=%s), level=%s' % (cls.__log, id(cls.__log), log_path, level))
 
             return cls.__log
