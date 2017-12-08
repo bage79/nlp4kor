@@ -70,7 +70,7 @@ class MySQLUtil(object):
             return None
 
     @classmethod
-    def columns2numpy_types(cls, mysql, table_name):
+    def columns2numpy_types(cls, mysql, table_name) -> (list, list):
         columns, types = [], []
         for row in mysql.select('SHOW FIELDS FROM `%s`' % table_name):
             columns.append(row['Field'])
