@@ -21,7 +21,7 @@ class ShellUtil(object):
     @staticmethod
     def call(cmd):
         try:
-            p = subprocess.Popen(cmd.split(' ', 1), stdout=subprocess.PIPE)
+            p = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
             out, _err = p.communicate()
             lines = []
             for line in out.splitlines():
