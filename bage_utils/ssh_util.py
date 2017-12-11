@@ -12,7 +12,7 @@ class SshUtil(object):
     - See also `bage_util.SellUtil`
     """
 
-    def __init__(self, username, password, hostname, port=22, log=None):
+    def __init__(self, hostname, username=None, password=None, port=22, log=None):
         self.client = None
         self.log = log
         try:
@@ -55,5 +55,7 @@ class SshUtil(object):
 
 
 if __name__ == '__main__':
-    ssh = SshUtil('root', 'xxxx', 'server1')
+    import os
+
+    ssh = SshUtil('gpu4')
     ssh.execute_n_print('ls -l')
