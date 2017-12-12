@@ -48,7 +48,7 @@ class ExcelWriteSheet(object):
     def __init__(self, writer, sheet, style, log=logging.getLogger()):
         self.sheet = sheet
         self.style = style
-        self.writer = writer
+        self.writer: ExcelWriter = writer
         self.log = log
 
     def __repr__(self):
@@ -75,7 +75,7 @@ class ExcelReadSheet(object):  # aaa
 
     def __init__(self, reader, sheet, log=logging.getLogger()):
         self.sheet = sheet
-        self.reader = reader
+        self.reader: ExcelReader = reader
         self.log = log
 
     def __repr__(self):
@@ -131,7 +131,7 @@ class ExcelWriter(object):
             #            self.__add_sheet('Sheet1')
             #            self.save()
 
-    def get_sheet(self, sheet_name):
+    def get_sheet(self, sheet_name) -> ExcelWriteSheet:
         sheet_name = ExcelUtil.normalize_sheet_name(sheet_name)
         #        print('sheet_name:', sheet_name
         try:
@@ -164,7 +164,7 @@ class ExcelReader(object):
             raise Exception('Available excel file types are .xls and xlsx.')
         self.book = xlrd.open_workbook(self.filepath, formatting_info=True)
 
-    def get_sheet(self, sheet_name):
+    def get_sheet(self, sheet_name) -> ExcelReadSheet:
         sheet_name = ExcelUtil.normalize_sheet_name(sheet_name)
         sheet = self.book.sheet_by_name(sheet_name)
         return ExcelReadSheet(self, sheet)

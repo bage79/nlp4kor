@@ -21,7 +21,7 @@ class MongodbUtil(object):
         self.db_name = db_name
         self.collection_name = collection_name
         self.auto_connect = auto_connect
-        self.collection = MongoClient(mongo_url, socketKeepAlive=True, connect=auto_connect)[db_name][collection_name]
+        self.collection: MongoClient = MongoClient(mongo_url, socketKeepAlive=True, connect=auto_connect)[db_name][collection_name]
 
     def __repr__(self):
         return '%s (db_name:%s, collection_name:%s, auto_connect:%s)' % (

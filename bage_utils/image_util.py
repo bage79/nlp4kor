@@ -12,7 +12,7 @@ class ImageUtil(object):
     def __init__(self, img_path):
         self.img_path = img_path
         self.img_format = os.path.splitext(self.img_path)[1]
-        self.img = Image.open(img_path)
+        self.img: Image.Image = Image.open(img_path)
 
     def size(self):
         return self.img.size
