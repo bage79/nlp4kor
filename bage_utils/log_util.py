@@ -36,7 +36,7 @@ class LogUtil(object):
         :return: logging object
         """
         with lock:
-            if cls.__log and cls.__log.hasHandlers() and cls.__log.level >= level:
+            if cls.__log and cls.__log.hasHandlers() and cls.__log.level == level:
                 sys.stderr.write('reuse old logger (id:%s, log_path:%s), level:%s\n' % (
                     id(cls.__log), cls.source_filepath, cls.__log.level))
                 return cls.__log
