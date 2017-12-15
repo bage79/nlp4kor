@@ -26,12 +26,12 @@ class PandasUtil(object):
         if dtype is None:
             dtype = {}
 
-        if index_label:
-            df.to_sql(con=self.mysql_engine, name=table_name, if_exists='append', chunksize=10000, dtype=dtype,
-                      index=True, index_label=index_label)
-        else:
+        if index_label is None or len(index_label) == 0:
             df.to_sql(con=self.mysql_engine, name=table_name, if_exists='append', chunksize=10000, dtype=dtype,
                       index=False)
+        else:
+            df.to_sql(con=self.mysql_engine, name=table_name, if_exists='append', chunksize=10000, dtype=dtype,
+                      index=True, index_label=index_label)
 
     @staticmethod
     def merge_all(df_list: list) -> pd.DataFrame:
