@@ -26,7 +26,7 @@
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/DAE_for_spelling_error_correction.ipynb
 
 ### 4. DL for NLP: A to Z - 2017.07.15
-- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/DL_for_NLP_A_to_Z.pdf
+- https://github.com/bage79/nlp4kor/blob/master/ipynb/DL_for_NLP_A_to_Z.pdf
 
 ### 5. Real Tensorflow Coding - 2017.07.29
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/real_tensorflow_coding.ipynb
@@ -35,4 +35,7 @@
 # Season #2 2017.10 ~ 2017.12 (embedding)
 ### 6. 수학 함수 학습 & hyper-parameters 최적화 - 2017.10.08
 - https://github.com/bage79/nlp4kor/blob/master/nlp4kor/skeletons/learn_math_functions_demo.py
+
+### 7. 왕초보를 위한 RNN - 2017.12.24
+- http://github.com/bage79/nlp4kor/blob/master/ipynb/RNN_for_beginners.pdf
 
