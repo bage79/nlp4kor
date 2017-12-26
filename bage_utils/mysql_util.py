@@ -1,5 +1,4 @@
 import os
-import time
 import traceback
 import numpy as np
 import pymysql
@@ -89,6 +88,7 @@ class MySQLUtil(object):
                 self.execute(full_query)
         else:
             self.queries.append(query)
+
             # print(len(self.queries))
             if len(self.queries) >= bulk_size:
                 full_query = ';'.join(self.queries)
@@ -101,11 +101,10 @@ class MySQLUtil(object):
             self.connect()
         try:
             self.cursor.execute(query)
-        except pymysql.OperationalError:
+        except pymysql.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
         except Exception as e:
-            print('에러:', e)
             raise e
 
     def select_one(self, query):
@@ -114,7 +113,7 @@ class MySQLUtil(object):
         try:
             self.cursor.execute(query)
             return self.cursor.fetchone()
-        except pymysql.OperationalError:
+        except pymysql.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
             return self.cursor.fetchone()
@@ -131,7 +130,7 @@ class MySQLUtil(object):
                 if not row:
                     break
                 yield row
-        except pymysql.OperationalError:
+        except pymysql.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
             while True:
@@ -144,32 +143,18 @@ class MySQLUtil(object):
 
 
 if __name__ == '__main__':
-    # noinspection PyShadowingNames
     __MYSQL = {
-        'host': '1.2.3.4',
+        'host': '192.168.0.12',
         'user': 'root',
         'passwd': os.getenv('MYSQL_PASSWD'),
         'db': 'test',
         'port': 3306,
         'charset': 'utf8'
     }
-
-    # field = ''' \\ ' " '''
-    # print(field)
-    # print(MySQLUtil.addslashes(field))
-
-    start = time.time()
-    # db = MySQLUtil(host='1.2.3.4', user='user', passwd='passwd', db='db_name', port=3306, charset='utf8', )
+    print(__MYSQL)
     try:
-        # input_collection = MySQLUtil(host='localhost', user='root', passwd='user_passwd', db='wikipedia_korean', port=3306, charset='utf8', auto_connect=False)
-        input_collection = MySQLUtil(**__MYSQL)
-        # noinspection SqlDialectInspection
-        for row in input_collection.select('SELECT prefix_url FROM news_doc_rule LIMIT 10'):
+        mysql = MySQLUtil(**__MYSQL)
+        for row in mysql.select('SELECT * FROM test_table'):
             print(row)
     except:
         traceback.print_exc()
-    print('OK')
-    print(time.time() - start)
-    # for row in db.execute("select pncode, region from region_pncode order by pncode"):
-    #     pn = str(row['pncode'])
-    # db.execute("""insert into room(room_id, name, last_message_id) values(%s, %s, %s)""", room_id, name, last_message_id)
