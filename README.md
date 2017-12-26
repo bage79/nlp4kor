@@ -36,3 +36,6 @@
 ### 6. 수학 함수 학습 & hyper-parameters 최적화 - 2017.10.08
 - https://github.com/bage79/nlp4kor/blob/master/nlp4kor/skeletons/learn_math_functions_demo.py
 
+### 7. 왕초보를 위한 RNN - 2017.12.24
+- http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/RNN_for_beginners.pdf
+
