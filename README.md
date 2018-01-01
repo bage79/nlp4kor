@@ -42,5 +42,5 @@
 ### 8. 왕초보를 위한 CNN - 2017.12.27
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/CNN_for_beginners.pdf
 
-### 9. 왕초보를 위한 CNN - 2018.01.02
+### 9. 왕초보를 위한 NN - 2018.01.02
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/NN_for_beginners.pdf
