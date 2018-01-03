@@ -143,8 +143,8 @@ class PytorchUtil(object):
         :param change_cross: change max_cross for fitting to data size
         :return:
         """
-        if nth_data is None:
-            nth_data = 0
+        if nth_data is None or nth_data < 0 or nth_data > max_cross - 1:
+            nth_data = max_cross - 1  # default: last bucket
 
         df_train, df_valid, df_test, n_cross = None, None, None, max_cross
         if indexes_by_label is not None and len(indexes_by_label) > 0:
@@ -188,20 +188,21 @@ class PytorchUtil(object):
                 n_cross = cls.cross_valid_buckets(len(df), max_cross)
             else:
                 n_cross = max_cross
+
             data_in_bucket = int(len(df) / n_cross)
+            df = df[-n_cross * data_in_bucket:]
 
             # print('len(df):', len(df))
             # print('n_cross:', n_cross)
             # print('data_in_bucket:', data_in_bucket)
             # print('n_cross:', n_cross)
 
-            if nth_data is None:
-                nth_data = 0
+            if nth_data is None or nth_data < 0 or nth_data > n_cross - 1:
                 # nth_data = int(np.random.choice(n_cross, 1, replace=False)[0])
+                nth_data = n_cross - 1  # default: last bucket
 
-            df = df[-n_cross * data_in_bucket:]
             test_no = nth_data % n_cross
-            valid_no = (nth_data + 1) % n_cross
+            valid_no = (nth_data - 1) % n_cross
             for i in range(n_cross):
                 df_part = df[i * data_in_bucket: (i + 1) * data_in_bucket].copy()
                 if i == test_no:
