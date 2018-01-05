@@ -7,10 +7,12 @@ class DateBetweenUtil(object):
     """ between two days """
 
     def __init__(self, from_date: datetime.date, to_date: datetime.date):
-        if not (isinstance(from_date, datetime.datetime) and isinstance(to_date, datetime.datetime)) and not (
-                    isinstance(from_date, datetime.date) and isinstance(to_date, datetime.date)):
-            raise Exception(
-                "from_date, to_date must be datetime.datetime instances.")
+        if isinstance(from_date, datetime.datetime) and isinstance(to_date, datetime.datetime):
+            pass
+        elif isinstance(from_date, datetime.date) and isinstance(to_date, datetime.date):
+            pass
+        else:
+            raise Exception("from_date and to_date must be datetime.datetime or datetime.date instances.")
         self.from_date = from_date
         self.to_date = to_date
         self.delta = self.to_date - self.from_date
@@ -58,10 +60,10 @@ if __name__ == '__main__':
     # print()
     # for a, b in between.date_split(from_start=False):
     #     print(a, b)
-        # between = DateBetweenUtil(datetime.datetime(2013, 1, 31, 1), datetime.datetime(2013, 2, 2, 4))
-        # print(between.days())
-        # for d in between.date_list():
-        #     print(str(d), type(d))
-        # print(between.hour_list())
-        # check exception raised.
-        # assert Exception, DateBetweenUtil(10, datetime.datetime(2013, 2, 2, 4))
+    # between = DateBetweenUtil(datetime.datetime(2013, 1, 31, 1), datetime.datetime(2013, 2, 2, 4))
+    # print(between.days())
+    # for d in between.date_list():
+    #     print(str(d), type(d))
+    # print(between.hour_list())
+    # check exception raised.
+    # assert Exception, DateBetweenUtil(10, datetime.datetime(2013, 2, 2, 4))
