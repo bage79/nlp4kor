@@ -256,8 +256,8 @@ class DateUtil(object):
 
 if __name__ == '__main__':
     # print(DateUtil.nth_weekday(2017, 10, nth=2, weekday='목'))
-    # print(DateUtil.to_date_string('20150102', format='%04d%02d%2d'))
-    now = DateUtil.string_to_date('20150102', time_format='%Y%m%d')
+    # print(DateUtil.to_date_string('20170101', format='%04d%02d%2d'))
+    now = DateUtil.string_to_date('20170101', time_format='%Y%m%d')
     print(type(now), now)
     before = now - datetime.timedelta(days=5)
     print(type(before), before)
