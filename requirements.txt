@@ -1,3 +1,4 @@
+nltk
 editdistance
 beautifulsoup4
 bokeh
