@@ -80,8 +80,8 @@ class MySQLUtil(object):
     def addslashes(field):
         return field.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"')
 
-    def bulk_execute(self, query, bulk_size=100, force_execute=False):
-        if force_execute:
+    def bulk_execute(self, query=None, bulk_size=100, force_execute=False):
+        if force_execute or query is None:
             full_query = ';'.join(self.queries)
             if full_query and len(full_query) > 0:
                 # print(full_query)
