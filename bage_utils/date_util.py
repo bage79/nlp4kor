@@ -161,6 +161,7 @@ class DateUtil(object):
             return True
         except:
             return False
+
     @staticmethod
     def date_to_datetime(date):
         return datetime.datetime(*date.timetuple()[:-4])
@@ -229,7 +230,7 @@ class DateUtil(object):
             return False
 
     @staticmethod
-    def weekday_string(date, lang='ko'):
+    def weekday_string(date: datetime.date, lang: str = 'ko'):
         if lang == 'ko':
             WEEK_DAY = ['월', '화', '수', '목', '금', '토', '일']
         else:
@@ -254,15 +255,16 @@ class DateUtil(object):
         return [day for week in monthcal for day in week \
                 if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
 
+
 if __name__ == '__main__':
     # print(DateUtil.nth_weekday(2017, 10, nth=2, weekday='목'))
     # print(DateUtil.to_date_string('20170101', format='%04d%02d%2d'))
-    now = DateUtil.string_to_date('20170101', time_format='%Y%m%d')
-    print(type(now), now)
-    before = now - datetime.timedelta(days=5)
-    print(type(before), before)
-    print(DateUtil.to_date_string(before, format='%04d%02d%02d'))
-    # print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
+    # now = DateUtil.string_to_date('20170101', time_format='%Y%m%d')
+    # print(type(now), now)
+    # before = now - datetime.timedelta(days=5)
+    # print(type(before), before)
+    # print(DateUtil.to_date_string(before, format='%04d%02d%02d'))
+    print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
     # print(DateUtil.string_to_datetime('2017-03-16', time_format='%Y-%m-%d'))
     # time = datetime.datetime.time(datetime.datetime.now())
     # print('time:', time)
