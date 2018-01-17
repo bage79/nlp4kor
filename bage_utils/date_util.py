@@ -255,6 +255,10 @@ class DateUtil(object):
         return [day for week in monthcal for day in week \
                 if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
 
+    @classmethod
+    def date2datetime(cls, end_date):
+        return datetime.datetime.combine(end_date, datetime.datetime.min.time())
+
 
 if __name__ == '__main__':
     # print(DateUtil.nth_weekday(2017, 10, nth=2, weekday='목'))
