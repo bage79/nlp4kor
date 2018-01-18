@@ -49,7 +49,7 @@ class CharVocab(object):
         :return: string
         """
         if pad_size > 0:
-            return ''.join([self.__cid2char.get(cid, CharVocab.unk_char) for cid in cids]).rstrip(' ')  # TODO: TEST
+            return ''.join([self.__cid2char.get(cid, CharVocab.unk_char) for cid in cids]).rstrip(' ')
         else:
             return ''.join([self.__cid2char.get(cid, CharVocab.unk_char) for cid in cids])
 
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     # def create_graph_one_hot(dic_size, batch_size, window_size):
     #     x = tf.placeholder(tf.int32, [batch_size, window_size])
-    #     x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+    #     x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # int32 or float32
     #     embeddings = None
     #     return x, embeddings, x_vector
     #
@@ -167,7 +167,7 @@ if __name__ == '__main__':
             x_vector = tf.nn.embedding_lookup(embeddings, x)
             print(embeddings)
             print(x)
-            # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # FIXME: int32 or float32
+            # x_vector = tf.one_hot(tf.cast(x, tf.int32), depth=dic_size, dtype=tf.int32)  # int32 or float32
             return x, embeddings, x_vector
 
 

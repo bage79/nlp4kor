@@ -125,7 +125,7 @@ class ExcelWriter(object):
 
         try:
             _book = xlrd.open_workbook(self.filepath, formatting_info=True)
-            self.book = _book  # xlutils.copy.copy(_book) # FIXME: need test on python3.
+            self.book = _book  # xlutils.copy.copy(_book) # need test on python3.
         except IOError:  # No such file or directory
             self.book = xlwt.Workbook(encoding='utf8')
             #            self.__add_sheet('Sheet1')

@@ -70,7 +70,7 @@ class DataSet(object):
 
                 yield features_batch, labels_batch
 
-    def convert_to_one_hot_vector(self, verbose=False):  # TODO: pipeline (from read to write) or tensorflow queue
+    def convert_to_one_hot_vector(self, verbose=False):  # pipeline (from read to write) or tensorflow queue
         self.features, self.labels = self.__to_one_hot_vector(self.features, self.labels, verbose=verbose)
         return self
 

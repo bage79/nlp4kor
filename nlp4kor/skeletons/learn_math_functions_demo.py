@@ -56,7 +56,7 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # ignore tensorflow warnings
     tf.logging.set_verbosity(tf.logging.ERROR)  # ignore tensorflow info
 
-    func = multiply  # TODO: 다른 데이터 생성 함수로 교체해 볼것 add, average
+    func = multiply  # 다른 데이터 생성 함수로 교체해 볼것 add, average
     n_features = 2  # x1, x2
     n_classes = 1  # y
     digits = list(range(-99, 100, 1))
@@ -90,13 +90,13 @@ if __name__ == '__main__':
     train_time = 1  # secs
 
     # # good values
-    # # TODO: 0. (cost: 2500-3000)
-    activation = tf.nn.relu  # TODO: 1. 학습 가능 여부 (cost: 1700)
-    weights_initializer = tf.truncated_normal_initializer  # TODO: 2. 좀더 안정된 분포 (600-700)(min epoch==total epoch)
-    n_hiddens = 1000  # TODO: 4. 모델 용량 증가 (cost: 500-700) cost 변화 없음. min epoch < total epoch 이므로 learning_rate를 줄여야 함.
-    learning_rate = 0.001  # TODO: 5. 정확도 증가 (cost: 1600) cost 증가했으나 min epoch==total epoch 이므로, cost가 더 줄어들 수 있음 확인. tensorboard 확인
-    train_time = 10 * 60  # TODO: 6. 끝까지 학습  (cost: 4-5) (6분)
-    # # # TODO: 7. 좀더 줄이려면 어떻게 해야 할까요? (decay)
+    # #  0. (cost: 2500-3000)
+    activation = tf.nn.relu  # 1. 학습 가능 여부 (cost: 1700)
+    weights_initializer = tf.truncated_normal_initializer  # 2. 좀더 안정된 분포 (600-700)(min epoch==total epoch)
+    n_hiddens = 1000  # 4. 모델 용량 증가 (cost: 500-700) cost 변화 없음. min epoch < total epoch 이므로 learning_rate를 줄여야 함.
+    learning_rate = 0.001  # 5. 정확도 증가 (cost: 1600) cost 증가했으나 min epoch==total epoch 이므로, cost가 더 줄어들 수 있음 확인. tensorboard 확인
+    train_time = 10 * 60  # 6. 끝까지 학습  (cost: 4-5) (6분)
+    # # #  7. 좀더 줄이려면 어떻게 해야 할까요? (decay)
 
     log.info('%s -> %s -> %s -> %s -> %s' % (x_train.shape[1], n_hiddens, activation.__name__, n_hiddens, 1))
     log.info('weights_initializer: %s' % weights_initializer.__name__)
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     for _ in range(how_many_trains):
         time.sleep(1)
         tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
-        tf.set_random_seed(7942)  # TODO: 3. 결과를 규칙적으로 만들자. (cost: 600-700)
+        tf.set_random_seed(7942)  # 3. 결과를 규칙적으로 만들자. (cost: 600-700)
 
         scope_name = '%s.%s' % (func.__name__, DateUtil.current_yyyymmdd_hhmmss())
         x, y, y_hat, cost, rsme, train_step, summary = build_graph(scope_name, n_features, n_hiddens, n_classes, learning_rate, activation=activation, weights_initializer=weights_initializer,

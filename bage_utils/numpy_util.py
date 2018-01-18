@@ -14,7 +14,7 @@ class NumpyUtil(object):
         return arr.reshape(-1, la)
 
     @staticmethod
-    def embeddings(dic_size, embeddings_size=10, min_val=-1., max_val=1., dtype=np.float32) -> np.ndarray:  # FIXME: memory error, embeddings_size > 10
+    def embeddings(dic_size, embeddings_size=10, min_val=-1., max_val=1., dtype=np.float32) -> np.ndarray:  # memory error, embeddings_size > 10
         """
 
         :param dic_size: row size
