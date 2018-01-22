@@ -39,7 +39,7 @@ class PlotUtil(object):
         # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
 
         if len(subtitles) < len(df.columns):
-            subtitles = [str(col) for col in df.culumns]
+            subtitles = [str(col) for col in df.columns]
         for nth, col in enumerate(df.columns):
             if debug:
                 print(f'plot {nth} th...')
@@ -52,8 +52,11 @@ class PlotUtil(object):
                     print(sub_df.head())
                 sub_df['pos'].plot.bar(color='r', title=subtitles[nth])
                 sub_df['neg'].plot.bar(color='b')
-                xticks = numpy.linspace(0, len(df), max_xticks, endpoint=True)
-                pyplot.xticks(xticks)
+                xticks = numpy.linspace(0, len(df), max_xticks, endpoint=True).astype(numpy.int32)
+                xticks[-1] -= 1
+                # print('xticks:', xticks)
+                # print([df.index[idx] for idx in xticks])
+                pyplot.xticks(xticks, [df.index[idx] for idx in xticks])
             else:
                 if debug:
                     print(sub_df.head())
