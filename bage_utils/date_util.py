@@ -256,7 +256,7 @@ class DateUtil(object):
                 if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
 
     @classmethod
-    def date2datetime(cls, end_date):
+    def date2datetime(cls, end_date: datetime.date):
         return datetime.datetime.combine(end_date, datetime.datetime.min.time())
 
 
