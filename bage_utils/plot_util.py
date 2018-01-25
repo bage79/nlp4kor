@@ -44,6 +44,11 @@ class PlotUtil(object):
             if debug:
                 print(f'plot {nth} th...')
             ax = pyplot.subplot(gs[nth + plot_columns])
+            ax.set_ylim(min(df.min()), max(df.max()))
+            if axhline:
+                ax.axhline(y=0.0, color='black', linestyle=':')
+            pyplot.setp(ax.xaxis.get_majorticklabels(), rotation=rotate_xtick)
+
             sub_df: pandas.DataFrame = df[[col]]
             if kind == 'bar':
                 sub_df['pos'] = sub_df[col][sub_df[col] > 0]
@@ -61,12 +66,6 @@ class PlotUtil(object):
                 if debug:
                     print(sub_df.head())
                 sub_df[col].plot.line(title=subtitles[nth])
-
-            if axhline:
-                ax.axhline(y=0.0, color='black', linestyle=':')
-
-
-            pyplot.setp(ax.xaxis.get_majorticklabels(), rotation=rotate_xtick)
 
         fig.tight_layout()
         if plot_filepath is None:
