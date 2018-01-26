@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, title='', subtitles=[], kind='line', plot_columns=1, max_xticks=10, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=10, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         plot_rows = math.ceil(len(df.columns) / plot_columns) + 1  # with title
@@ -44,7 +44,9 @@ class PlotUtil(object):
             if debug:
                 print(f'plot {nth} th...')
             ax = pyplot.subplot(gs[nth + plot_columns])
-            ax.set_ylim(min(df.min()), max(df.max()))
+            if y_min_max is None:
+                y_min_max = min(df.min()), max(df.max())
+            ax.set_ylim(y_min_max)
             if axhline:
                 ax.axhline(y=0.0, color='black', linestyle=':')
             pyplot.setp(ax.xaxis.get_majorticklabels(), rotation=rotate_xtick)
