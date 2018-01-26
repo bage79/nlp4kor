@@ -38,14 +38,15 @@ class PlotUtil(object):
         fig.suptitle(title, size=title_font_size)
         # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
 
+        if y_min_max is None:
+            y_min_max = min(df.min()), max(df.max())
+
         if len(subtitles) < len(df.columns):
             subtitles = [str(col) for col in df.columns]
         for nth, col in enumerate(df.columns):
             if debug:
                 print(f'plot {nth} th...')
             ax = pyplot.subplot(gs[nth + plot_columns])
-            if y_min_max is None:
-                y_min_max = min(df.min()), max(df.max())
             ax.set_ylim(y_min_max)
             if axhline:
                 ax.axhline(y=0.0, color='black', linestyle=':')
@@ -76,6 +77,8 @@ class PlotUtil(object):
             if os.path.exists(plot_filepath):
                 os.remove(plot_filepath)
             pyplot.savefig(plot_filepath)
+
+        return y_min_max
 
 
 if __name__ == '__main__':
