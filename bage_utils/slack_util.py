@@ -26,8 +26,11 @@ class SlackUtil(object):
         :return: 
         """
         with lock:
-            time.sleep(0.1)
-            cls.slack_client.api_call("chat.postMessage", channel=channel, text=message)
+            try:
+                time.sleep(0.1)
+                cls.slack_client.api_call("chat.postMessage", channel=channel, text=message)
+            except:
+                pass
 
 
 if __name__ == '__main__':
