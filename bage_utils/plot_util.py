@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=10, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         plot_rows = math.ceil(len(df.columns) / plot_columns) + 1  # with title
@@ -51,6 +51,8 @@ class PlotUtil(object):
             pyplot.setp(ax.xaxis.get_majorticklabels(), rotation=rotate_xtick)
 
             sub_df: pandas.DataFrame = df[[col]]
+            xticks = numpy.linspace(0, len(df), num=max_xticks, endpoint=True).astype(numpy.int32)
+            xticks[-1] -= 1
             if kind == 'bar':
                 sub_df['pos'] = sub_df[col][sub_df[col] > 0]
                 sub_df['neg'] = sub_df[col][sub_df[col] < 0]
@@ -58,15 +60,14 @@ class PlotUtil(object):
                     print(sub_df.head())
                 sub_df['pos'].plot.bar(color='r', title=subtitles[nth])
                 sub_df['neg'].plot.bar(color='b')
-                xticks = numpy.linspace(0, len(df), max_xticks, endpoint=True).astype(numpy.int32)
-                xticks[-1] -= 1
-                # print('xticks:', xticks)
+                if debug:
+                    print('xticks:', len(xticks), xticks)
                 # print([df.index[idx] for idx in xticks])
                 pyplot.xticks(xticks, [df.index[idx] for idx in xticks])
             else:
                 if debug:
                     print(sub_df.head())
-                sub_df[col].plot.line(title=subtitles[nth])
+                sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
 
         fig.tight_layout()
         if plot_filepath is None:
