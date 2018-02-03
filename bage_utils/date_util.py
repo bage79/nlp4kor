@@ -19,7 +19,7 @@ class DateUtil(object):
             return ''
 
     @staticmethod
-    def mysql_date2yyyymmdd(mysql_date):
+    def mysql_date2yyyymmdd(mysql_date: str):
         tokens = mysql_date.split('-')
         if len(mysql_date) == 10 and len(tokens) == 3:
             return '%4d%02d%02d' % (int(tokens[0]), int(tokens[1]), int(tokens[2]))
@@ -27,7 +27,7 @@ class DateUtil(object):
             return ''
 
     @staticmethod
-    def mysql_date2date(mysql_date):
+    def mysql_date2date(mysql_date: str):
         tokens = mysql_date.split('-')
         if len(mysql_date) == 10 and len(tokens) == 3:
             return datetime.date(int(tokens[0]), int(tokens[1]), int(tokens[2]))
@@ -162,9 +162,9 @@ class DateUtil(object):
         except:
             return False
 
-    @staticmethod
-    def date_to_datetime(date):
-        return datetime.datetime(*date.timetuple()[:-4])
+    # @staticmethod
+    # def date_to_datetime(date): # date2datetime
+    #     return datetime.datetime(*date.timetuple()[:-4])
 
     @staticmethod
     def string_to_datetime(date_str, time_format='%Y-%m-%d %H:%M:%S'):
@@ -256,17 +256,22 @@ class DateUtil(object):
                 if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
 
     @classmethod
-    def date2datetime(cls, end_date: datetime.date):
-        return datetime.datetime.combine(end_date, datetime.datetime.min.time())
+    def date2datetime(cls, date: datetime.date):
+        return datetime.datetime.combine(date, datetime.datetime.min.time())
+
+    @classmethod
+    def datetime2date(cls, datetime: datetime.datetime):
+        return datetime.date()
 
 
 if __name__ == '__main__':
+    print(datetime.date(datetime.datetime.now()))
     # print(DateUtil.nth_weekday(2017, 10, nth=2, weekday='목'))
     # print(type(now), now)
     # before = now - datetime.timedelta(days=5)
     # print(type(before), before)
     # print(DateUtil.to_date_string(before, format='%04d%02d%02d'))
-    print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
+    # print(DateUtil.weekday_string(DateUtil.string_to_date(str(20171010), time_format='%Y%m%d')))
     # print(DateUtil.string_to_datetime('2017-03-16', time_format='%Y-%m-%d'))
     # time = datetime.datetime.time(datetime.datetime.now())
     # print('time:', time)
