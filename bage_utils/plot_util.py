@@ -38,6 +38,10 @@ class PlotUtil(object):
         fig.suptitle(title, size=title_font_size)
         # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
 
+        # print(title, subtitles, df.columns)
+        # print()
+        # return
+
         if len(subtitles) < len(df.columns):
             subtitles = [str(col) for col in df.columns]
         for nth, col in enumerate(df.columns):
