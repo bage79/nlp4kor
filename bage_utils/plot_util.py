@@ -67,7 +67,7 @@ class PlotUtil(object):
                 if debug:
                     print('xticks:', len(xticks), xticks)
                 # print([df.index[idx] for idx in xticks])
-                pyplot.xticks(xticks, [df.index[idx] for idx in xticks])
+                pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)
             else:
                 if debug:
                     print(sub_df.head())
