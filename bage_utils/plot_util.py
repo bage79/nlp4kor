@@ -26,10 +26,13 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
-        plot_rows = math.ceil(len(df.columns) / plot_columns) + 1  # with title
+        if columns is None:
+            columns = df.columns
+
+        plot_rows = math.ceil(len(columns) / plot_columns) + 1  # with title
         figsize_pixel = (width, one_row_height * plot_rows)
         figsize = PlotUtil.pixel2inch(figsize_pixel)
         fig = pyplot.figure(figsize=figsize)  # for len(df)==1000
@@ -38,13 +41,10 @@ class PlotUtil(object):
         fig.suptitle(title, size=title_font_size)
         # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
 
-        # print(title, subtitles, df.columns)
-        # print()
-        # return
+        if len(subtitles) < len(columns):
+            subtitles = [str(col) for col in columns]
 
-        if len(subtitles) < len(df.columns):
-            subtitles = [str(col) for col in df.columns]
-        for nth, col in enumerate(df.columns):
+        for nth, col in enumerate(columns):
             if debug:
                 print(f'plot {nth} th...')
             ax = pyplot.subplot(gs[nth + plot_columns])
