@@ -41,7 +41,7 @@ class MySQLUtil(object):
     # def __check_connection(self):
     #     try:
     #         self.cursor.execute("SELECT 1")
-    #     except (AttributeError, pymysql.OperationalError):
+    #     except (AttributeError, pymysql.err.OperationalError):
     #         self.connect()
 
     def affected_rows(self):
@@ -101,7 +101,7 @@ class MySQLUtil(object):
             self.connect()
         try:
             self.cursor.execute(query)
-        except pymysql.OperationalError or pymysql.err.InterfaceError:
+        except pymysql.err.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
         except Exception as e:
@@ -113,7 +113,7 @@ class MySQLUtil(object):
         try:
             self.cursor.execute(query)
             return self.cursor.fetchone()
-        except pymysql.OperationalError or pymysql.err.InterfaceError:
+        except pymysql.err.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
             return self.cursor.fetchone()
@@ -130,7 +130,7 @@ class MySQLUtil(object):
                 if not row:
                     break
                 yield row
-        except pymysql.OperationalError or pymysql.err.InterfaceError:
+        except pymysql.err.OperationalError or pymysql.err.InterfaceError:
             self.connect()  # reconnect
             self.cursor.execute(query)
             while True:
