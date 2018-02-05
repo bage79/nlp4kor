@@ -44,7 +44,7 @@ class PlotUtil(object):
         fig.suptitle(title, size=title_font_size)
         # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
 
-        if len(subtitles) < len(columns):
+        if len(subtitles) != len(columns):
             subtitles = [str(col) for col in columns]
 
         for nth, col in enumerate(columns):
