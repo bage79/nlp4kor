@@ -26,11 +26,14 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, columns=None, title='', subtitles=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, base_column=None, title='', subtitles=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         if columns is None:
-            columns = df.columns
+            columns = list(df.columns)
+
+        if base_column is not None and base_column in columns:
+            columns.remove(base_column)
 
         plot_rows = math.ceil(len(columns) / plot_columns) + 1  # with title
         figsize_pixel = (width, one_row_height * plot_rows)
@@ -67,6 +70,8 @@ class PlotUtil(object):
                     print(sub_df.head())
                 sub_df['pos'].plot.bar(color='r', title=subtitles[nth])
                 sub_df['neg'].plot.bar(color='b')
+                if base_column is not None:
+                    df[base_column].plot.bar(color='g')  # TODO: TEST
                 if debug:
                     print('xticks:', len(xticks), xticks)
                 # print([df.index[idx] for idx in xticks])
@@ -75,7 +80,9 @@ class PlotUtil(object):
                 if debug:
                     print(sub_df.head())
                 sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
+                df[base_column].plot.line(color='g')
 
+        pyplot.legend()
         fig.tight_layout()
         if plot_filepath is None:
             pyplot.show()
