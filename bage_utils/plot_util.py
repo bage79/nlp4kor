@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, columns=None, title='', subtitles=[], kind='line', y_min_max=None, plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, title='', subtitles=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         if columns is None:
@@ -57,6 +57,9 @@ class PlotUtil(object):
             sub_df: pandas.DataFrame = df[[col]]
             xticks = numpy.linspace(0, len(df), num=max_xticks, endpoint=True).astype(numpy.int32)
             xticks[-1] -= 1
+            if len(y_label) > 0:
+                pyplot.ylabel(y_label)
+
             if kind == 'bar':
                 sub_df['pos'] = sub_df[col][sub_df[col] > 0]
                 sub_df['neg'] = sub_df[col][sub_df[col] < 0]
