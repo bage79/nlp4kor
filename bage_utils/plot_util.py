@@ -41,8 +41,10 @@ class PlotUtil(object):
         fig = pyplot.figure(figsize=figsize)  # for len(df)==1000
         gs = gridspec.GridSpec(plot_rows, plot_columns)
 
-        fig.suptitle(title, size=title_font_size)
-        # print(f'figsize: {figsize_pixel}, total_subplot:{total_subplot}, plot_filepath:{plot_filepath}')
+        pyplot.subplot(gs[0, :])
+        pyplot.axis('off')
+        pyplot.text(x=0.5, y=0, s=title, fontsize=title_font_size, horizontalalignment='center', verticalalignment='bottom')
+        # fig.suptitle(title, size=title_font_size, horizontalalignment='center', verticalalignment='bottom')
 
         if len(subtitles) != len(columns):
             subtitles = [str(col) for col in columns]
