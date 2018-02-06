@@ -80,7 +80,8 @@ class PlotUtil(object):
                 if debug:
                     print(sub_df.head())
                 sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
-                df[base_column].plot.line(color='g')
+                if base_column is not None:
+                    df[base_column].plot.line(color='g')
             pyplot.legend()
 
         fig.tight_layout()
