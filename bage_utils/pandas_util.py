@@ -1,4 +1,4 @@
-import numpy as np
+# coding=utf-8
 import pandas as pd
 from sqlalchemy import create_engine
 from tabulate import tabulate
@@ -13,7 +13,7 @@ class PandasUtil(object):
     - Pandas Util
     """
 
-    def __init__(self, mysql_info: dict):
+    def __init__(self, mysql_info: list):
         self.mysql_engine = create_engine(
             "mysql+mysqldb://{user}:{passwd}@{host}/{db}?charset=utf8".format(**mysql_info),
             encoding='utf8', echo=False)
@@ -95,8 +95,8 @@ class PandasUtil(object):
         """
         JOSN 문자열을 읽어서 DataFrame으로 반환한다.
         Series 인 경우에도 DataFrame으로 변환하여 반환한다.
-        :param json_str: 
-        :return: pandas.DataFrame or pandas.Series 
+        :param json_str:
+        :return: pandas.DataFrame or pandas.Series
         """
         try:
             df = pd.read_json(json_str, orient='split', typ='frame', dtype=False)  # read json as DataFrame
@@ -110,7 +110,7 @@ class PandasUtil(object):
 
 
 if __name__ == '__main__':
-    df = pd.Data(columns=["firstname", "lastname"])
+    df = pd.DataFrame(columns=["firstname", "lastname"])
     df = df.append({
         "firstname": "John",
         "lastname": "Johny"
