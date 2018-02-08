@@ -85,10 +85,10 @@ class MySQLUtil(object):
 
     def bulk_execute(self, query=None, bulk_size=100, force_execute=False):
         if force_execute or query is None:
-            full_query = ';'.join(self.queries)
-            if full_query and len(full_query) > 0:
-                # print(full_query)
+            if len(self.queries) > 0:
+                full_query = ';'.join(self.queries)
                 self.execute(full_query)
+                self.queries = []
         else:
             self.queries.append(query)
 
