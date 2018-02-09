@@ -252,8 +252,7 @@ class DateUtil(object):
             '일': calendar.SUNDAY, '월': calendar.MONDAY, '화': calendar.TUESDAY, '수': calendar.WEDNESDAY, '목': calendar.THURSDAY, '금': calendar.FRIDAY, '토': calendar.SATURDAY
         }
         monthcal = c.monthdatescalendar(year=year, month=month)
-        return [day for week in monthcal for day in week \
-                if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
+        return [day for week in monthcal for day in week if day.weekday() == weekday_from_kor[weekday] and day.month == month][nth - 1]
 
     @classmethod
     def date2datetime(cls, date: datetime.date):
