@@ -32,7 +32,7 @@ class PlotUtil(object):
         if columns is None:
             columns = list(df.columns)
 
-        print('base_columns:', base_columns)
+        # print('base_columns:', base_columns)
 
         plot_rows = math.ceil(len(columns) / plot_columns) + 1  # with title
         figsize_pixel = (width, one_row_height * plot_rows)
