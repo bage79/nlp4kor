@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, columns=None, base_columns=[], title='', subtitles=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, base_columns=[], title='', subtitles=[], point_list=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         if columns is None:
@@ -79,11 +79,17 @@ class PlotUtil(object):
                 # print([df.index[idx] for idx in xticks])
                 pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)
             else:
-                if debug:
-                    print(sub_df.head())
-                sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
+                # if debug:
+                #     print(sub_df.head())
+
+                if len(columns) == len(point_list):
+                    x_list, y_list = point_list[nth]
+                    sub_df[col].plot.line(title=subtitles[nth], xticks=xticks, markevery=x_list, marker='o', markerfacecolor='red')
+                else:
+                    sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
                 if len(columns) == len(base_columns):
                     df[base_columns[nth]].plot.line(color='g', secondary_y=secondary_y)
+
             if legend:
                 pyplot.legend()
             if grid:
