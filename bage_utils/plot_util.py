@@ -61,8 +61,8 @@ class PlotUtil(object):
             sub_df: pandas.DataFrame = df[[col]]
             xticks = numpy.linspace(0, len(df), num=max_xticks, endpoint=True).astype(numpy.int32)
             xticks[-1] -= 1
-            if len(y_label) > 0:
-                pyplot.ylabel(y_label)
+            # if len(y_label) > 0:
+            #     pyplot.ylabel(y_label)
 
             if kind == 'bar':
                 sub_df['pos'] = sub_df[col][sub_df[col] > 0]
@@ -76,9 +76,9 @@ class PlotUtil(object):
                     df[base_columns[nth]].plot.bar(color='g')  # TODO: TEST
                 if debug:
                     print('xticks:', len(xticks), xticks)
-                # print([df.index[idx] for idx in xticks])
                 pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)
             else:
+                pass
                 # if debug:
                 #     print(sub_df.head())
 
@@ -87,9 +87,10 @@ class PlotUtil(object):
                     sub_df[col].plot.line(title=subtitles[nth], xticks=xticks, markevery=x_list, marker='o', markerfacecolor='red')
                 else:
                     sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
-                if len(columns) == len(base_columns):
-                    df[base_columns[nth]].plot.line(color='g', secondary_y=secondary_y)
 
+                if len(columns) == len(base_columns):
+                    df[base_columns[nth]].plot.line(color='g', secondary_y=secondary_y, xticks=xticks)
+                pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)  # FIXME: doesn't work when secondary_y=True
             if legend:
                 pyplot.legend()
             if grid:
