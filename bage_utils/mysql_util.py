@@ -144,6 +144,16 @@ class MySQLUtil(object):
         except Exception as e:
             raise e
 
+    def copy_table(self, table, from_db, to_db):
+        fieldlist, _ = MySQLUtil.columns2numpy_types(self, table)
+        fieldlist = [f'`{f}`' for f in fieldlist]
+        fieldlist = ','.join(fieldlist)
+        # print(f'fieldlist: {fieldlist}')
+
+        self.execute(f"TRUNCATE TABLE `{to_db}`.{table}")
+        query = f"INSERT INTO `{to_db}`.{table} ({fieldlist}) SELECT {fieldlist} FROM `{from_db}`.{table}"
+        self.execute(query)
+
 
 if __name__ == '__main__':
     __MYSQL = {
