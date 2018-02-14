@@ -1,10 +1,10 @@
+import math
 import os
 
 import matplotlib
 import numpy
 import pandas
 from matplotlib import pyplot, gridspec
-import math
 
 
 class PlotUtil(object):
@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, columns=None, base_columns=[], title='', subtitles=[], point_list=[], kind='line', y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, second_columns=[], title='', subtitles=[], point_list=[], kind='line', y_min_max=None, second_y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         if columns is None:
@@ -61,8 +61,8 @@ class PlotUtil(object):
             sub_df: pandas.DataFrame = df[[col]]
             xticks = numpy.linspace(0, len(df), num=max_xticks, endpoint=True).astype(numpy.int32)
             xticks[-1] -= 1
-            # if len(y_label) > 0:
-            #     pyplot.ylabel(y_label)
+            if y_label is not None:
+                pyplot.ylabel(y_label)
 
             if kind == 'bar':
                 sub_df['pos'] = sub_df[col][sub_df[col] > 0]
@@ -71,25 +71,23 @@ class PlotUtil(object):
                     print(sub_df.head())
                 sub_df['pos'].plot.bar(color='r', title=subtitles[nth])
                 sub_df['neg'].plot.bar(color='b')
-                if len(columns) == len(base_columns):
-                    print(base_columns[nth])
-                    df[base_columns[nth]].plot.bar(color='g')  # TODO: TEST
+                if len(columns) == len(second_columns):
+                    print(second_columns[nth])
+                    df[second_columns[nth]].plot.bar(color='g')  # TODO: TEST
                 if debug:
                     print('xticks:', len(xticks), xticks)
                 pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)
             else:
-                pass
-                # if debug:
-                #     print(sub_df.head())
-
                 if len(columns) == len(point_list):
                     x_list, y_list = point_list[nth]
                     sub_df[col].plot.line(title=subtitles[nth], xticks=xticks, markevery=x_list, marker='o', markerfacecolor='red')
                 else:
                     sub_df[col].plot.line(title=subtitles[nth], xticks=xticks)
 
-                if len(columns) == len(base_columns):
-                    df[base_columns[nth]].plot.line(color='g', secondary_y=secondary_y, xticks=xticks)
+                if len(columns) == len(second_columns):
+                    ax2 = df[second_columns[nth]].plot.line(color='g', secondary_y=secondary_y, xticks=xticks)
+                    if second_y_min_max is not None:
+                        ax2.set_ylim(second_y_min_max)
                 pyplot.xticks(xticks, [df.index[idx] for idx in xticks], rotation=0)  # FIXME: doesn't work when secondary_y=True
             if legend:
                 pyplot.legend()
