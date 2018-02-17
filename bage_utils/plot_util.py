@@ -26,7 +26,7 @@ class PlotUtil(object):
         # return matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
 
     @staticmethod
-    def grid_plots(df: pandas.DataFrame, columns=None, second_columns=[], title='', subtitles=[], point_list=[], kind='line', y_min_max=None, second_y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=45, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
+    def grid_plots(df: pandas.DataFrame, columns=None, second_columns=[], title='', subtitles=[], point_list=[], kind='line', y_min_max=None, second_y_min_max=None, y_label='', plot_columns=1, max_xticks=4, rotate_xtick=0, one_row_height=400, width=2048, title_font_size=50, axhline=True, secondary_y=False, legend=True, grid=True, plot_filepath=None, debug=False):
         matplotlib.rcParams['legend.loc'] = 'upper left'
 
         if columns is None:
