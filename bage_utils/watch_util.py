@@ -12,7 +12,7 @@ class WatchUtil(object):
     """
     DEFAULT_WATCH_NAME = ''  # ''__WATCH__'
 
-    def __init__(self, auto_stop=True):
+    def __init__(self, auto_stop=False):
         """
         :param auto_stop: auto_stop=True이면, elapsed() 또는 elapsed_string() 호출시 자동으로 stop() 호출됨.
         """
