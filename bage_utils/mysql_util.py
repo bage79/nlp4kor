@@ -1,5 +1,6 @@
 import os
 import traceback
+
 import numpy as np
 import pymysql
 
@@ -150,8 +151,10 @@ class MySQLUtil(object):
         fieldlist = ','.join(fieldlist)
         # print(f'fieldlist: {fieldlist}')
 
+        self.execute(f'CREATE TABLE IF NOT EXISTS `{to_db}`.`{table}` LIKE `{from_db}`.`{table}`')
         self.execute(f"TRUNCATE TABLE `{to_db}`.{table}")
-        query = f"INSERT INTO `{to_db}`.{table} ({fieldlist}) SELECT {fieldlist} FROM `{from_db}`.{table}"
+
+        query = f"INSERT INTO `{to_db}`.`{table}` ({fieldlist}) SELECT {fieldlist} FROM `{from_db}`.{table}"
         self.execute(query)
 
 
