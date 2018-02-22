@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import time
 
+from torch.optim import Optimizer
+
 
 class PytorchUtil(object):
     random_seed = 7942
@@ -45,6 +47,24 @@ class PytorchUtil(object):
     #             param_group['lr'] = init_lr * (0.1 ** (epoch // lr_decay_epoch))
     #
     #     return optimizer
+
+    @classmethod
+    def get_learning_rate(cls, optimizer: Optimizer):  # TODO:
+        for param_group in optimizer.param_groups:
+            if 'lr' in param_group:
+                return param_group['lr']
+
+    @classmethod
+    def set_learning_rate(cls, optimizer: Optimizer, epoch, gamma=0.1, base_lr=1e-3, min_lr=1e-5, decay_start=1, decay_interval=1):
+        if epoch >= decay_start:
+            lr = base_lr * (gamma ** (epoch // decay_interval))
+            if lr < min_lr:
+                lr = min_lr
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+            return lr
+        else:
+            return base_lr
 
     # noinspection PyDefaultArgument
     @classmethod
