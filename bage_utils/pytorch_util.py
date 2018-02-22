@@ -55,9 +55,9 @@ class PytorchUtil(object):
                 return param_group['lr']
 
     @classmethod
-    def set_learning_rate(cls, optimizer: Optimizer, epoch, gamma=0.1, base_lr=1e-3, min_lr=1e-5, decay_start=1, decay_interval=1):
+    def set_learning_rate(cls, optimizer: Optimizer, epoch=1, gamma=0.1, base_lr=1e-3, min_lr=1e-5, decay_start=1, decay_interval=1):
         if epoch >= decay_start:
-            lr = base_lr * (gamma ** (epoch // decay_interval))
+            lr = base_lr * (gamma ** (epoch - 1 // decay_interval))
             if lr < min_lr:
                 lr = min_lr
             for param_group in optimizer.param_groups:
