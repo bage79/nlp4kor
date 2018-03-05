@@ -13,7 +13,12 @@ class PytorchUtil(object):
     random_seed = 7942
 
     @classmethod
-    def use_gpu(cls, device_no=0) -> None:
+    def use_gpu(cls, device_no: str) -> None:
+        """
+
+        :param device_no: e.g. "0" or "1" or "0,1"
+        :return:
+        """
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
 
