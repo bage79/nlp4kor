@@ -1,11 +1,10 @@
+import os
+import time
 import traceback
 
-import torch
-import os
-import pandas as pd
 import numpy as np
-import time
-
+import pandas as pd
+import torch
 from torch.optim import Optimizer
 
 
@@ -13,14 +12,18 @@ class PytorchUtil(object):
     random_seed = 7942
 
     @classmethod
-    def use_gpu(cls, device_no: str) -> None:
+    def use_gpu(cls, device_no: str = None) -> None:
         """
 
         :param device_no: e.g. "0" or "1" or "0,1"
         :return:
         """
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
+        if device_no is None:
+            os.environ['OMP_NUM_THREADS'] = 4  # TODO: TEST 4 ~ 8
+            os.environ["KMP_AFFINITY"] = 'scatter'
+        else:
+            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(device_no)
 
     @classmethod
     def get_gpus(cls) -> int:
