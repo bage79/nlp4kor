@@ -6,6 +6,11 @@ import numpy as np
 class NumpyUtil(object):
     @staticmethod
     def cartesian_product(*arrays: np.ndarray):
+        """
+        # TODO: delete
+        :param arrays:
+        :return:
+        """
         la = len(arrays)
         dtype = np.result_type(*arrays)
         arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
@@ -32,12 +37,17 @@ class NumpyUtil(object):
         W = NumpyUtil.cartesian_product(*dims)
         return W[:dic_size]
 
+    @staticmethod
+    def combinations(arrays):
+        return np.array(np.meshgrid(*arrays)).T.reshape(-1, len(arrays))
+
 
 if __name__ == '__main__':
+    print(NumpyUtil.combinations([['a', 'b', 'c'], [4, 5], [6, 7]]))
     # dic_size = 16000
-    W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=15)
-    print(W)
-    print(W.shape)
+    # W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=15)
+    # print(W)
+    # print(W.shape)
     # print(W.shape)
     # W = np.reshape(W, (-1, embedding_size))
     # W = W[:dic_size]
