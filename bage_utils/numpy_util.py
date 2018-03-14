@@ -1,3 +1,4 @@
+import itertools
 import math
 
 import numpy as np
@@ -5,9 +6,8 @@ import numpy as np
 
 class NumpyUtil(object):
     @staticmethod
-    def cartesian_product(*arrays: np.ndarray):
+    def cartesian_product(*arrays: np.ndarray):  # TODO: check max size
         """
-        # TODO: delete
         :param arrays:
         :return:
         """
@@ -38,12 +38,21 @@ class NumpyUtil(object):
         return W[:dic_size]
 
     @staticmethod
-    def combinations(arrays):
+    def all_cases(arrays: [list]):
+        """
+        len(arrays) < 32
+        :param arrays: [['a', 'b', 'c'], [4, 5], [6, 7]]
+        :return:
+        """
+        if len(arrays) > 32:
+            arrays = arrays[:31]
         return np.array(np.meshgrid(*arrays)).T.reshape(-1, len(arrays))
 
 
 if __name__ == '__main__':
-    print(NumpyUtil.combinations([['a', 'b', 'c'], [4, 5], [6, 7]]))
+    # print(NumpyUtil.combinations([['a', 'b', 'c'], [4, 5], [6, 7]]))
+    for i, x in enumerate(itertools.combinations(range(40), 39)):
+        print(i, x)
     # dic_size = 16000
     # W = NumpyUtil.embeddings(dic_size=15232, embeddings_size=15)
     # print(W)
