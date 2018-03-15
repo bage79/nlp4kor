@@ -1,8 +1,26 @@
 import time
 
-from pytools.stopwatch import StopWatch
-
 from bage_utils.date_util import DateUtil
+
+
+class StopWatch:
+    def __init__(self):
+        self.Elapsed = 0.
+        self.LastStart = None
+
+    def start(self):
+        assert self.LastStart is None
+        self.LastStart = time.time()
+        return self
+
+    def stop(self):
+        assert self.LastStart is not None
+        self.Elapsed = time.time() - self.LastStart
+        self.LastStart = None
+        return self
+
+    def elapsed(self):
+        return self.Elapsed
 
 
 class WatchUtil(object):
@@ -10,9 +28,9 @@ class WatchUtil(object):
     - wrapper of 'pytools.stopwatch.StopWatch`
     - support multiple watches.
     """
-    DEFAULT_WATCH_NAME = ''  # ''__WATCH__'
+    DEFAULT_WATCH_NAME = ''
 
-    def __init__(self, auto_stop=False):
+    def __init__(self, auto_stop=True):
         """
         :param auto_stop: auto_stop=True이면, elapsed() 또는 elapsed_string() 호출시 자동으로 stop() 호출됨.
         """
@@ -92,16 +110,17 @@ if __name__ == '__main__':
     # print(watches.elapsed_string('A'))
     # watches.del_watch('A')
 
-    watches.start('A')
+    watches.start()
     time.sleep(3)
-    print(watches.elapsed_string('A'))
+    print(watches.elapsed_string())
 
-    watches.start('B')
+    watches.start()
+    time.sleep(1)
+    print(watches.elapsed_string())
+    print(watches.elapsed_string())
+
+    watches.start()
     time.sleep(3)
-    print(watches.elapsed_string('B'))
-
-    watches.start('A')
-    time.sleep(2)
-    print(watches.elapsed_string('A'))
+    print(watches.elapsed_string())
 
     print(watches.summary())
