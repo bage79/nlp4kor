@@ -20,7 +20,10 @@ class StopWatch:
         return self
 
     def elapsed(self):
-        return self.Elapsed
+        if self.LastStart is None:  # stopped
+            return self.Elapsed
+        else:
+            return time.time() - self.LastStart
 
 
 class WatchUtil(object):
@@ -66,6 +69,7 @@ class WatchUtil(object):
     def elapsed(self, name=DEFAULT_WATCH_NAME) -> int:
         if self.auto_stop:
             try:
+                print('auto_stop')
                 self.__get(name).stop()  # must call start() later.
             except AssertionError:
                 pass
@@ -93,6 +97,7 @@ class WatchUtil(object):
 
         for name, total_milli_secs in li:
             if self.__cnt[name] > 0:
+                print(total_milli_secs)
                 if len(prefix) > 0:
                     s += '%s average [%s] %s\n' % (
                         prefix, DateUtil.millisecs_to_string(float(total_milli_secs) / float(self.__cnt[name])), name)
@@ -103,7 +108,7 @@ class WatchUtil(object):
 
 
 if __name__ == '__main__':
-    watches = WatchUtil(auto_stop=True)
+    watches = WatchUtil(auto_stop=False)
 
     # watches.start('A')
     # time.sleep(1)

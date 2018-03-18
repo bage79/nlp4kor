@@ -53,9 +53,9 @@ class DateUtil(object):
         hours, mins = divmod(mins, 60)
         days, hours = divmod(hours, 24)
         if days > 0:
-            return '%ddays %02d:%02d:%02d %.4f' % (days, hours, mins, secs, mili_secs)
+            return '%ddays %02d:%02d:%02d%s' % (days, hours, mins, secs, ('%.4f' % mili_secs)[1:])
         else:
-            return '%02d:%02d:%02d %.4f' % (hours, mins, secs, mili_secs)
+            return '%02d:%02d:%02d%s' % (hours, mins, secs, ('%.4f' % mili_secs)[1:])
 
     @staticmethod
     def current_datetime_string(datetime_format='%04d-%02d-%02d %02d:%02d:%02d'):
