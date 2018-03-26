@@ -10,9 +10,9 @@ class DataFileUtil(object):
 
         try:
             if gzip_format:
-                f = gzip.open(filepath, 'rt')
+                f = gzip.open(filepath, 'rt', encoding='utf8')
             else:
-                f = open(filepath, 'r')
+                f = open(filepath, 'r', encoding='utf8')
 
             with f:
                 if strip:
