@@ -57,7 +57,7 @@ class WordSpacing(object):
                 log.info('%s %s total: %s' % (name, os.path.basename(data_file), NumUtil.comma_str(total)))
 
                 features, labels = [], []
-                with gzip.open(data_file, 'rt') as f:
+                with gzip.open(data_file, 'rt', encoding='utf8') as f:
                     for i, line in enumerate(f, 1):
                         if total < i:
                             break
@@ -332,7 +332,7 @@ if __name__ == '__main__':
         else:
             sentences_file = train_sentences_file
 
-        with gzip.open(sentences_file, 'rt') as f:
+        with gzip.open(sentences_file, 'rt', encoding='utf8') as f:
             for i, line in enumerate(f, 1):
                 if len(sentences) >= max_test_sentences:
                     break

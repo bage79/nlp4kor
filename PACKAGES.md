@@ -8,4 +8,4 @@
     - `spelling_error_correction.py`: DAE for 철자 오류 교정
     - `dae_mnist.py`: DAE for MNIST
 - `config.py`: 설정 파일
-- `text_processing.py`: 전처리        
+- `text_processing.py`: 전처리

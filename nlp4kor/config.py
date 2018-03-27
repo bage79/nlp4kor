@@ -18,7 +18,11 @@ if log is None:
     else:  # by batch script
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
 
-PROJECT_DIR = os.path.join(os.getenv("HOME"), 'workspace/nlp4kor')
+HOME_DIR = os.getenv("HOME")
+if HOME_DIR is None:
+    HOME_DIR = os.getenv("HOMEPATH")
+
+PROJECT_DIR = os.path.join(HOME_DIR, 'workspace/nlp4kor')
 
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 log.info('DATA_DIR: %s' % DATA_DIR)
@@ -40,7 +44,7 @@ MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_P
 #################################################
 # tensorboard log dir
 #################################################
-TENSORBOARD_LOG_DIR = os.path.join(os.getenv("HOME"), 'tensorboard_log')
+TENSORBOARD_LOG_DIR = os.path.join(HOME_DIR, 'tensorboard_log')
 log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
 if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
@@ -48,7 +52,7 @@ if not os.path.exists(TENSORBOARD_LOG_DIR):
 #################################################
 # mnist
 #################################################
-MNIST_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-mnist')
+MNIST_DIR = os.path.join(HOME_DIR, 'workspace', 'nlp4kor-mnist')
 MNIST_DATA_DIR = os.path.join(MNIST_DIR, 'data')
 MNIST_CNN_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'cnn')
 MNIST_DAE_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'dae')
@@ -56,7 +60,7 @@ MNIST_DAE_MODEL_DIR = os.path.join(MNIST_DIR, 'models', 'dae')
 #################################################
 # ko.wikipedia.org
 #################################################
-KO_WIKIPEDIA_ORG_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
+KO_WIKIPEDIA_ORG_DIR = os.path.join(HOME_DIR, 'workspace', 'nlp4kor-ko.wikipedia.org')
 
 KO_WIKIPEDIA_ORG_INFO_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.info.txt')
 KO_WIKIPEDIA_ORG_URLS_FILE = os.path.join(KO_WIKIPEDIA_ORG_DIR, 'data', 'ko.wikipedia.org.urls.txt')
@@ -73,7 +77,7 @@ KO_WIKIPEDIA_ORG_SPELLING_ERROR_CORRECTION_MODEL_DIR = os.path.join(KO_WIKIPEDIA
 #################################################
 # ko.wikipedia.org
 #################################################
-WIKIPEDIA_DIR = os.path.join(os.getenv('HOME'), 'workspace', 'nlp4kor-ko.wikipedia.org')
+WIKIPEDIA_DIR = os.path.join(HOME_DIR, 'workspace', 'nlp4kor-ko.wikipedia.org')
 
 # text (with string)
 WIKIPEDIA_DATA_DIR = os.path.join(WIKIPEDIA_DIR, 'data')
