@@ -1,9 +1,11 @@
 import codecs
+import gzip
 import os.path
 import subprocess
 
 import chardet
 
+from bage_utils.base_util import is_windows_os
 from bage_utils.num_util import NumUtil
 
 
@@ -77,15 +79,25 @@ class FileUtil(object):
             else:
                 gzip_format = False
 
-            if gzip_format:
-                p = subprocess.Popen('gzip -cd %s | wc -l' % filename, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            else:
-                p = subprocess.Popen(['wc', '-l', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if is_windows_os():
+                if gzip_format:
+                    f = gzip.open(filename, 'rt', encoding='utf8')
+                else:
+                    f = open(filename, 'r', encoding='utf8')
 
-            result, err = p.communicate()
-            if p.returncode != 0:
-                raise IOError(err)
-            lines += int(result.strip().split()[0])
+                with f:
+                    for _ in f.readlines():
+                        lines += 1
+            else:
+                if gzip_format:
+                    p = subprocess.Popen('gzip -cd %s | wc -l' % filename, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                else:
+                    p = subprocess.Popen(['wc', '-l', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                result, err = p.communicate()
+                if p.returncode != 0:
+                    raise IOError(err)
+                lines += int(result.strip().split()[0])
         return lines
 
     @staticmethod

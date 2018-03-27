@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import warnings
+from os.path import expanduser
 
 from bage_utils.base_util import db_hostname, is_my_pc
 from bage_utils.log_util import LogUtil
@@ -18,9 +19,8 @@ if log is None:
     else:  # by batch script
         log = LogUtil.get_logger(sys.argv[0], level=logging.INFO, console_mode=False)  # global log
 
-HOME_DIR = os.getenv("HOME")
-if HOME_DIR is None:
-    HOME_DIR = os.getenv("HOMEPATH")
+HOME_DIR = expanduser("~")
+log.info('HOME_DIR: %s' % HOME_DIR)
 
 PROJECT_DIR = os.path.join(HOME_DIR, 'workspace/nlp4kor')
 
@@ -45,7 +45,7 @@ MYSQL_URL = {'host': db_hostname(), 'user': 'root', 'passwd': os.getenv('MYSQL_P
 # tensorboard log dir
 #################################################
 TENSORBOARD_LOG_DIR = os.path.join(HOME_DIR, 'tensorboard_log')
-log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
+# log.info('TENSORBOARD_LOG_DIR: %s' % TENSORBOARD_LOG_DIR)
 if not os.path.exists(TENSORBOARD_LOG_DIR):
     os.mkdir(TENSORBOARD_LOG_DIR)
 
