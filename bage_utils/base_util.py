@@ -1,8 +1,12 @@
 import getpass
 import inspect
-import os.path
+import os
 import platform
 import socket
+
+
+def home_dir():
+    return os.path.expanduser("~")
 
 
 def real_path(filepath=None):
