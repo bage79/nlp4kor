@@ -193,7 +193,7 @@ class HangulUtil(object):
         return ' '.join(han_eng_re.sub('', s).split(' ')).strip()
 
     @classmethod
-    def has_hangul(cls, word: object) -> object:
+    def has_hangul(cls, word: list) -> object:
         """
         :param word: 단어
         :return: 한글 음절을 포함하는지 여부
@@ -308,11 +308,10 @@ class HangulUtil(object):
         :param char: 음절
         :return: 한글 여부
         """
-        if len(char) == 0:
+        if len(char) == 0 or len(char) > 1:
             return False
         try:
-            if char in cls.HANGUL_LIST:
-                # if ord(char) in cls.WANSUNG_RANGE:
+            if char in cls.HANGUL_LIST:  # if ord(char) in cls.WANSUNG_RANGE:
                 return True
             return False
         except:
@@ -325,9 +324,8 @@ class HangulUtil(object):
         :param char: 음절
         :return: 영어 여부
         """
-        if len(char) == 0:
+        if len(char) == 0 or len(char) > 1:
             return False
-
         try:
             if ord(char) in cls.ENGLISH_LOWER_RANGE or ord(char) in cls.ENGLISH_UPPER_RANGE:
                 return True
@@ -342,9 +340,8 @@ class HangulUtil(object):
         :param char: 음절
         :return: 한자 여부
         """
-        if len(char) == 0:
+        if len(char) == 0 or len(char) > 1:
             return False
-
         try:
             if ord(char) in cls.HANJA_RANGE:
                 return True
@@ -398,14 +395,14 @@ class HangulUtil(object):
         :param char: 음절
         :return: 초성
         """
-        if cls.is_cho(char):
-            return char
-        # offset = int(__char_offset(char))
-        # if offset == IS_NOT_HANGUL:
-        #     return char
-        elif cls.is_jung(char) or cls.is_jong(char):
+        try:
+            if cls.is_cho(char):
+                return char
+            elif cls.is_jung(char) or cls.is_jong(char):
+                return ''
+            return cls.CHO_LIST[int(cls.__char_offset(char) / int(len(cls.MO_LIST) * len(cls.JONG_LIST)))]
+        except:
             return ''
-        return cls.CHO_LIST[int(cls.__char_offset(char) / int(len(cls.MO_LIST) * len(cls.JONG_LIST)))]
 
     @classmethod
     def get_jung(cls, char):
@@ -477,13 +474,16 @@ class HangulUtil(object):
     def sentence2jaso(cls, sentence: str) -> str:
         li = []
         for char in sentence:
-            cho, jung, jong = cls.split2cho_jung_jong(char)
-            if len(cho) > 0:
-                li.append(cho)
-            if len(jung) > 0:
-                li.append(jung)
-            if len(jong) > 0:
-                li.append(jong)
+            if cls.is_hangul_char(char):
+                cho, jung, jong = cls.split2cho_jung_jong(char)
+                if len(cho) > 0:
+                    li.append(cho)
+                if len(jung) > 0:
+                    li.append(jung)
+                if len(jong) > 0:
+                    li.append(jong)
+            else:
+                li.append(char)
         return ''.join(li)
 
     @classmethod
@@ -586,6 +586,11 @@ class HangulUtil(object):
     # noinspection PyPep8Naming
     @classmethod
     def qwerty_to_hangul(cls, word):
+        """
+        오타 인식용
+        :param word:
+        :return:
+        """
         chars = []
         for char in word:
             if char in cls.KEYBOARD_ENG_TO_HAN:
@@ -599,22 +604,22 @@ class HangulUtil(object):
             return word  # convert failed
 
     @staticmethod
-    def get_except_hangul(value):
+    def get_except_hangul(chars):
         """한글을 제외한 문자열을 리턴함"""
-        chars = ''
-        for i in value:
-            if not HangulUtil.is_hangul_char(i):
-                chars += i
-        return chars
+        li = []
+        for char in chars:
+            if not HangulUtil.is_hangul_char(char):
+                li.append(char)
+        return ''.join(li)
 
     @staticmethod
-    def get_except_english(value):
+    def get_except_english(chars):
         """영어를 제외한 문자열을 리턴함"""
-        chars = ''
-        for i in value:
-            if not HangulUtil.is_english_char(i):
-                chars += i
-        return chars
+        li = []
+        for char in chars:
+            if not HangulUtil.is_english_char(char):
+                li.append(char)
+        return ''.join(li)
 
     @classmethod
     def text2sentences(cls, text: str, sentence_delim='다.', remove_only_one_word=True, has_hangul=True, remove_markdown=True):
@@ -643,7 +648,8 @@ class HangulUtil(object):
 HangulUtil.load()
 
 if __name__ == '__main__':
-    print(HangulUtil.remain_han_eng('ㅠㅠ형대기술로 이런 범죄가 가능한가? 가까운 미래 SF영화 같네...'))
+    print(HangulUtil.is_hangul_char('ㅠ'))
+    print(HangulUtil.sentence2jaso('ㅠㅠ형대기술로 이런 범죄가 가능한가? 가까운 미래 SF영화 같네...'))
     # print('"%s"' % str(HangulUtil.CHO_LIST))
     # print('"%s"' % str(HangulUtil.JUNG_LIST))
     # print('"%s"' % str(HangulUtil.JONG_LIST))
