@@ -41,8 +41,8 @@ def _to_one_hot_vector(c: str, li=None) -> numpy.ndarray:
 
 
 warnings.filterwarnings("ignore", category=FutureWarning, append=1)  # for warning in re
-# han_eng_re = re.compile('[^ㄱ-ㅎ가-힣0-9a-zA-Z~!@#=\^\$%&_\+~:\";\',\.?/\(\)\{\}\[\]\\s]')
-han_eng_re = re.compile('[^ㄱ-ㅎ가-힣0-9a-zA-Z~!@#=^$%&_+:\";\',.?/(){\}\[\]\\s]')
+han_eng_re = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣0-9a-zA-Z\\s]')
+han_eng_symbol_re = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣0-9a-zA-Z~!@#=^$%&_+:\";\',.?/(){\}\[\]\\s]')
 
 
 # noinspection PyGlobalUndefined
@@ -175,13 +175,22 @@ class HangulUtil(object):
             return -1
 
     @staticmethod
+    def remain_han_eng_symbol(s):
+        """
+        한글, 영어, 숫자, 일부 기호만 남기고 제거
+        :param s:
+        :return:
+        """
+        return ' '.join(han_eng_symbol_re.sub('', s).split(' ')).strip()
+
+    @staticmethod
     def remain_han_eng(s):
         """
         한글, 영어, 숫자, 일부 기호만 남기고 제거
         :param s:
         :return:
         """
-        return ' '.join(han_eng_re.sub(' ', s).split(' ')).strip()
+        return ' '.join(han_eng_re.sub('', s).split(' ')).strip()
 
     @classmethod
     def has_hangul(cls, word: object) -> object:
@@ -258,7 +267,7 @@ class HangulUtil(object):
         try:
             for char in word:
                 if char != ' ' and (char not in exclude_chars) and (ord(char) not in cls.WANSUNG_RANGE) and (ord(char) not in cls.ENGLISH_UPPER_RANGE) and (
-                            ord(char) not in cls.ENGLISH_LOWER_RANGE):
+                        ord(char) not in cls.ENGLISH_LOWER_RANGE):
                     return False
             return True
         except:
@@ -465,6 +474,19 @@ class HangulUtil(object):
         return [cho, jung, jong]
 
     @classmethod
+    def sentence2jaso(cls, sentence: str) -> str:
+        li = []
+        for char in sentence:
+            cho, jung, jong = cls.split2cho_jung_jong(char)
+            if len(cho) > 0:
+                li.append(cho)
+            if len(jung) > 0:
+                li.append(jung)
+            if len(jong) > 0:
+                li.append(jong)
+        return ''.join(li)
+
+    @classmethod
     def join_cho_jung_jong(cls, cho, jung, jong=' '):
         """
         :param jong: 초성
@@ -621,13 +643,14 @@ class HangulUtil(object):
 HangulUtil.load()
 
 if __name__ == '__main__':
+    print(HangulUtil.remain_han_eng('ㅠㅠ형대기술로 이런 범죄가 가능한가? 가까운 미래 SF영화 같네...'))
     # print('"%s"' % str(HangulUtil.CHO_LIST))
     # print('"%s"' % str(HangulUtil.JUNG_LIST))
     # print('"%s"' % str(HangulUtil.JONG_LIST))
-    for c in ['한', '사']:
-        jaso_list = HangulUtil.split2cho_jung_jong(c)
-        _c = HangulUtil.encode_noise(c)
-        print(c, '->', jaso_list, '->', _c)
+    # for c in ['한', '사']:
+    #     jaso_list = HangulUtil.split2cho_jung_jong(c)
+    #     _c = HangulUtil.encode_noise(c)
+    #     print(c, '->', jaso_list, '->', _c)
     # text = r'''이 숫염소의 이름은 쾰른의 레전드 선수이자 나중에 명감독으로 꼽힌 헤네스 바이스바일러에서 유래하였다.
     # 숫염소 헤네스는 인근의 쾰른 서커스단으로부터 기증받은 것이다.
     # {{축구 클럽팀 정보2| 클럽 이름 = 1. FSV 마인츠 05| 풀 네임 = 1. Fußball- und Sport-Verein Mainz 05 e.V.| 별칭 = Die Nullfünfer (05년) Karnevalsverein (카니발 클럽)| 설립연도 = 1905년 3월 27일| 홈구장 = 코파스 아레나| 수용인원 = 33,500| 회장 = {{국기그림|독일}} 하랄트 슈트르츠| 스포르팅 매니저 = {{국기그림|독일}} 크리스티안 하이델| 감독 = {{국기그림|스위스}} 마틴 슈미트| 리그 = 1 분데스리가| 시즌 = 2013-14| 순위 = 7위| pattern_la1=_fsvmainz1415h| pattern_b1=_fsvmainz1415h| pattern_ra1=_fsvmainz1415h| pattern_sh1
