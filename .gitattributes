@@ -1,15 +1,15 @@
-*.characters filter=lfs diff=lfs merge=lfs -text
-*.sentences filter=lfs diff=lfs merge=lfs -text
-*.npy filter=lfs diff=lfs merge=lfs -text
-*.w2v filter=lfs diff=lfs merge=lfs -text
-*.w2m filter=lfs diff=lfs merge=lfs -text
-*.gs filter=lfs diff=lfs merge=lfs -text
-*.gs.* filter=lfs diff=lfs merge=lfs -text
-*.tf filter=lfs diff=lfs merge=lfs -text
-*.tf.* filter=lfs diff=lfs merge=lfs -text
+*.gz binary
+*.tar binary
+*.tgz binary
+*.zip binary
+*.npy binary
+*.gs binary
+*.gs.* binary
+*.tf binary
+*.tf.* binary
 *.csv filter=lfs diff=lfs merge=lfs -text
 *.tsv filter=lfs diff=lfs merge=lfs -text
-*.tar filter=lfs diff=lfs merge=lfs -text
-*.tgz filter=lfs diff=lfs merge=lfs -text
-*.zip filter=lfs diff=lfs merge=lfs -text
-*.gz filter=lfs diff=lfs merge=lfs -text
+*.characters filter=lfs diff=lfs merge=lfs -text
+*.sentences filter=lfs diff=lfs merge=lfs -text
+*.embedding binary
+*.pickle binary
