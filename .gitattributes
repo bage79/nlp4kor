@@ -11,5 +11,8 @@
 *.tsv filter=lfs diff=lfs merge=lfs -text
 *.characters filter=lfs diff=lfs merge=lfs -text
 *.sentences filter=lfs diff=lfs merge=lfs -text
+*.vocab binary
+*.corpus binary
 *.embedding binary
 *.pickle binary
+*.torch binary
