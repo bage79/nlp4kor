@@ -93,8 +93,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
-**/logs/
-**/datasets/
-
 .idea/
-models/
+**/logs/
