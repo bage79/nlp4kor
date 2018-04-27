@@ -1,3 +1,5 @@
+tqdm
+srt
 scipy
 nltk
 editdistance
