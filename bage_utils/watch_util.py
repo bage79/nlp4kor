@@ -69,7 +69,6 @@ class WatchUtil(object):
     def elapsed(self, name=DEFAULT_WATCH_NAME) -> int:
         if self.auto_stop:
             try:
-                print('auto_stop')
                 self.__get(name).stop()  # must call start() later.
             except AssertionError:
                 pass
