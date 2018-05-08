@@ -12,7 +12,7 @@
 - https://www.youtube.com/playlist?list=PLE_yleP-KQefhFSNh16hJKnq6stIG05fu
 
 
-# with Tensorflow (2017.05 ~ 2017.07)
+# Season #1 NLP with Tensorflow
 ### http://github.com/bage79/nlp4kor-tensorflow
 
 ### 1. CNN for MNIST - 2017.05.20
@@ -33,7 +33,7 @@
 ### 5. Real Tensorflow Coding - 2017.07.29
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/real_tensorflow_coding.ipynb
 
-# about Deep Learning (2017.10 ~ 2017.12)
+# Season #2 Deep Learning
 ### 6. 수학 함수 학습 & hyper-parameters 최적화 - 2017.10.08
 - https://github.com/bage79/nlp4kor/blob/master/nlp4kor/skeletons/learn_math_functions_demo.py
 - https://github.com/bage79/nlp4kor-tensorflow/blob/master/nlp4kor_tensorflow/skeletons/learn_math_functions_demo.py
@@ -47,7 +47,7 @@
 ### 9. 왕초보를 위한 NN - 2018.01.02
 - http://nbviewer.jupyter.org/github/bage79/nlp4kor/blob/master/ipynb/NN_for_beginners.pdf
 
-# with Pytorch (2018.05 ~)
+# Season #3 NLP with Pytorch
 - http://github.com/bage79/nlp4kor-pytorch
 
 ### 10. word2vec 응용 - 2018.05.08
