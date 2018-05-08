@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # print(v.char2index)
     # print(v.chars2indices(' 가나다라 마바사.'))
     # exit()
-    # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
+    # with open('/home/bage/workspace/nlp4kor-ko.wikipedia.org/nlp4kor-tensorflow/dataset/spelling_error_correction/ko.wikipedia.org.train.sentences_100.window_size_%s.csv' % window_size, 'rt') as f:
     #     for no, line in enumerate(f, 1):
     #         x_cids = [int(cid) for cid in line.split(',')][:window_size]
     #         y_cids = [int(cid) for cid in line.split(',')][window_size:]
