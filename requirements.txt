@@ -31,7 +31,6 @@ psutil
 pymongo
 pymysql
 pytools
-pywinauto
 redis
 requests
 slackclient
